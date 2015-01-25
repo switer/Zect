@@ -1,4 +1,22 @@
 Zect
 ====
 
-Give a ViewModel layer to make MVC like MVVM helping delvelop complex and complicated business.
+DOM's manipulation should be automatically when state change.Zect make reactive UI easy.
+**Zect**'s state tracking is power by [muxjs](https://github.com/switer/muxjs)
+
+## Installation
+
+
+## API Reference
+- Global API
+
+- Instance Options
+
+- Instance Methods
+
+- Direcitves
+
+## Guide
+- [Get start]()
+
+
