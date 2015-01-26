@@ -88,11 +88,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return Component.call(this, options || {})
 	    }
 	}
-	Zect.directive = function () {
-
+	Zect.directive = function(id, definition) {
+	    _globalDirectives[id] = definition
 	}
-
-	Zect.namespace = function (n) {
+	Zect.namespace = function(n) {
 	    _namespace = n + '-'
 	}
 
@@ -113,32 +112,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	    component.$el = el
 
 	    var vm = new Mux({
+	        deep: true,
 	        props: options.data,
 	        computed: options.computed
 	    })
 
 	    Object.defineProperty(component, '$data', {
 	        enumerable: true,
-	        get: function () {
+	        get: function() {
 	            return vm
 	        },
-	        set: function (v) {
+	        set: function(v) {
 	            vm.$set(v)
 	        }
 	    })
 
 	    util.objEach(_defaultDirective, directiveBinding)
 
-	    function directiveBinding (id, definition) {
+	    function directiveBinding(id, definition) {
 	        var attrName = _namespace + id
-	        function defaultExpGetter () {
+
+	        function defaultExpGetter(exp) {
 	            if (/\:/.exec(exp)) {
-	                return [exp.split(':')[0].trim(), exp.split(':')[0].trim()]
+	                return [exp.split(':')[1].trim(), exp.split(':')[0].trim()]
 	            } else {
 	                return [exp.trim()]
 	            }
 	        }
-	        $(component.$el).find('[' + attrName + ']').each(function (tar) {
+
+	        /**
+	         *  using selector to parse declare syntax
+	         */
+	        $(component.$el).find('[' + attrName + ']').each(function(tar) {
 	            var directive = {
 	                tar: tar,
 	                mounted: component.$el,
@@ -150,18 +155,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var update = definition.update
 
 	            var watchKeys = bind.apply(directive, (expGetter || defaultExpGetter)(exp) || [])
+
 	            if (watchKeys) {
 	                var args = new Array(watchKeys.length)
-	                watchKeys.forEach(function (key, index) {
+	                watchKeys.forEach(function(key, index) {
 	                    args[index] = vm.$get(key)
-	                    vm.$watch(key, function (next) {
+	                    vm.$watch(key, function(next) {
 	                        args[index] = next
 	                        update.apply(directive, args)
 	                    })
 	                    update.apply(directive, args)
 	                })
 	            }
-
+	            /**
+	             *  remove declare syntax from element
+	             */
 	            $(tar).removeAttr(attrName)
 	        })
 	    }
@@ -1420,14 +1428,25 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = {
 	    'html': {
-	        exp: function (exp) {
-	            return [exp]
-	        },
-	        bind: function (key) {
-	            return [key] // those dependencies need to watch
+	        bind: function (wkey) {
+	            return [wkey] // those dependencies need to watch
 	        },
 	        update: function (next) {
 	            $(this.tar).html(next)
+	        }
+	    },
+	    'attr': {
+	        bind: function (wkey, attname) {
+	            this.attname = attname
+	            return [wkey] // those dependencies need to watch
+	        },
+	        update: function (next) {
+	            if (!next && next !== '') {
+	                $(this.tar).removeAttr(this.attname)
+	            } else {
+	                $(this.tar).attr(this.attname, next)
+	                
+	            }
 	        }
 	    }
 	}

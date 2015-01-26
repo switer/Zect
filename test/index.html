@@ -7,7 +7,9 @@
 <body>
     <div id="app">
         <div z-html="title"></div>
-        Length: <span z-html="length"><span>
+        Length: 
+        <span z-html="length"></span>
+        <button z-attr="disabled: disabled">click</button>
     </div>
     <script src="../dist/zect.js"></script>
     <script>
@@ -15,7 +17,8 @@
             el: '#app',
             data: function () {
                 return {
-                    title: 'zect data-binding'
+                    title: 'zect data-binding',
+                    disabled: true
                 }
             },
             computed: {
