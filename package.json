@@ -4,7 +4,8 @@
   "description": "Give a ViewModel layer to make MVC like MVVM helping delvelop complex and complicated business. ",
   "main": "index.js",
   "scripts": {
-    "test": "node test"
+    "test": "node test",
+    "start": "node server"
   },
   "repository": {
     "type": "git",
@@ -19,5 +20,15 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/switer/Zect/issues"
+  },
+  "devDependencies": {
+    "colors": "*",
+    "express": "*",
+    "express-livereload": "*",
+    "gulp": "^3.8.10",
+    "gulp-header": "^1.2.2",
+    "gulp-uglifyjs": "^0.5.0",
+    "gulp-watch": "^4.1.0",
+    "gulp-webpack": "^1.1.2"
   }
 }

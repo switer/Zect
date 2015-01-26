@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <div id="app">
+        <div z-html="title"></div>
+        Length: <span z-html="length"><span>
+    </div>
+    <script src="../dist/zect.js"></script>
+    <script>
+        new Zect({
+            el: '#app',
+            data: function () {
+                return {
+                    title: 'zect data-binding'
+                }
+            },
+            computed: {
+                length: {
+                    deps: ['title'],
+                    fn: function () {
+                        return this.title.length
+                    }
+                }
+            }
+        })
+    </script>
+</body>
+</html>
