@@ -65,39 +65,39 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Mux = __webpack_require__(2)
-	var util = __webpack_require__(3)
-	var $ = __webpack_require__(4)
-
+	var $ = __webpack_require__(2)
+	var Mux = __webpack_require__(3)
+	var util = __webpack_require__(4)
+	var conf = __webpack_require__(5)
 	/**
 	 *  private vars
 	 */
-	var _defaultDirective = __webpack_require__(5)
+	var _getPresetDirective = __webpack_require__(6)
 	var _globalDirectives = {}
-	var _localDirectives = {}
 
-	var _namespace = 'z-'
-
+	/**
+	 *  Global API
+	 */
 	function Zect(options) {
-	    return Component.call(this, options || {})
+	    return ViewModel.call(this, options || {})
 	}
-
 	Zect.extend = function(options) {
 	    return function() {
 	        _insertProto(this, Zect.prototype)
-	        return Component.call(this, options || {})
+	        return ViewModel.call(this, options || {})
 	    }
 	}
 	Zect.directive = function(id, definition) {
 	    _globalDirectives[id] = definition
 	}
 	Zect.namespace = function(n) {
-	    _namespace = n + '-'
+	    conf.namespace = n
 	}
 
-	function Component(options) {
+
+	function ViewModel (options) {
 	    var proto = this.__proto__
-	    var component = this
+	    var vm = this
 	    var el = options.el
 
 	    if (!el && options.template) {
@@ -108,72 +108,73 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } else if (!(el instanceof HTMLElement)) {
 	        throw new Error('Unmatch el option')
 	    }
+	    vm.$el = el
 
-	    component.$el = el
-
-	    var vm = new Mux({
+	    var $data = new Mux({
 	        deep: true,
 	        props: options.data,
 	        computed: options.computed
 	    })
-
-	    Object.defineProperty(component, '$data', {
+	    Object.defineProperty(vm, '$data', {
 	        enumerable: true,
 	        get: function() {
-	            return vm
+	            return $data
 	        },
 	        set: function(v) {
-	            vm.$set(v)
+	            $data.$set(v)
 	        }
 	    })
+	    util.objEach(_getPresetDirective(Zect), function (id, def) {
+	        registerDirective(vm, id, def)
+	    })
+	    util.objEach(_globalDirectives, function (id, def) {
+	        registerDirective(vm, id, def)
+	    })
+	}
 
-	    util.objEach(_defaultDirective, directiveBinding)
-
-	    function directiveBinding(id, definition) {
-	        var attrName = _namespace + id
-
-	        function defaultExpGetter(exp) {
-	            if (/\:/.exec(exp)) {
-	                return [exp.split(':')[1].trim(), exp.split(':')[0].trim()]
-	            } else {
-	                return [exp.trim()]
-	            }
+	function registerDirective(vm, id, definition) {
+	    var attrName = conf.namespace + id
+	    function defaultExpGetter(exp) {
+	        if (/\:/.exec(exp)) {
+	            return [exp.split(':')[1].trim(), exp.split(':')[0].trim()]
+	        } else {
+	            return [exp.trim()]
 	        }
+	    }
+	    function directiveParse(tar) {
+	        var directive = {
+	            tar: tar,
+	            mounted: vm.$el,
+	            vm: vm
+	        }
+	        var exp = $(tar).attr(attrName)
+	        var expGetter = definition.exp
+	        var bind = definition.bind
+	        var update = definition.update
 
 	        /**
-	         *  using selector to parse declare syntax
+	         *  remove declare syntax from element
 	         */
-	        $(component.$el).find('[' + attrName + ']').each(function(tar) {
-	            var directive = {
-	                tar: tar,
-	                mounted: component.$el,
-	                vm: vm
-	            }
-	            var exp = $(tar).attr(attrName)
-	            var expGetter = definition.exp
-	            var bind = definition.bind
-	            var update = definition.update
-
-	            var watchKeys = bind.apply(directive, (expGetter || defaultExpGetter)(exp) || [])
-
-	            if (watchKeys) {
-	                var args = new Array(watchKeys.length)
-	                watchKeys.forEach(function(key, index) {
-	                    args[index] = vm.$get(key)
-	                    vm.$watch(key, function(next) {
-	                        args[index] = next
-	                        update.apply(directive, args)
-	                    })
+	        $(tar).removeAttr(attrName)
+	        
+	        var watchKeys = bind.apply(directive, (expGetter || defaultExpGetter)(exp) || [])
+	        if (watchKeys) {
+	            var args = new Array(watchKeys.length)
+	            watchKeys.forEach(function(key, index) {
+	                args[index] = vm.$data.$get(key)
+	                vm.$data.$watch(key, function(next) {
+	                    args[index] = next
 	                    update.apply(directive, args)
 	                })
-	            }
-	            /**
-	             *  remove declare syntax from element
-	             */
-	            $(tar).removeAttr(attrName)
-	        })
+	                update.apply(directive, args)
+	            })
+	        }
 	    }
-
+	    /**
+	     *  using selector to parse declare syntax
+	     */
+	    vm.$el.hasAttribute(attrName) && directiveParse(vm.$el)
+	    $(vm.$el).find('[' + attrName + ']').each(directiveParse)
 	}
 
 
@@ -186,12 +187,125 @@ return /******/ (function(modules) { // webpackBootstrap
 	    obj.__proto__.__proto__ = end
 	}
 
-
 	module.exports = Zect
-
 
 /***/ },
 /* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var util = __webpack_require__(4)
+
+	function Selector (sel) {
+	    if (util.type(sel) == 'string') {
+	        var nodes = util.copyArray(document.querySelectorAll(sel))
+	        return Dom(nodes)
+	    } else if (sel instanceof Dom) return sel
+	    else if (sel instanceof HTMLElement) {
+	        return Dom([sel])
+	    } else {
+	        throw new Error('Unexpect selector !')
+	    }
+	}
+
+	function Dom (nodes) {
+	    var ins = {
+	        find: function (sel) {
+	            var subs = []
+	            nodes.forEach(function (n) {
+	                subs = subs.concat(util.copyArray(n.querySelectorAll(sel)))
+	            })
+	            return Dom(subs)
+	        },
+	        attr: function (attname, attvalue) {
+	            var len = arguments.length
+	            var el = nodes[0]
+	            if (len > 1) {
+	                el.setAttribute(attname, attvalue)
+	            } else if (len == 1) {
+	                return (el.getAttribute(attname) || '').toString()
+	            }
+	            return this
+	        },
+	        removeAttr: function (attname) {
+	            nodes.forEach(function (el) {
+	                el.removeAttribute(attname)
+	            })
+	            return this
+	        },
+	        addClass: function (clazz) {
+	            nodes.forEach(function (el) {
+	                var classes = util.copyArray(el.classList)
+	                if (!~classes.indexOf(clazz)) classes.push(clazz)
+	                el.className = classes.join(' ')
+	            })
+	            return this
+	        },
+	        removeClass: function (clazz) {
+	            nodes.forEach(function (el) {
+	                el.className = classes.reduce(function (r, n) {
+	                    if (n != clazz) r.push(n)
+	                    return r
+	                }, []).join(' ')
+	            })
+	            return this
+	        },
+	        each: function (fn) {
+	            nodes.forEach(fn)
+	            return this
+	        },
+	        on: function (type, listener, capture) {
+	            nodes.forEach(function (el) {
+	                el.addEventListener(type, listener, capture)
+	            })
+	            return this
+	        },
+	        off: function (type, listener) {
+	            nodes.forEach(function (el) {
+	                el.removeEventListener(type, listener)
+	            })
+	            return this
+	        },
+	        html: function (html) {
+	            var len = arguments.length
+	            if (len >= 1) {
+	                nodes.forEach(function (el) {
+	                    el.innerHTML = html
+	                })
+	            } else if (nodes.length){
+	                return nodes[0].innerHTML
+	            }
+	            return this
+	        },
+	        parent: function () {
+	            if (!nodes.length) return null
+	            return Dom([nodes[0].parentNode])
+	        },
+	        remove: function () {
+	            nodes.forEach(function (el) {
+	                var parent = el.parentNode
+	                parent && parent.removeChild(el)
+	            })
+	            return this
+	        },
+	        // return element by index
+	        get: function (i) {
+	            return nodes[i]
+	        },
+	        append: function (n) {
+	            if (nodes.length) this.get(0).appendChild(n)
+	            return this
+	        }
+	    }
+	    ins.__proto__ = Dom.prototype
+	    return ins
+	}
+
+	module.exports = Selector
+
+/***/ },
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -1294,7 +1408,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 3 */
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1323,133 +1437,87 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var util = __webpack_require__(3)
-
-	function Selector (sel) {
-	    if (util.type(sel) == 'string') {
-	        var nodes = util.copyArray(document.querySelectorAll(sel))
-	        return Dom(nodes)
-	    } else if (sel instanceof Dom) return sel
-	    else if (sel instanceof HTMLElement) {
-	        return Dom([sel])
-	    } else {
-	        throw new Error('Unexpect selector !')
-	    }
-	}
-
-	function Dom (nodes) {
-	    var ins = {
-	        find: function (sel) {
-	            var subs = []
-	            nodes.forEach(function (n) {
-	                subs = subs.concat(util.copyArray(n.querySelectorAll(sel)))
-	            })
-	            return Dom(subs)
-	        },
-	        attr: function (attname, attvalue) {
-	            var len = arguments.length
-	            var el = nodes[0]
-	            if (len > 1) {
-	                el.setAttribute(attname, attvalue)
-	            } else if (len == 1) {
-	                return (el.getAttribute(attname) || '').toString()
-	            }
-	            return this
-	        },
-	        removeAttr: function (attname) {
-	            nodes.forEach(function (el) {
-	                el.removeAttribute(attname)
-	            })
-	            return this
-	        },
-	        addClass: function (clazz) {
-	            nodes.forEach(function (el) {
-	                var classes = util.copyArray(el.classList)
-	                if (!~classes.indexOf(clazz)) classes.push(clazz)
-	                el.className = classes.join(' ')
-	            })
-	            return this
-	        },
-	        removeClass: function (clazz) {
-	            nodes.forEach(function (el) {
-	                el.className = classes.reduce(function (r, n) {
-	                    if (n != clazz) r.push(n)
-	                    return r
-	                }, []).join(' ')
-	            })
-	            return this
-	        },
-	        each: function (fn) {
-	            nodes.forEach(fn)
-	            return this
-	        },
-	        on: function (type, listener, capture) {
-	            nodes.forEach(function (el) {
-	                el.addEventListener(type, listener, capture)
-	            })
-	            return this
-	        },
-	        off: function (type, listener) {
-	            nodes.forEach(function (el) {
-	                el.removeEventListener(type, listener)
-	            })
-	            return this
-	        },
-	        html: function (html) {
-	            var len = arguments.length
-	            if (len >= 1) {
-	                nodes.forEach(function (el) {
-	                    el.innerHTML = html
-	                })
-	            } else if (nodes.length){
-	                return nodes[0].innerHTML
-	            }
-	            return this
-	        }
-	    }
-	    ins.__proto__ = Dom.prototype
-	    return ins
-	}
-
-	module.exports = Selector
-
-/***/ },
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var $ = __webpack_require__(4)
-
+	var _namespace = 'z-'
 	module.exports = {
-	    'html': {
-	        bind: function (wkey) {
-	            return [wkey] // those dependencies need to watch
-	        },
-	        update: function (next) {
-	            $(this.tar).html(next)
-	        }
+	    set namespace (n) {
+	        _namespace = n + '-'
 	    },
-	    'attr': {
-	        bind: function (wkey, attname) {
-	            this.attname = attname
-	            return [wkey] // those dependencies need to watch
+	    get namespace () {
+	        return _namespace
+	    }
+	 }
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var $ = __webpack_require__(2)
+	var util = __webpack_require__(4)
+
+	module.exports = function(Zect) {
+	    return {
+	        'repeat': {
+	            bind: function(wkey) {
+	                var $el = $(this.tar)
+	                this.$parent = $el.parent()
+	                $el.remove()
+	                return [wkey]
+	            },
+	            update: function(items) {
+	                if (!items) return
+	                this.$parent.html('')
+	                var that = this
+	                var frag = document.createDocumentFragment()
+	                items.forEach(function(item, index) {
+	                    var $subEl = that.tar.cloneNode()
+	                    var $data = util.type(item) == 'object' ? item : {}
+
+	                    $data.$index = index
+	                    $data.$value = item
+	                    $data.$parentVM = that.vm
+	                    new Zect({
+	                        el: $subEl,
+	                        data: $data
+	                    })
+	                    frag.appendChild($subEl)
+	                })
+	                this.$parent.append(frag)
+	            }
 	        },
-	        update: function (next) {
-	            if (!next && next !== '') {
-	                $(this.tar).removeAttr(this.attname)
-	            } else {
-	                $(this.tar).attr(this.attname, next)
-	                
+	        'html': {
+	            bind: function(wkey) {
+
+	                return [wkey] // those dependencies need to watch
+	            },
+	            update: function(next) {
+
+	                $(this.tar).html(next)
+	            }
+	        },
+	        'attr': {
+	            bind: function(wkey, attname) {
+	                this.attname = attname
+	                return [wkey] // those dependencies need to watch
+	            },
+	            update: function(next) {
+	                if (!next && next !== '') {
+	                    $(this.tar).removeAttr(this.attname)
+	                } else {
+	                    $(this.tar).attr(this.attname, next)
+
+	                }
 	            }
 	        }
 	    }
 	}
+
 
 /***/ }
 /******/ ])
