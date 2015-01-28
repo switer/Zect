@@ -45,12 +45,38 @@ var app = new Zect({
     * [components]() // TBD
 
 - Instance Methods
+    * [$set]() // TBD
+    * [$get]() // TBD
 
 - Direcitves
     * [html]()
     * [attr]()
     * [repeat]()
+    * [if]() // DOING
     * [component]() // TBD
+
+
+## Guide
+- **Custom Directive**
+
+Options's Methods: `exp`, `bind`, `update`. `exp` is optional. Example below:
+
+```js
+Zect.directive('', {
+    exp: function (exp) {
+        // parse directive's attribute value to key
+        return [exp.split(':')[0], exp.split(':')[1]]
+    },
+    bind: function (key1, key2) {
+        // do something
+        return [key2] // keys that need to watch changes
+    },
+    update: function (value) {
+        // do some with state
+    }
+})
+```
+
 
 ## License
 

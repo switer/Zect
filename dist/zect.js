@@ -1481,11 +1481,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                    $data.$index = index
 	                    $data.$value = item
-	                    $data.$parentVM = that.vm
-	                    new Zect({
+	                    var subVM = new Zect({
 	                        el: $subEl,
 	                        data: $data
 	                    })
+	                    subVM.$parentVM = that.vm
+	                    
 	                    frag.appendChild($subEl)
 	                })
 	                this.$parent.append(frag)
