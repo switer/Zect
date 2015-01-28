@@ -13,6 +13,7 @@
         <ul>
             <li z-repeat="items" z-html="title"></li>
         </ul>
+        <div z-show="isShow">z show</div>
     </div>
     <script src="../dist/zect.js"></script>
     <script>
@@ -22,7 +23,8 @@
                 return {
                     items: [{'title': 'switer'}],
                     title: 'zect data-binding',
-                    disabled: false
+                    disabled: false,
+                    isShow: false
                 }
             },
             computed: {

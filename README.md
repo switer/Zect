@@ -52,6 +52,7 @@ var app = new Zect({
     * [html]()
     * [attr]()
     * [repeat]()
+    * [show]() 
     * [if]() // DOING
     * [component]() // TBD
 
