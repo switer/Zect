@@ -11,16 +11,17 @@
         <span z-html="length"></span>
         <button z-attr="disabled: disabled">click</button>
         <ul>
-            <li z-repeat="items" z-html="title"></li>
+            <li z-repeat="items" z-html="$value"></li>
         </ul>
     </div>
     <script src="../dist/zect.js"></script>
     <script>
+        console.time('p')
         new Zect({
             el: '#app',
             data: function () {
                 return {
-                    items: [{'title': 'switer'}],
+                    items: new Array(5000),
                     title: 'zect data-binding',
                     disabled: false
                 }
@@ -32,6 +33,13 @@
                         return this.title.length
                     }
                 }
+            },
+            ready: function () {
+                console.timeEnd('p')
+                setTimeout( function() {
+                    this.$data.items = [1,2,3]
+                }.bind(this), 1000);
+                    
             }
         })
     </script>

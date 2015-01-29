@@ -49,10 +49,14 @@ var app = new Zect({
     * [$get]() // TBD
 
 - Direcitves
-    * [html]()
-    * [attr]()
-    * [repeat]()
     * [if]() // DOING
+    * [on]()
+    * [attr]() // DONE
+    * [class]() // DONE
+    * [style]() // DONE
+    * [html]() // TBD: syntax sugar
+    * [width]() // TBD
+    * [repeat]() // TBF: diff
     * [component]() // TBD
 
 
@@ -76,7 +80,6 @@ Zect.directive('', {
     }
 })
 ```
-
 
 ## License
 
