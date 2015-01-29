@@ -1478,25 +1478,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.$parent = $el.parent()
 	                this.$holder = document.createComment(conf.namespace + 'repeat')
 	                $el.replace(this.$holder, this.tar)
-	                // $el.remove()
 	                return [wkey]
 	            },
 	            update: function(items) {
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data')
 	                }
-
 	                var that = this
 	                function createSubVM (item, index) {
-	                    var $subEl = that.tar.cloneNode()
+	                    var $subEl = that.tar.cloneNode(true)
 	                    var $data = util.type(item) == 'object' ? item : {}
-
 	                    $data.$index = index
 	                    $data.$value = item
+
 	                    var subVM = new Zect({
 	                        el: $subEl,
 	                        data: $data
 	                    })
+
 	                    subVM.$parentVM = that.vm
 	                    return subVM
 	                }
@@ -1519,7 +1518,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            // reset $index
 	                            v.$index = i
 	                        } else {
-	                            v = createSubVM()
+	                            v = createSubVM(item, index)
 	                        }
 	                    }
 	                    vms[index] = v
@@ -1541,11 +1540,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        'html': {
 	            bind: function(wkey) {
-
 	                return [wkey] // those dependencies need to watch
 	            },
 	            update: function(next) {
-
 	                $(this.tar).html(next)
 	            }
 	        },

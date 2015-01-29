@@ -11,7 +11,13 @@
         <span z-html="length"></span>
         <button z-attr="disabled: disabled">click</button>
         <ul>
-            <li z-repeat="items" z-html="$value"></li>
+            <li z-repeat="items">
+                <span z-html="$value"></span>
+                <span z-html="$value"></span>
+                <span z-html="$value"></span>
+                <span z-html="$value"></span>
+                <span z-html="$value"></span>
+            </li>
         </ul>
         <div z-show="isShow">z show</div>
     </div>
@@ -22,7 +28,7 @@
             el: '#app',
             data: function () {
                 return {
-                    items: new Array(5000),
+                    items: new Array(1000),
                     title: 'zect data-binding',
                     disabled: false,
                     isShow: false
@@ -41,7 +47,6 @@
                 setTimeout( function() {
                     this.$data.items = [1,2,3]
                 }.bind(this), 1000);
-                    
             }
         })
     </script>
