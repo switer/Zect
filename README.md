@@ -49,8 +49,10 @@ var app = new Zect({
     * [$get]() // TBD
 
 - Direcitves
+
     * [if]() // DOING
     * [on]()
+    * [show]() 
     * [attr]() // DONE
     * [class]() // DONE
     * [style]() // DONE

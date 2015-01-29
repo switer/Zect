@@ -1562,6 +1562,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                }
 	            }
+	        },
+	        'show': {
+	            bind: function(wkey) {
+	                return [wkey] // those dependencies need to watch
+	            },
+	            update: function(next) {
+	                this.tar.style.display = next ? 'block': 'none';
+	            }
 	        }
 	    }
 	}
