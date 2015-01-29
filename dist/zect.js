@@ -130,6 +130,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    util.objEach(_globalDirectives, function (id, def) {
 	        registerDirective(vm, id, def)
 	    })
+
+	    var ready = options.ready
+	    ready && ready.call(vm)
 	}
 
 	function registerDirective(vm, id, definition) {
@@ -295,6 +298,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        append: function (n) {
 	            if (nodes.length) this.get(0).appendChild(n)
+	            return this
+	        },
+	        replace: function (n) {
+	            var $parent = this.parent()
+	            $parent.get(0).replaceChild(n, this.get(0))
 	            return this
 	        }
 	    }
@@ -1459,6 +1467,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
+	var conf = __webpack_require__(5)
 	var util = __webpack_require__(4)
 
 	module.exports = function(Zect) {
@@ -1467,15 +1476,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	            bind: function(wkey) {
 	                var $el = $(this.tar)
 	                this.$parent = $el.parent()
-	                $el.remove()
+	                this.$holder = document.createComment(conf.namespace + 'repeat')
+	                $el.replace(this.$holder, this.tar)
+	                // $el.remove()
 	                return [wkey]
 	            },
 	            update: function(items) {
-	                if (!items) return
-	                this.$parent.html('')
+	                if (!items || !items.forEach) {
+	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data')
+	                }
+
 	                var that = this
-	                var frag = document.createDocumentFragment()
-	                items.forEach(function(item, index) {
+	                function createSubVM (item, index) {
 	                    var $subEl = that.tar.cloneNode()
 	                    var $data = util.type(item) == 'object' ? item : {}
 
@@ -1486,10 +1498,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        data: $data
 	                    })
 	                    subVM.$parentVM = that.vm
-	                    
-	                    frag.appendChild($subEl)
+	                    return subVM
+	                }
+
+	                var vms = new Array(items.length)
+	                var olds = this.last ? util.copyArray(this.last): olds
+	                var oldVms = this.$vms ? util.copyArray(this.$vms): oldVms
+	                items.forEach(function (item, index) {
+	                    var v
+	                    if (!olds) {
+	                        v = createSubVM(item, index)
+	                    } else {
+	                        var i = olds.indexOf(item)
+	                        if (~i) {
+	                            // reused
+	                            v = oldVms[i]
+	                            // clean
+	                            olds.splice(i, 1)
+	                            oldVms.splice(i, 1)
+	                            // reset $index
+	                            v.$index = i
+	                        } else {
+	                            v = createSubVM()
+	                        }
+	                    }
+	                    vms[index] = v
 	                })
-	                this.$parent.append(frag)
+	                this.$vms = vms
+	                this.last = items
+	                var $floor = this.$holder
+	                // from rear to head
+	                var len = vms.length
+	                while(len --) {
+	                    var v = vms[len]
+	                    that.$parent.get(0).insertBefore(v.$el, $floor)
+	                    $floor = v.$el
+	                }
+	                oldVms && oldVms.forEach(function (v) {
+	                    v && $(v.$el).remove()
+	                })
 	            }
 	        },
 	        'html': {
