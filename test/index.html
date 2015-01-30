@@ -6,20 +6,24 @@
 </head>
 <body>
     <div id="app">
-        <div z-html="title"></div>
+<!--         <div z-html="title"></div>
         Length: 
         <span z-html="length"></span>
-        <button z-attr="disabled: disabled">click</button>
+        <button z-attr="disabled: disabled">click</button> -->
         <ul>
             <li z-repeat="items">
-                <div z-repeat="$value">
+<!--                 <div z-repeat="$value">
                     <div z-repeat="$value">
                         <span z-html="$value"></span>
                     </div>
+                </div> -->
+                <!-- <span z-html="$value"></span> -->
+                <div z-repeat="$value">
+                    <span z-html="$value"></span>
                 </div>
             </li>
         </ul>
-        <div z-show="isShow">z show</div>
+        <!-- <div z-show="isShow">z show</div> -->
     </div>
     <script src="../dist/zect.js"></script>
     <script>
@@ -28,7 +32,7 @@
             el: '#app',
             data: function () {
                 return {
-                    items: [[[1,2,3]]],
+                    items: [[1]],
                     title: 'zect data-binding',
                     disabled: false,
                     isShow: false
@@ -45,7 +49,7 @@
             ready: function () {
                 console.timeEnd('p')
                 setTimeout( function() {
-                    this.$data.items = [[[4,5,6]]]
+                    this.$data.items[0] = [2]
                 }.bind(this), 1000);
             }
         })
