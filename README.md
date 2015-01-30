@@ -38,8 +38,8 @@ var app = new Zect({
 
 - Instance Options
     * [el]()
-    * [template]()
     * [data]()
+    * [template]()
     * [computed]()
     * [directives]() // TBD
     * [components]() // TBD
@@ -51,14 +51,14 @@ var app = new Zect({
 - Direcitves
 
     * [if]() // DOING
-    * [on]()
-    * [show]() 
-    * [attr]() // DONE
-    * [class]() // DONE
-    * [style]() // DONE
+    * [on]() // TBD
+    * [show]()
+    * [attr]()
     * [html]() // TBD: syntax sugar
+    * [class]() // TBD
+    * [style]() // TBD
     * [width]() // TBD
-    * [repeat]() // TBF: diff
+    * [repeat]()
     * [component]() // TBD
 
 

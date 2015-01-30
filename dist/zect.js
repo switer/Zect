@@ -177,7 +177,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  using selector to parse declare syntax
 	     */
 	    vm.$el.hasAttribute(attrName) && directiveParse(vm.$el)
-	    $(vm.$el).find('[' + attrName + ']').each(directiveParse)
+
+	    $(vm.$el).find('[' + attrName + ']').each(function (tar) {
+	        if(!vm.$el.contains(tar)) return
+	        directiveParse(tar)
+	    })
 	}
 
 
@@ -1543,7 +1547,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                return [wkey] // those dependencies need to watch
 	            },
 	            update: function(next) {
-	                $(this.tar).html(next)
+	                $(this.tar).html(next === undefined ? '':next)
 	            }
 	        },
 	        'attr': {
