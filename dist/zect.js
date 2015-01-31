@@ -1534,7 +1534,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	                return [wkey] // those dependencies need to watch
 	            },
 	            update: function(next) {
-	                this.tar.style.display = next ? '': 'none';
+	                this.tar.style.display = next ? '': 'none'
+	            }
+	        },
+	        'if': {
+	            bind: function(wkey){
+	                console.log(wkey)
+	                var $el = $(this.tar)
+	                this.pnode = this.tar.parentNode;
+	                this.$holder = document.createComment(conf.namespace + 'if')
+	                $el.replace(this.$holder, this.tar)
+	                return [wkey]
+	            },
+	            update: function(next){
+	                var $el = $(this.tar)
+	                var $p = this.$parent
+
+	                console.log(this.tar, next, this.$holder)
+	                if(next){
+	                    this.pnode.replaceChild(this.tar, this.$holder);
+	                }else{
+	                    $el.replace(this.$holder, this.tar)
+	                }
 	            }
 	        }
 	    }
