@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <div id="app">
+        <div z-html="title"></div>
+        Length: 
+        <span z-html="length"></span>
+        <button z-attr="disabled: disabled">click</button>
+        <div z-show="zshow">z show</div>
+        <p z-if="zif">zzzzzzz if test</p>
+    </div>
+    <script src="../dist/zect.js"></script>
+    <script>
+        console.time('p')
+        new Zect({
+            el: '#app',
+            data: function () {
+                return {
+                    items: [[1]],
+                    title: 'zect data-binding',
+                    disabled: false,
+                    zshow: false,
+                    zif: true
+                }
+            },
+            computed: {
+                length: {
+                    deps: ['title'],
+                    fn: function () {
+                        return this.title.length
+                    }
+                }
+            },
+            ready: function () {
+                console.timeEnd('p')
+                setTimeout( function() {
+                    this.$data.items[0] = [2]
+                }.bind(this), 1000);
+            }
+        })
+    </script>
+</body>
+</html>
