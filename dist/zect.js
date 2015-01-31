@@ -330,7 +330,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	* Mux.js v2.2.2
+	* Mux.js v2.2.3
 	* (c) 2014 guankaishe
 	* Released under the MIT License.
 	*/
@@ -476,6 +476,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		    var emitter = options.emitter || new $Message(model) // EventEmitter of this model, context bind to model
 		    var _emitter = options._emitter || new $Message(model)
 		    var _isDeep = options.deep || !options.hasOwnProperty('deep') // default to true
+		    var __kp__ = options.__kp__
 		    var proto = {
 		        '__muxid__': allotId()
 		    }
@@ -485,7 +486,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		     *  return current keypath prefix of this model
 		     */
 		    function _rootPath () {
-		        return model.__kp__ || ''
+		        return __kp__ || ''
 		    }
 
 		    var getter = options.props
@@ -531,7 +532,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		    function _emitChange(propname/*, arg1, ..., argX*/) {
 		        var args = arguments
 		        var evtArgs = $util.copyArray(args)
-		        var kp = $keypath.join(_rootPath(), propname)
+		        var kp = $keypath.normalize($keypath.join(_rootPath(), propname))
 
 		        args[0] = 'change:' + kp
 		        _emitter.emit('change', kp)
@@ -584,7 +585,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		    function _subInstance (target, props, kp) {
 
 		        var ins
-		        if (target instanceof Mux && target.__kp__ == kp && target.__root__ == model.__muxid__) {
+		        if (target instanceof Mux && target.__kp__ === kp && target.__root__ == model.__muxid__) {
 		            // reuse
 		            ins = target
 		            // emitter proxy
@@ -596,7 +597,8 @@ return /******/ (function(modules) { // webpackBootstrap
 		                props: props,
 		                emitter: emitter, 
 		                deep: true,
-		                _emitter: _emitter
+		                _emitter: _emitter,
+		                __kp__: kp
 		            })
 		        }
 		        if (ins.__root__ == undefined) {
@@ -604,14 +606,6 @@ return /******/ (function(modules) { // webpackBootstrap
 		                enumerable: false,
 		                value: model.__muxid__
 		            })
-		        }
-		        if (ins.__kp__ == undefined) {
-		            $util.def(ins, '__kp__', {
-		                enumerable: false,
-		                value: kp
-		            })
-		        } else if (ins.__kp__ != kp) {
-		            ins.__kp__ = kp
 		        }
 		        return ins
 		    }
@@ -656,19 +650,23 @@ return /******/ (function(modules) { // webpackBootstrap
 		            case 'array':
 		                // walk deep into array items
 		                value.forEach(function (item, index) {
-		                    item = _walk(index, item, $keypath.join(kp, index))
-		                    $util.def(value, index, {
-		                        enumerable: true,
-		                        get: function () {
-		                            return item
-		                        },
-		                        set: function (v) {
-		                            var pv = item
-		                            var mn = $keypath.join(name, index) // mounted property name
-		                            item = _walk(index, v, $keypath.join(kp, index))
-		                            _emitChange(mn, item, pv)
-		                        }
-		                    })
+		                    value[index] = _walk(index, item, $keypath.join(kp, index))
+		                    /**
+		                     *  "defineProperty" to array indexcies will cause performance problem
+		                     *  remove it
+		                     */
+		                    // $util.def(value, index, {
+		                    //     enumerable: true,
+		                    //     get: function () {
+		                    //         return item
+		                    //     },
+		                    //     set: function (v) {
+		                    //         var pv = item
+		                    //         var mn = $keypath.join(name, index) // mounted property name
+		                    //         item = _walk(index, v, $keypath.join(kp, index))
+		                    //         _emitChange(mn, item, pv)
+		                    //     }
+		                    // })
 		                })
 		                return value
 		            default: 
@@ -850,15 +848,16 @@ return /******/ (function(modules) { // webpackBootstrap
 		     *  @param propsObj <Object>
 		     */
 		    proto.$add = function(/* [propname [, defaultValue]] | propnameArray | propsObj */) {
-		        var first = arguments[0]
+		        var args = arguments
+		        var first = args[0]
 		        var pn, pv
 
 		        switch($util.type(first)) {
 		            case 'string':
 		                // with specified value or not
 		                pn = first
-		                if (arguments.length > 1) {
-		                    pv = arguments[1]
+		                if (args.length > 1) {
+		                    pv = args[1]
 		                    if (_$add(pn, pv)) {
 		                        _$set(pn, pv)
 		                    }
@@ -917,11 +916,12 @@ return /******/ (function(modules) { // webpackBootstrap
 		     *  @param kpMap <Object>
 		     */
 		    proto.$set = function( /*[kp, value] | [kpMap]*/ ) {
-		        var len = arguments.length
-		        if (len >= 2 || (len == 1 && $util.type(arguments[0]) == 'string')) {
-		            _$set(arguments[0], arguments[1])
-		        } else if (len == 1 && $util.type(arguments[0]) == 'object') {
-		            _$setMulti(arguments[0])
+		        var args = arguments
+		        var len = args.length
+		        if (len >= 2 || (len == 1 && $util.type(args[0]) == 'string')) {
+		            _$set(args[0], args[1])
+		        } else if (len == 1 && $util.type(args[0]) == 'object') {
+		            _$setMulti(args[0])
 		        } else {
 		            $info.warn('Unexpect $set params')
 		        }
@@ -957,17 +957,16 @@ return /******/ (function(modules) { // webpackBootstrap
 		     *  @param callback <Function>
 		     */
 		    proto.$watch =  function( /*[key, ]callback*/ ) {
-		        var len = arguments.length
+		        var args = arguments
+		        var len = args.length
+		        var first = args[0]
 		        var key, callback
-
 		        if (len >= 2) {
-		            var prefix = _rootPath()
-		            prefix && (prefix += '.')
-		            key = 'change:' + arguments[0]
-		            callback = arguments[1]
-		        } else if (len == 1 && $util.type(arguments[0]) == 'function') {
+		            key = 'change:' + $keypath.normalize($keypath.join(_rootPath(), first))
+		            callback = args[1]
+		        } else if (len == 1 && $util.type(first) == 'function') {
 		            key = '*'
-		            callback = arguments[0]
+		            callback = first
 		        } else {
 		            $info.warn('Unexpect $watch params')
 		            return NOOP
@@ -975,7 +974,6 @@ return /******/ (function(modules) { // webpackBootstrap
 		        emitter.on(key, callback)
 
 		        var that = this
-		        var args = arguments
 		        // return a unsubscribe method
 		        return function() {
 		            that.$unwatch.apply(that, args)
@@ -990,28 +988,30 @@ return /******/ (function(modules) { // webpackBootstrap
 		     *  @param callback <Function>
 		     */
 		    proto.$unwatch = function( /*[key, ] [callback] */ ) {
-		        var len = arguments.length
-		        var args
-		        var prefix = _rootPath()
+		        var args = arguments
+		        var len = args.length
+		        var first = args[0]
+		        var params
+		        var prefix
 		        if (len >= 2) {
+		            prefix = $keypath.normalize($keypath.join(_rootPath(), first))
 		            // key + callback
-		            prefix && (prefix += '.')
-		            args = ['change:' + prefix + arguments[0], arguments[1]]
-		        } else if (len == 1 && $util.type(arguments[0]) == 'string') {
+		            params = ['change:' + prefix, args[1]]
+		        } else if (len == 1 && $util.type(first) == 'string') {
+		            prefix = $keypath.normalize($keypath.join(_rootPath(), first))
 		            // key
-		            prefix && (prefix += '.')
-		            args = ['change:' + prefix + arguments[0]]
-		        } else if (len == 1 && $util.type(arguments[0]) == 'function') {
+		            params = ['change:' + prefix]
+		        } else if (len == 1 && $util.type(first) == 'function') {
 		            // callback
-		            args = ['*', arguments[0]]
+		            params = ['*', first]
 		        } else if (len == 0) {
 		            // all
-		            args = []
+		            params = []
 		        } else {
-		            $info.warn('Unexpect param type of ' + arguments[0])
+		            $info.warn('Unexpect param type of ' + first)
 		        }
-		        if (args) {
-		            emitter.off.apply(emitter, args)
+		        if (params) {
+		            emitter.off.apply(emitter, params)
 		        }
 		        return this
 		    }
@@ -1109,14 +1109,15 @@ return /******/ (function(modules) { // webpackBootstrap
 		 */
 		Message.prototype.off = function(subject, cb) {
 		    var types
+		    var args = arguments
 
-		    var len = arguments.length
+		    var len = args.length
 		    if (len >= 2) {
 		        // clear all observers of this subject and callback eq "cb"
 		        types = [subject]
-		    } else if (len == 1 && _type(arguments[0]) == 'function') {
+		    } else if (len == 1 && _type(args[0]) == 'function') {
 		        // clear all observers those callback equal "cb"
-		        cb = arguments[0]
+		        cb = args[0]
 		        types = Object.keys(this._observers)
 		    } else if (len == 1) {
 		        // clear all observers of this subject
@@ -1190,8 +1191,8 @@ return /******/ (function(modules) { // webpackBootstrap
 		 *  @example "person.books[1].title" --> "person.books.1.title"
 		 */
 		function _keyPathNormalize(kp) {
-		    return new String(kp).replace(/\[([^\[\]])+\]/g, function(m, k) {
-		        return '.' + k
+		    return new String(kp).replace(/\[([^\[\]]+)\]/g, function(m, k) {
+		        return '.' + k.replace(/^["']|["']$/g, '')
 		    })
 		}
 		/**
@@ -1231,11 +1232,11 @@ return /******/ (function(modules) { // webpackBootstrap
 		 */
 		function _join(pre, tail) {
 		    var _hasBegin = !!pre
-		    !_hasBegin && (pre = '')
+		    if(!_hasBegin) pre = ''
 		    if (/^\[.*\]$/.exec(tail)) return pre + tail
 		    else if (typeof(tail) == 'number') return pre + '[' + tail + ']'
 		    else if (_hasBegin) return pre + '.' + tail
-		    else return tail 
+		    else return tail
 		}
 
 		function _digest(nkp) {
@@ -1248,7 +1249,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		    set: _set,
 		    get: _get,
 		    join: _join,
-		    digest:_digest
+		    digest: _digest
 		}
 
 

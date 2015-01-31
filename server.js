@@ -11,7 +11,7 @@ var colors = require('colors')
 var livereload = require('express-livereload')
 livereload(app, {
     
-    watchDir: path.join(__dirname, '.')
+    watchDir: path.join(__dirname, 'lib/')
 })
 app.get('/livereload', function (req, res) {
     res.send("document.write('<script src=\"http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js\"></' + 'script>')")
