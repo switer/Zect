@@ -27,6 +27,11 @@
         
         <div z-if="zif">
             =========zif============
+
+            <div z-if="subzif">
+                =========sub zif============
+            </div>
+
         </div>
 
         <div z-if="zif">
@@ -45,8 +50,8 @@
                     title: 'zect data-binding',
                     disabled: false,
                     isShow: true,
-                    zif: true
-
+                    zif: false,
+                    subzif: true
                 }
             },
             computed: {
@@ -67,6 +72,10 @@
                 // setInterval( function() {
                 //     this.$data.zif = !this.$data.zif;
                 // }.bind(this), 1000);
+
+                setTimeout( function() {
+                    this.$data.zif = !this.$data.zif;
+                }.bind(this), 1000);
             }
         })
     </script>

@@ -1598,7 +1598,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                if(next){
 	                    this.pnode.insertBefore(this.tar, this.$holder)
-	                }else{
+	                }else if(this.tar.parentNode == this.pnode){
 	                    this.pnode.removeChild(this.tar)
 	                }
 	            }
