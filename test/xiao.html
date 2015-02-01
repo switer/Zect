@@ -24,7 +24,7 @@
             </li>
         </ul>
         <div z-show="isShow">z show</div>
-        <p z-if="zif">z if</p>
+        <p z-if="zif">=========zif============</p>
     </div>
     <script src="../dist/zect.js"></script>
     <script>
@@ -36,7 +36,7 @@
                     items: [[1]],
                     title: 'zect data-binding',
                     disabled: false,
-                    isShow: false,
+                    isShow: true,
                     zif: true
                 }
             },
@@ -55,8 +55,8 @@
                 }.bind(this), 1000);
 
 
-                setTimeout( function() {
-                    this.$data.zif = false;
+                setInterval( function() {
+                    this.$data.zif = !this.$data.zif;
                 }.bind(this), 1000);
             }
         })
