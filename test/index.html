@@ -43,7 +43,7 @@
             ready: function () {
                 console.timeEnd('p')
                 setTimeout( function() {
-                    this.$data.items[0] = [2]
+                    this.$data.$set('items[0]', [2])
                 }.bind(this), 1000);
             }
         })

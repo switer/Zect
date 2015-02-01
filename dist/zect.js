@@ -698,7 +698,8 @@ return /******/ (function(modules) { // webpackBootstrap
 		        }
 
 		        var pv = _props[prop] // old value
-
+		        var isArrayChange
+		        var piv
 		        $keypath.set(_props, kp, value, function (tar, key, v) {
 		            v = $util.copyValue(value)
 		            if (tar instanceof Mux) {
@@ -708,9 +709,16 @@ return /******/ (function(modules) { // webpackBootstrap
 		                    tar.$add(key, v)
 		                }
 		            } else {
+	                	if ( _isDeep && $util.type(tar) == 'array' && key.match(/^\d+$/) )  {
+		        			isArrayChange = true
+		        			piv = tar[key]
+				        }
 		                tar[key] = v
 		            }
 		        })
+				if (isArrayChange) {
+					_emitChange(kp, value, piv)
+				}
 		        /**
 		         *  return previous and next value for another compare logic
 		         */
@@ -1406,7 +1414,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }
 	    },
+	    /**
+	     *  two level diff
+	     */
 	    diff: function (next, pre) {
+	        var method
+	        if (this.type(next) == 'array' && this.type(pre) == 'array')
+	            method = this.arrayDiff
+	        else if (this.type(next) == 'object' && this.type(pre) == 'object') 
+	            method = this.objDiff
+	        else method = this.valueDiff
+
+	        return method.call(this, next, pre)
+	    },
+	    objDiff: function (next, pre) {
+	        var nkeys = Object.keys(next)
+	        var pkeys = Object.keys(pre)
+	        if (nkeys.length != pkeys.length) return true
+
+	        var that = this
+	        return nkeys.some(function (k) {
+	            return (!~pkeys.indexOf(k)) || that.valueDiff(next[k], pre[k])
+	        })
+	    },
+	    arrayDiff: function (next, pre) {
+	        if (next.length !== pre.length) return true
+	        var that = this
+	        next.some(function (item, index) {
+	            return that.valueDiff(item, pre[index])
+	        })
+	    },
+	    valueDiff: function () {
 	        return next !== pre || next instanceof Object
 	    }
 	}
@@ -1503,7 +1541,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    $floor = v.$el
 	                }
 	                oldVms && oldVms.forEach(function (v) {
-	                    v && $(v.$el).remove()
+	                    $(v.$el).remove()
 	                })
 	            }
 	        },
