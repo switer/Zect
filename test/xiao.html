@@ -24,7 +24,13 @@
             </li>
         </ul>
         <div z-show="isShow">z show</div>
-        <p z-if="zif">=========zif============</p>
+        
+        <div z-if="zif">
+            =========zif============
+            
+            发生的
+        </div>
+
     </div>
     <script src="../dist/zect.js"></script>
     <script>
@@ -38,6 +44,7 @@
                     disabled: false,
                     isShow: true,
                     zif: true
+
                 }
             },
             computed: {
@@ -55,9 +62,9 @@
                 }.bind(this), 1000);
 
 
-                setInterval( function() {
-                    this.$data.zif = !this.$data.zif;
-                }.bind(this), 1000);
+                // setInterval( function() {
+                //     this.$data.zif = !this.$data.zif;
+                // }.bind(this), 500);
             }
         })
     </script>
