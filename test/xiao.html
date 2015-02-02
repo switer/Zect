@@ -51,7 +51,7 @@
                     disabled: false,
                     isShow: true,
                     zif: false,
-                    subzif: true
+                    subzif: false
                 }
             },
             computed: {
@@ -76,6 +76,11 @@
                 setTimeout( function() {
                     this.$data.zif = !this.$data.zif;
                 }.bind(this), 1000);
+
+
+                setTimeout( function() {
+                    this.$data.subzif = !this.$data.subzif;
+                }.bind(this), 3000);
             }
         })
     </script>

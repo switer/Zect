@@ -1395,20 +1395,20 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	module.exports = {
-	    type: function (obj) {
+	    type: function(obj) {
 	        return /\[object (\w+)\]/.exec(Object.prototype.toString.call(obj))[1].toLowerCase()
 	    },
-	    copyArray: function (arr) {
+	    copyArray: function(arr) {
 	        var len = arr.length
 	        var nArr = new Array(len)
-	        while(len --) {
+	        while (len--) {
 	            nArr[len] = arr[len]
 	        }
 	        return nArr
 	    },
-	    objEach: function (obj, fn) {
+	    objEach: function(obj, fn) {
 	        if (!obj) return
-	        for(var key in obj) {
+	        for (var key in obj) {
 	            if (obj.hasOwnProperty(key)) {
 	                fn(key, obj[key])
 	            }
@@ -1417,37 +1417,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     *  two level diff
 	     */
-	    diff: function (next, pre) {
+	    diff: function(next, pre) {
 	        var method
 	        if (this.type(next) == 'array' && this.type(pre) == 'array')
 	            method = this.arrayDiff
-	        else if (this.type(next) == 'object' && this.type(pre) == 'object') 
+	        else if (this.type(next) == 'object' && this.type(pre) == 'object')
 	            method = this.objDiff
 	        else method = this.valueDiff
 
 	        return method.call(this, next, pre)
 	    },
-	    objDiff: function (next, pre) {
+	    objDiff: function(next, pre) {
 	        var nkeys = Object.keys(next)
 	        var pkeys = Object.keys(pre)
 	        if (nkeys.length != pkeys.length) return true
 
 	        var that = this
-	        return nkeys.some(function (k) {
+	        return nkeys.some(function(k) {
 	            return (!~pkeys.indexOf(k)) || that.valueDiff(next[k], pre[k])
 	        })
 	    },
-	    arrayDiff: function (next, pre) {
+	    arrayDiff: function(next, pre) {
 	        if (next.length !== pre.length) return true
 	        var that = this
-	        next.some(function (item, index) {
+	        next.some(function(item, index) {
 	            return that.valueDiff(item, pre[index])
 	        })
 	    },
-	    valueDiff: function () {
+	    valueDiff: function(next, pre) {
 	        return next !== pre || next instanceof Object
 	    }
 	}
+
 
 /***/ },
 /* 5 */
@@ -1577,29 +1578,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        'if': {
 	            bind: function(wkey){
-	                console.log(wkey)
 	                var $el = $(this.tar)
-	                this.$parent = $el.parent();
-	                this.pnode = this.tar.parentNode;
+	                this.parent = this.tar.parentNode;
 	                this.$holder = document.createComment(conf.namespace + 'if')
 	                
 	                // insert ref
-	                this.pnode.insertBefore(this.$holder, this.tar)
-	                this.pnode.removeChild(this.tar)
+	                this.parent.insertBefore(this.$holder, this.tar)
+	                this.parent.removeChild(this.tar)
 
 	                return [wkey]
 	            },
 	            // next: true show || false del
 	            update: function(next, key){
 	                var $el = $(this.tar)
-	                var $p = this.$parent
 
-	                console.log(this.tar, next, this.$holder)
+	                // console.log(this.tar, next, this.$holder)
 
-	                if(next){
-	                    this.pnode.insertBefore(this.tar, this.$holder)
-	                }else if(this.tar.parentNode == this.pnode){
-	                    this.pnode.removeChild(this.tar)
+	                if(!next){
+	                    this.tar.parentNode == this.parent && this.parent.removeChild(this.tar)
+	                }else {
+	                    console.log(this.tar)
+	                    this.childVM = new Zect({
+	                        el: this.tar.cloneNode(true),
+	                        data: false
+	                    })
+	                    
+	                    this.parent.insertBefore(this.childVM.$el, this.$holder)
 	                }
 	            }
 	        }
