@@ -1578,29 +1578,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        'if': {
 	            bind: function(wkey){
-	                console.log(wkey)
 	                var $el = $(this.tar)
-	                this.$parent = $el.parent();
-	                this.pnode = this.tar.parentNode;
+	                this.parent = this.tar.parentNode;
 	                this.$holder = document.createComment(conf.namespace + 'if')
 	                
 	                // insert ref
-	                this.pnode.insertBefore(this.$holder, this.tar)
-	                this.pnode.removeChild(this.tar)
+	                this.parent.insertBefore(this.$holder, this.tar)
+	                this.parent.removeChild(this.tar)
 
 	                return [wkey]
 	            },
 	            // next: true show || false del
 	            update: function(next, key){
 	                var $el = $(this.tar)
-	                var $p = this.$parent
 
-	                console.log(this.tar, next, this.$holder)
+	                // console.log(this.tar, next, this.$holder)
 
-	                if(next){
-	                    this.pnode.insertBefore(this.tar, this.$holder)
-	                }else{
-	                    this.pnode.removeChild(this.tar)
+	                if(!next){
+	                    this.tar.parentNode == this.parent && this.parent.removeChild(this.tar)
+	                }else {
+	                    console.log(this.tar)
+	                    this.childVM = new Zect({
+	                        el: this.tar.cloneNode(true),
+	                        data: false
+	                    })
+	                    
+	                    this.parent.insertBefore(this.childVM.$el, this.$holder)
 	                }
 	            }
 	        }
