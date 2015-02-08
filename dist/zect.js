@@ -115,6 +115,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    vm.$el = el
 
+	    /**
+	     *  assign methods
+	     */
+	    var methods = options.methods
+	    util.objEach(methods, function (k, v) {
+	        vm[k] = v
+	    })
 
 	    var $data
 	    if (options.$data) {
@@ -1714,6 +1721,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            },
 	            update: function(next) {
 	                this.tar.style.display = next ? '' : 'none'
+	            }
+	        },
+	        'on': {
+	            bind: function (wkey, evtType) {
+	                var fn = this.vm[wkey]
+	                if (util.type(fn) !== 'function') throw new Error('"' + conf.namespace + 'on" only accept function')
+	                this.fn = fn.bind(this.vm)
+	                this.tar.addEventListener(evtType, this.fn, false)
 	            }
 	        }
 	    }

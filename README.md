@@ -50,8 +50,8 @@ var app = new Zect({
 
 - Direcitves
 
-    * [if]() // DOING
-    * [on]() // TBD
+    * [if]()
+    * [on]()
     * [show]()
     * [attr]()
     * [html]() // TBD: syntax sugar
