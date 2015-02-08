@@ -1728,7 +1728,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var fn = this.vm[wkey]
 	                if (util.type(fn) !== 'function') throw new Error('"' + conf.namespace + 'on" only accept function')
 	                this.fn = fn.bind(this.vm)
+	                this.type = evtType
 	                this.tar.addEventListener(evtType, this.fn, false)
+	            },
+	            unbind: function () {
+	                if (this.fn) {
+	                    this.tar.removeEventLisnter(this.type, this.fn)
+	                    this.fn = null
+	                }
+	            }
+	        },
+	        'class': {
+	            bind: function (wkey, className) {
+	                this.className = className
+	                return [wkey]
+	            },
+	            update: function (next) {
+	                var $el = $(this.tar)
+	                if (next) $el.addClass(this.className)
+	                else $el.removeClass(this.className)
 	            }
 	        }
 	    }
