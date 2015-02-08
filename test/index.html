@@ -6,7 +6,7 @@
 </head>
 <body>
     <div id="app">
-        <div z-html="title"></div>
+<!--         <div z-html="title"></div>
         Length: 
         <span z-html="length"></span>
         <button z-attr="disabled: disabled">click</button>
@@ -17,7 +17,8 @@
                 </div>
             </li>
         </ul>
-        <div z-show="isShow">z show</div>
+        <div z-show="isShow">z show</div> -->
+        <div z-if="isShow"><span z-html="title"></span></div>
     </div>
     <script src="../dist/zect.js"></script>
     <script>
@@ -29,7 +30,7 @@
                     items: [[1]],
                     title: 'zect data-binding',
                     disabled: false,
-                    isShow: false
+                    isShow: true
                 }
             },
             computed: {
@@ -43,7 +44,8 @@
             ready: function () {
                 console.timeEnd('p')
                 setTimeout( function() {
-                    this.$data.$set('items[0]', [2])
+                    this.$data.title
+                //     this.$data.$set('items[0]', [2])
                 }.bind(this), 1000);
             }
         })

@@ -102,7 +102,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var vm = this
 	    var el = options.el
 
-
 	    /**
 	     *  Mounted element detect
 	     */
@@ -117,20 +116,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    vm.$el = el
 
 
-	    /**
-	     *  Init state model
-	     */
-	    var mopts = {
-	        deep: true,
-	        props: options.data,
-	        computed: options.computed
+	    var $data
+	    if (options.$data) {
+	        $data = options.$data
+	    } else {
+	        /**
+	         *  Init state model
+	         */
+	        var mopts = {
+	            deep: true,
+	            props: options.data,
+	            computed: options.computed
+	        }
+	        var $data = new Mux(mopts)
 	    }
-
-	    /**
-	     *  Use for sharing EventEmitter with childVM
-	     */
-	    if (options.emitter) mopts.emitter = options.emitter
-	    var $data = new Mux(mopts)
 	    Object.defineProperty(vm, '$data', {
 	        enumerable: true,
 	        get: function() {
@@ -140,22 +139,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            $data.$set(v)
 	        }
 	    })
-	    Object.defineProperty(vm, '$emitter', {
-	        enumerable: false,
-	        get: function() {
-	            return $data.$emitter
-	        },
-	        set: function() {
-	            throw new Error('Can not overwrite $emitter property')
-	        }
-	    })
-
 
 	    /**
 	     *  Directive bindings
 	     */
 	    directives[0] = preset(Zect) // set preset directives
-
+	    console.log(el)
 	    directives.forEach(function (d) {
 	        util.objEach(d, function(id, def) {
 	            parseDirective(vm, id, def)
@@ -170,17 +159,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	function parseDirective(vm, id, definition) {
-	    var attrName = conf.namespace + id
-
+	    var atn = conf.namespace + id
 
 	    /**
 	     *  using selector to parse declare syntax
 	     */
-	    vm.$el.hasAttribute(attrName) && new Directive(vm, vm.$el, attrName, definition)
+	    vm.$el.hasAttribute(atn) && new Directive(vm, vm.$el, atn, definition)
 
-	    $(vm.$el).find('[' + attrName + ']').each(function(tar) {
+	    $(vm.$el).find('[' + atn + ']').each(function(tar) {
 	        if (!vm.$el.contains(tar)) return
-	        new Directive(vm, tar, attrName, definition)
+	        new Directive(vm, tar, atn, definition)
 	    })
 	}
 
@@ -1444,13 +1432,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    type: function(obj) {
 	        return /\[object (\w+)\]/.exec(Object.prototype.toString.call(obj))[1].toLowerCase()
 	    },
-	    copyArray: function(arr) {
-	        var len = arr.length
-	        var nArr = new Array(len)
-	        while (len--) {
-	            nArr[len] = arr[len]
+	    copyArray: function(a) {
+	        var l = a.length
+	        var n = new Array(l)
+	        while (l--) {
+	            n[l] = a[l]
 	        }
-	        return nArr
+	        return n
 	    },
 	    objEach: function(obj, fn) {
 	        if (!obj) return
@@ -1697,31 +1685,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	        'if': {
 	            bind: function(wkey) {
 	                var $el = $(this.tar)
-	                this.parent = this.tar.parentNode;
+	                var parent = this.parent = this.tar.parentNode
 	                this.$holder = document.createComment(conf.namespace + 'if')
 
 	                // insert ref
-	                this.parent.insertBefore(this.$holder, this.tar)
-	                this.parent.removeChild(this.tar)
+	                parent.insertBefore(this.$holder, this.tar)
+	                parent.removeChild(this.tar)
 
 	                return [wkey]
 	            },
 	            // next: true show || false del
-	            update: function(next, key) {
-	                var $el = $(this.tar)
-
-	                // console.log(this.tar, next, this.$holder)
-
+	            update: function(next) {
+	                var that = this
+	                function mount (tar) {
+	                    that.parent.insertBefore(that.tar, that.$holder)
+	                }
 	                if (!next) {
-	                    this.tar.parentNode == this.parent && this.parent.removeChild(this.tar)
+	                    this.parent.removeChild(this.tar)
+	                } else if (this.childVM) {
+	                    mount()
 	                } else {
 	                    this.childVM = new Zect({
-	                        emitter: this.vm.$emitter,
-	                        el: this.tar.cloneNode(true),
-	                        data: false
+	                        el: this.tar,
+	                        $data: this.vm.$data
 	                    })
-
-	                    this.parent.insertBefore(this.childVM.$el, this.$holder)
+	                    mount()
 	                }
 	            }
 	        }
