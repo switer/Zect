@@ -6,29 +6,8 @@
 </head>
 <body>
     <div id="app">
-        <div
-
-            href="{...}"
-            z-html="{express}" 
-            z-name="{
-                title: (name='guankaishe') 
-                    ? 'guanks'
-                    : {},
-                name: 'switer'
-            }"
-        >{title}</div>
-        Length: 
-        <span z-html="length"></span>
-        <button z-attr="disabled: disabled"  z-on="click: alert">click</button>
-        <ul>
-            <li z-repeat="items">
-                <div z-repeat="$value">
-                    <span z-html="$value"></span>
-                </div>
-            </li>
-        </ul>
-        <div z-show="isShow">z show</div>
-        <div z-if="person"><span z-html="person.name.name"></span></div>
+        <span>{title} {disabled}</span>
+        <span v-html="{'switer' + title}"></span>
     </div>
     <script src="../dist/zect.js"></script>
     <script>

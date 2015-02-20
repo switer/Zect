@@ -70,6 +70,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var util = __webpack_require__(4)
 	var conf = __webpack_require__(5)
 	var Directive = __webpack_require__(6)
+	var AttributeDirective = Directive.Attribute
+	var TextDirective = Directive.Text
 
 	/**
 	 *  private vars
@@ -77,6 +79,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var preset = __webpack_require__(7) // preset directives getter
 	var directives = [null, {}] // [preset, global]
 	var gdirs = directives[1]
+
 	/**
 	 *  Global API
 	 */
@@ -92,8 +95,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	Zect.directive = function(id, definition) {
 	    gdirs[id] = definition
 	}
-	Zect.namespace = function(n) {
-	    conf.namespace = n
+	Zect.namespace = function(ns) {
+	    conf.namespace = ns
 	}
 
 
@@ -119,7 +122,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  assign methods
 	     */
 	    var methods = options.methods
-	    util.objEach(methods, function (k, v) {
+	    util.objEach(methods, function(k, v) {
 	        vm[k] = v
 	    })
 
@@ -148,15 +151,81 @@ return /******/ (function(modules) { // webpackBootstrap
 	    })
 
 	    /**
-	     *  Directive bindings
+	     *  Component tag detect
 	     */
-	    directives[0] = preset(Zect) // set preset directives
+	    function isComponent() {
+	        // TODO
+	    }
 
-	    directives.forEach(function (d) {
-	        util.objEach(d, function(id, def) {
-	            parseDirective(vm, id, def)
-	        })
-	    })
+	    var exprReg = /^\{.*?\}&/
+
+	    util.walk(el, function(node) {
+	        var type = node.nodeType // 1. ELEMENT_NODE; 2. ATTRIBUTE_NODE; 3. TEXT_NODE; 8. COMMENT_NODE; 9. DOCUMENT_NODE 
+	        var value = node.nodeValue
+	        var tagName = node.tagName
+
+	        switch (type) {
+	            case 1:
+	                if (isComponent(tagName)) {
+	                    // child component
+	                    new Zect({
+	                        el: node,
+	                        $parent: vm
+	                    })
+	                    return false
+	                } else {
+	                    var attrs = node.attributes
+	                    var ast = {
+	                        attributes: {},
+	                        directives: {}
+	                    }
+	                    /**
+	                     *  attributes walk
+	                     */
+	                    for (var i = 0; i < attrs.length; i++) {
+	                        var att = attrs[i]
+	                        var aname = att.name
+	                        var v = att.value
+	                        // parse att
+	                        if (aname.match(exprReg)) {
+	                            // variable attribute name
+	                            ast.attributes[aname] = v
+	                        } else if(aname.indexOf(conf.namespace == 0)) {
+	                            // directive
+	                            ast.directives[aname] = v
+	                        } else if(v.trim().match(exprReg)) {
+	                            // named attribute with expression
+	                            ast.attributes[aname] = v
+	                        }
+	                    }
+
+	                    /**
+	                     *  Attributes binding
+	                     */
+	                    util.objEach(ast.attributes, function (name, value) {
+	                        new AttributeDirective(vm, node, name, value)
+	                        node.removeAttribute(name)
+	                    })
+
+	                    /**
+	                     *  Directives binding
+	                     */
+	                    util.objEach(ast.directives, function(d) {
+	                        util.objEach(d, function(id, def) {
+	                            if(vm.$el.contains(node)) return false
+	                            if (ast.directives[id]) {
+	                                new Directive(vm, node, id, def)
+	                            }
+	                        })
+	                    })
+	                }
+	                break
+	            case 3:
+	                new TextDirective(vm, node)
+	            default:
+	                return false
+	        }
+	    }.bind(this))
 
 	    /**
 	     *  Life cycle methods
@@ -164,12 +233,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	    options.ready && options.ready.call(vm)
 	}
 
+	var definition = {}
+	function extractExp(node) {
+	    var attrs = node.attributes
+	    for (var i = 0; i < attrs.length; i ++) {
+	        var name = attrs[i].name
+	        var value = attrs[i].value
+	        if (name.match(/[\w]-[\w]/)) {
+
+	        } else if (value.match(/^\s*\{.*?\}\s*$/)) {
+	            new Directive(vm, node, name, {
+	                bind: function () {
+	                    return []
+	                },
+	                update:function () {
+
+	                }
+	            })
+	        }
+	    }
+	}
 
 	function parseDirective(vm, id, definition) {
 	    var atn = conf.namespace + id
-	    /**
-	     *  using selector to parse declare syntax
-	     */
+	        /**
+	         *  using selector to parse declare syntax
+	         */
 	    vm.$el.hasAttribute(atn) && new Directive(vm, vm.$el, atn, definition)
 
 	    $(vm.$el).find('[' + atn + ']').each(function(tar) {
@@ -189,6 +278,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = Zect
+
 
 /***/ },
 /* 2 */
@@ -1455,7 +1545,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (!obj) return
 	        for (var key in obj) {
 	            if (obj.hasOwnProperty(key)) {
-	                fn(key, obj[key])
+	                if(fn(key, obj[key]) === false) break
 	            }
 	        }
 	    },
@@ -1493,7 +1583,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return next !== pre || next instanceof Object
 	    },
 	    walk: function(node, fn) {
-	        node = fn(node) === false ? node.nextSibling : node.firstChild
+	        var into = fn(node) !== false
+	        console.log(node, into)
+	        node = into 
+	            ? node.firstChild 
+	            : node.nextSibling
+	        
 
 	        while (node) {
 	            this.walk(node, fn)
@@ -1523,60 +1618,167 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
 	var $ = __webpack_require__(2)
+	var util = __webpack_require__(4)
 
-	function defaultExpGetter(exp) {
-	    if (/\:/.exec(exp)) {
-	        return [exp.split(':')[1].trim(), exp.split(':')[0].trim()]
-	    } else {
-	        return [exp.trim()]
+	function _extractVars(t) {
+	    var reg = /("|').+?[^\\]\1|\.\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)/gi
+	    var vars = t.match(reg)
+	    vars = !vars ? [] : vars.filter(function(i) {
+	        if (!i.match(/^[."']/)) {
+	            return i
+	        }
+	    })
+	    return vars
+	}
+
+	/**
+	 *  Calc expression value
+	 */
+	function _execute(vm, expression) {
+	    var scope = {}
+	    util.objEach(vm.$data, function(k, v) {
+	        scope[k] = v
+	    })
+	    util.objEach(vm.methods, function(k, f) {
+	        scope[k] = f
+	    })
+	    return eval('with(scope){%s}'.replace('%s', expression))
+	}
+
+	function _watch(vm, vars, update) {
+	    if (vars && vars.length) {
+	        vm.$data.$watch(function(kp) {
+	            vars.forEach(function(key, index) {
+	                if (kp.indexOf(key) === 0) update.call(null, key, index)
+	            })
+	        })
 	    }
 	}
 
+	/**
+	 *  Whether a text is with express syntax
+	 */
+	function _isExpr(c) {
+	    return c ? c.trim().match(/^\{.*?\}$/) : false
+	}
+
+	function _strip(t) {
+	    return t.trim().match(/^\{(.*?)\}$/)[1]
+	}
+	/**
+	 *  Standard directive
+	 */
 	var _id = 0
-	function Directive(vm, tar, name, definition) {
+
+	function Directive(vm, tar, definition, name, expr) {
 	    var d = this
+
 	    d.tar = tar
 	    d.vm = vm
 	    d.mounted = vm.$el
-	    d.id = _id ++
+	    d.id = _id++
 
-	    var exp = $(tar).attr(name) // Attr String
-	    var expression = definition.exp || defaultExpGetter // Function
 	    var bind = definition.bind
-	    var update = definition.update
+	    var upda = definition.update
+	    var prev
 
-	    /**
-	     *  remove declare syntax from element
-	     */
-	    $(tar).removeAttr(name)
-
-	    var watches = bind.apply(d, expression(exp) || [])
-	    var args
-	    function _update(key, index) {
-	        args[index] = vm.$data.$get(key)
-	        update.apply(d, args)
+	    function _update() {
+	        var nexv = _execute(vm, exp)
+	        if (util.diff(nexv, prev)) {
+	            var p = prev
+	            prev = nexv
+	            upda.apply(d, nexv, p)
+	        }
 	    }
-
-	    if (watches && watches.length) {
-	        args = new Array(watches.length)
-	        vm.$data.$watch(function(kp) {
-	            watches.forEach(function(key, index) {
-	                if (kp.indexOf(key) === 0) _update.apply(null, arguments)
-	            })
-	        })
-
-	        // take params initially
-	        watches.forEach(_update)
-	    }
-
+	    bind.call(d, expr)
+	    upda.call(d, _execute(vm, expr))
+	    _watch(vm, _extractVars(expr), _update)
 	    return d
+	}
+
+	Directive.Text = function(vm, tar) {
+	    var v = tar.nodeValue
+	        .replace(/\\{/g, '\uFFF0')
+	        .replace(/\\}/g, '\uFFF1')
+
+	    var exprReg = /\{[\s\S]*?\}/g
+	    var parts = v.split(exprReg)
+
+	    var exprs = v.match(exprReg)
+	        // expression not match
+	    if (!exprs || !exprs.length) return
+
+	    var cache = new Array(exprs.length)
+	    
+	    exprs.forEach(function(exp, index) {
+	        // watch change
+	        exp = _strip(exp)
+	        var vars = _extractVars(exp)
+
+	        function _update() {
+	            var pv = cache[index]
+	            var nv = _execute(vm, exp)
+	            if (util.diff(nv, pv)) {
+	                // re-render
+	                cache[index] = nv
+	                render()
+	            }
+	        }
+	        _watch(vm, vars, _update)
+	        // initial value
+	        cache[index] = _execute(vm, exp)
+	    })
+
+	    function render() {
+	        var frags = []
+	        parts.forEach(function(item, index) {
+	            frags.push(item)
+	            if (index < exprs.length) {
+	                frags.push(cache[index])
+	            }
+	        })
+	        tar.nodeValue = frags.join('')
+	            .replace(/\uFFF0/g, '\\{')
+	            .replace(/\uFFF1/g, '\\}')
+	    }
+	    /**
+	     *  initial render
+	     */
+	    render()
+	}
+
+	Directive.Attribute = function(vm, tar, name, value) {
+	    var nvars = _isExpr(name) ? _extractVars(expr) : null
+	    var vvars = _isExpr(value) ? _extractVars(expr) : null
+
+	    var nexpr = nvars ? _strip(name) : null
+	    var vexpr = nvars ? _strip(value) : null
+
+	    var attName = nvars ? _execute(vm, nexpr) : name
+	    var attValue = nvars ? _execute(vm, vexpr) : value
+
+	    tar.setAttribute(attName, attValue)
+
+	    _watch(vm, vvars, function() {
+	        var next = _execute(vm, vexpr)
+	        if (util.diff(next, attValue)) {
+	            $(tar).attr(attName)
+	            attValue = next
+	        }
+	    })
+	    _watch(vm, nvars, function() {
+	        var next = _execute(vm, nexpr)
+	        if (util.diff(next, attValue)) {
+	            $(tar).removeAttr(attValue).attr(next, attValue)
+	            attValue = next
+	        }
+	    })
 	}
 
 
 	module.exports = Directive
+
 
 /***/ },
 /* 7 */
@@ -1595,20 +1797,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = function(Zect) {
 	    return {
 	        'if': {
-	            bind: function(wkey) {
+	            bind: function() {
 	                var parent = this.parent = this.tar.parentNode
 	                this.$holder = document.createComment(conf.namespace + 'if')
 
 	                // insert ref
 	                parent.insertBefore(this.$holder, this.tar)
 	                // parent.removeChild(this.tar)
-
-	                return [wkey]
 	            },
 	            // next: true show || false del
-	            update: function(next) {
+	            update: function(next, pre) {
 	                var that = this
-	                function mount (tar) {
+
+	                function mount(tar) {
 	                    that.parent.insertBefore(that.tar, that.$holder)
 	                }
 	                if (!next) {
@@ -1694,10 +1895,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'html': {
-	            bind: function(wkey) {
-	                return [wkey] // those dependencies need to watch
-	            },
 	            update: function(next) {
+	                console.log(next)
 	                $(this.tar).html(next === undefined ? '' : next)
 	            }
 	        },
@@ -1724,14 +1923,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'on': {
-	            bind: function (wkey, evtType) {
+	            bind: function(wkey, evtType) {
 	                var fn = this.vm[wkey]
 	                if (util.type(fn) !== 'function') throw new Error('"' + conf.namespace + 'on" only accept function')
 	                this.fn = fn.bind(this.vm)
 	                this.type = evtType
 	                this.tar.addEventListener(evtType, this.fn, false)
 	            },
-	            unbind: function () {
+	            unbind: function() {
 	                if (this.fn) {
 	                    this.tar.removeEventLisnter(this.type, this.fn)
 	                    this.fn = null
@@ -1739,11 +1938,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'class': {
-	            bind: function (wkey, className) {
+	            bind: function(wkey, className) {
 	                this.className = className
 	                return [wkey]
 	            },
-	            update: function (next) {
+	            update: function(next) {
 	                var $el = $(this.tar)
 	                if (next) $el.addClass(this.className)
 	                else $el.removeClass(this.className)
