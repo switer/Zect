@@ -5,19 +5,18 @@
     <title></title>
 </head>
 <body>
-    <!-- <div id="app"> -->
-        <!-- <span z-attr="disabled: !disabled">{title} {disabled}</span> -->
-        <!-- <p z-html="{'name is : ' + title}"></p> -->
-        <!-- <p z-if="{!disabled}">{title}</p> -->
-        <!-- <button z-on="click: onAlert">click me</button> -->
-        <!-- <div z-class="show: isShow">z-class</div> -->
-        <!-- <div z-show="isShow">z-show show</div>
-        <div z-show="!isShow">z-show hide</div> -->
-        <!-- <div z-repeat="items">
+    <div id="app">
+        <span z-attr="{disabled: !disabled}" data-checked="{'checked'}">{title} {disabled} \{cosu\}</span>
+<!--         <p z-html="{'name is : ' + title}"></p>
+        <p z-if="{!disabled}">{title}</p>
+        <button z-on="click: onAlert">click me</button>
+        <div z-class="show: isShow">z-class</div>
+        <div z-show="isShow">z-show show</div>
+        <div z-show="!isShow">z-show hide</div>
+        <div z-repeat="items">
             <div z-repeat="$value">{$value}</div>
         </div> -->
-    <!-- </div> -->
-    <div id="app"><div z-repeat="items"><div z-repeat="{$value}">{$value}</div></div></div>
+    </div>
     <script src="../dist/zect.js"></script>
     <script>
         console.time('p')

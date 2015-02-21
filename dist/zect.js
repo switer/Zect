@@ -156,7 +156,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // TODO
 	    }
 
-	    var exprReg = /^\{.*?\}&/
+	    var exprReg = /^\{.*?\}$/
 
 	    util.walk(el, function(node) {
 	        var type = node.nodeType // 1. ELEMENT_NODE; 2. ATTRIBUTE_NODE; 3. TEXT_NODE; 8. COMMENT_NODE; 9. DOCUMENT_NODE 
@@ -173,40 +173,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    })
 	                    return false
 	                } else {
-	                    var attrs = node.attributes
+	                    var attrs = [].slice.call(node.attributes)
 	                    var ast = {
-	                        attributes: {},
-	                        directives: {}
+	                        attrs: {},
+	                        dires: {}
 	                    }
 	                    /**
 	                     *  attributes walk
 	                     */
-	                    for (var i = 0; i < attrs.length; i++) {
-	                        var att = attrs[i]
+	                    attrs.forEach(function (att){
 	                        var aname = att.name
 	                        var v = att.value
 	                        // parse att
 	                        if (aname.match(exprReg)) {
 	                            // variable attribute name
-	                            ast.attributes[aname] = v
+	                            ast.attrs[aname] = v
 	                        } else if(aname.indexOf(conf.namespace) === 0) {
 	                            // directive
-	                            ast.directives[aname] = v
+	                            ast.dires[aname] = v
 	                        } else if(v.trim().match(exprReg)) {
 	                            // named attribute with expression
-	                            ast.attributes[aname] = v
-	                        } else {
-	                            continue
+	                            ast.attrs[aname] = v
 	                        }
 	                        node.removeAttribute(aname)
-	                    }
+	                    })
 
 	                    /**
 	                     *  Attributes binding
 	                     */
-	                    util.objEach(ast.attributes, function (name, value) {
+	                    util.objEach(ast.attrs, function (name, value) {
 	                        new AttributeDirective(vm, node, name, value)
-	                        node.removeAttribute(name)
 	                    })
 
 	                    /**
@@ -215,8 +211,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    directives.forEach(function(d) {
 	                        util.objEach(d, function(id, def) {
 	                            var dirName = conf.namespace + id
-	                            var expr = ast.directives[dirName]
-	                            if (ast.directives.hasOwnProperty(dirName)) {
+	                            var expr = ast.dires[dirName]
+	                            if (ast.dires.hasOwnProperty(dirName)) {
 	                                new Directive(vm, node, def, dirName, expr)
 	                            }
 	                        })
@@ -1782,29 +1778,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	Directive.Attribute = function(vm, tar, name, value) {
-	    var nvars = _isExpr(name) ? _extractVars(expr) : null
-	    var vvars = _isExpr(value) ? _extractVars(expr) : null
 
-	    var nexpr = nvars ? _strip(name) : null
-	    var vexpr = nvars ? _strip(value) : null
+	    var _ifNameExpr = _isExpr(name)
+	    var _ifValueExpr = _isExpr(value)
 
-	    var attName = nvars ? _execute(vm, nexpr) : name
-	    var attValue = nvars ? _execute(vm, vexpr) : value
+	    var nvars = _ifNameExpr ? _extractVars(name) : null
+	    var vvars = _ifValueExpr ? _extractVars(value) : null
 
-	    tar.setAttribute(attName, attValue)
+	    var nexpr = _ifNameExpr ? _strip(name) : null
+	    var vexpr = _ifValueExpr ? _strip(value) : null
 
-	    _watch(vm, vvars, function() {
-	        var next = _execute(vm, vexpr)
-	        if (util.diff(next, attValue)) {
-	            $(tar).attr(attName)
-	            attValue = next
+	    var preName = _ifNameExpr ? _execute(vm, nexpr) : name
+	    var preValue = _ifValueExpr ? _execute(vm, vexpr) : value
+
+	    tar.setAttribute(preName, preValue)
+
+	    /**
+	     *  watch attribute name expression variable changes
+	     */
+	    nvars && _watch(vm, nvars, function() {
+	        var next = _execute(vm, nexpr)
+	        if (util.diff(next, preName)) {
+	            $(tar).removeAttr(preName).attr(next, preValue)
+	            preValue = next
 	        }
 	    })
-	    _watch(vm, nvars, function() {
-	        var next = _execute(vm, nexpr)
-	        if (util.diff(next, attValue)) {
-	            $(tar).removeAttr(attValue).attr(next, attValue)
-	            attValue = next
+	    /**
+	     *  watch attribute value expression variable changes
+	     */
+	    vvars && _watch(vm, vvars, function() {
+	        var next = _execute(vm, vexpr)
+	        if (util.diff(next, preValue)) {
+	            $(tar).attr(preName, next)
+	            preValue = next
 	        }
 	    })
 	}
