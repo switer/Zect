@@ -1634,7 +1634,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  Calc expression value
 	 */
-	function _execute(vm, expression) {
+	function _execute(vm, expression, label) {
 
 	    var scope = {}
 	    util.objEach(vm.$data, function(k, v) {
@@ -1647,7 +1647,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var result = eval('with(scope){%s}'.replace('%s', expression))
 	        return result
 	    } catch (e) {
-	        throw new Error('Catch error "%s" when execute expression "{%s}" '
+	        throw new Error((label ? '"' + label + '": ' : '') + 'Catch error "%s" when execute expression "%s"'
 	            .replace('%s', e.message)
 	            .replace('%s', expression))
 	    }
@@ -1683,11 +1683,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var multiSep = ','
 
 	    var bindParams = []
+	    var isExpr = !!_isExpr(expr)
+
+	    isExpr && (expr = _strip(expr))
 
 	    if (definition.multi) {
 	        if (expr.match(multiSep)) {
 	            var parts = expr.split(multiSep)
-	            return parts.map(function (item) {
+	            return parts.map(function(item) {
 	                return new Directive(vm, tar, definition, name, item)
 	            })
 	        }
@@ -1706,8 +1709,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var upda = definition.update
 	    var prev
 
+	    function _exec(vm, expr) {
+	        return _execute.call(null, vm, expr, name)
+	    }
+
 	    function _update() {
-	        var nexv = _execute(vm, expr)
+	        var nexv = _exec(vm, expr)
 	        if (util.diff(nexv, prev)) {
 	            var p = prev
 	            prev = nexv
@@ -1715,7 +1722,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 
-	    var primary = _execute(vm, expr)
+	    var primary = _exec(vm, expr)
 	    bindParams.push(primary)
 	    bindParams.push(expr)
 	    bind && bind.apply(d, bindParams)
@@ -1835,35 +1842,43 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = function(Zect) {
 	    return {
-	        // 'if': {
-	        //     bind: function() {
-	        //         var parent = this.parent = this.tar.parentNode
-	        //         this.$holder = document.createComment(conf.namespace + 'if')
+	        'if': {
+	            bind: function() {
+	                var parent = this.parent = this.tar.parentNode
+	                this.$holder = document.createComment(conf.namespace + 'if')
 
-	        //         // insert ref
-	        //         parent.insertBefore(this.$holder, this.tar)
-	        //         parent.removeChild(this.tar)
-	        //     },
-	        //     // next: true show || false unmount
-	        //     update: function(next, pre) {
-	        //         var that = this
+	                // insert ref
+	                parent.insertBefore(this.$holder, this.tar)
+	                parent.removeChild(this.tar)
+	            },
+	            // next: true show || false unmount
+	            update: function(next, pre) {
+	                var that = this
 
-	        //         function mount(tar) {
-	        //             that.parent.insertBefore(that.tar, that.$holder)
-	        //         }
-	        //         if (!next) {
-	        //             this.parent.contains(this.tar) && this.parent.removeChild(this.tar)
-	        //         } else if (this.childVM) {
-	        //             mount()
-	        //         } else {
-	        //             this.childVM = new Zect({
-	        //                 el: this.tar,
-	        //                 $data: this.vm.$data
-	        //             })
-	        //             mount()
-	        //         }
-	        //     }
-	        // },
+	                function mount(tar) {
+	                    that.parent.insertBefore(that.tar, that.$holder)
+	                }
+	                if (!next) {
+	                    this.parent.contains(this.tar) && this.parent.removeChild(this.tar)
+	                } else if (this.childVM) {
+	                    mount()
+	                } else {
+	                    this.childVM = new Zect({
+	                        el: this.tar,
+	                        $data: this.vm.$data
+	                    })
+	                    mount()
+	                }
+	            }
+	        },
+	        'component': {
+	            bind: function () {
+
+	            },
+	            update: function () {
+	                
+	            }
+	        },
 	        'repeat': {
 	            bind: function() {
 	                var $el = $(this.tar)
@@ -1876,6 +1891,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data')
 	                }
 	                var that = this
+
 	                function createSubVM(item, index) {
 	                    var $subEl = that.tar.cloneNode(true)
 	                    var $data = util.type(item) == 'object' ? item : {}
@@ -1930,57 +1946,57 @@ return /******/ (function(modules) { // webpackBootstrap
 	                })
 	            }
 	        },
-	        // 'html': {
-	        //     update: function(next) {
-	        //         $(this.tar).html(next === undefined ? '' : next)
-	        //     }
-	        // },
-	        // 'attr': {
-	        //     multi: true,
-	        //     bind: function(attname) {
-	        //         this.attname = attname
-	        //     },
-	        //     update: function(next) {
-	        //         if (!next && next !== '') {
-	        //             $(this.tar).removeAttr(this.attname)
-	        //         } else {
-	        //             $(this.tar).attr(this.attname, next)
-	        //         }
-	        //     }
-	        // },
-	        // 'show': {
-	        //     update: function(next) {
-	        //         this.tar.style.display = next ? '' : 'none'
-	        //     }
-	        // },
-	        // 'on': {
-	        //     multi: true,
-	        //     watch: false,
-	        //     bind: function(evtType, handler /*, expression*/ ) {
-	        //         var fn = handler
-	        //         if (util.type(fn) !== 'function') throw new Error('"' + conf.namespace + 'on" only accept function')
-	        //         this.fn = fn.bind(this.vm)
-	        //         this.type = evtType
-	        //         this.tar.addEventListener(evtType, this.fn, false)
-	        //     },
-	        //     unbind: function() {
-	        //         if (this.fn) {
-	        //             this.tar.removeEventLisnter(this.type, this.fn)
-	        //             this.fn = null
-	        //         }
-	        //     }
-	        // },
-	        // 'class': {
-	        //     multi: true,
-	        //     bind: function(className) {
-	        //         this.className = className
-	        //     },
-	        //     update: function(next) {
-	        //         var $el = $(this.tar)
-	        //         if (next) $el.addClass(this.className)
-	        //         else $el.removeClass(this.className)
-	        //     }
-	        // }
+	        'html': {
+	            update: function(next) {
+	                $(this.tar).html(next === undefined ? '' : next)
+	            }
+	        },
+	        'attr': {
+	            multi: true,
+	            bind: function(attname) {
+	                this.attname = attname
+	            },
+	            update: function(next) {
+	                if (!next && next !== '') {
+	                    $(this.tar).removeAttr(this.attname)
+	                } else {
+	                    $(this.tar).attr(this.attname, next)
+	                }
+	            }
+	        },
+	        'show': {
+	            update: function(next) {
+	                this.tar.style.display = next ? '' : 'none'
+	            }
+	        },
+	        'on': {
+	            multi: true,
+	            watch: false,
+	            bind: function(evtType, handler /*, expression*/ ) {
+	                var fn = handler
+	                if (util.type(fn) !== 'function') throw new Error('"' + conf.namespace + 'on" only accept function')
+	                this.fn = fn.bind(this.vm)
+	                this.type = evtType
+	                this.tar.addEventListener(evtType, this.fn, false)
+	            },
+	            unbind: function() {
+	                if (this.fn) {
+	                    this.tar.removeEventLisnter(this.type, this.fn)
+	                    this.fn = null
+	                }
+	            }
+	        },
+	        'class': {
+	            multi: true,
+	            bind: function(className) {
+	                this.className = className
+	            },
+	            update: function(next) {
+	                var $el = $(this.tar)
+	                if (next) $el.addClass(this.className)
+	                else $el.removeClass(this.className)
+	            }
+	        }
 	    }
 	}
 
