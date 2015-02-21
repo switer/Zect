@@ -6,8 +6,9 @@
 </head>
 <body>
     <div id="app">
-        <span z-attr="disabled: !disabled">{title} {disabled}</span>
-        <p z-html="{'name is : ' + title}" v-if="{disabled}"></p>
+        <!-- <span z-attr="disabled: !disabled">{title} {disabled}</span> -->
+        <!-- <p z-html="{'name is : ' + title}"></p> -->
+        <p z-if="{!disabled}">{title}</p>
     </div>
     <script src="../dist/zect.js"></script>
     <script>

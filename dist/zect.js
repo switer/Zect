@@ -1827,9 +1827,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                // insert ref
 	                parent.insertBefore(this.$holder, this.tar)
-	                // parent.removeChild(this.tar)
+	                parent.removeChild(this.tar)
 	            },
-	            // next: true show || false del
+	            // next: true show || false unmount
 	            update: function(next, pre) {
 	                var that = this
 
