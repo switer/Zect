@@ -1789,31 +1789,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var _ifNameExpr = _isExpr(name)
 	    var _ifValueExpr = _isExpr(value)
 
-	    var nvars = _ifNameExpr ? _extractVars(name) : null
-	    var vvars = _ifValueExpr ? _extractVars(value) : null
-
 	    var nexpr = _ifNameExpr ? _strip(name) : null
 	    var vexpr = _ifValueExpr ? _strip(value) : null
 
 	    var preName = _ifNameExpr ? _execute(vm, nexpr) : name
 	    var preValue = _ifValueExpr ? _execute(vm, vexpr) : value
 
-	    tar.setAttribute(preName, preValue)
+	    function _validName (n) {
+	        if (n.match(' ')) {
+	            console.error('Attribute-name can not contains any white space.')
+	        }
+	        return n
+	    }
+
+	    tar.setAttribute(_validName(preName), preValue)
 
 	    /**
 	     *  watch attribute name expression variable changes
 	     */
-	    nvars && _watch(vm, nvars, function() {
+	    _ifNameExpr && _watch(vm, _extractVars(name), function() {
 	        var next = _execute(vm, nexpr)
 	        if (util.diff(next, preName)) {
-	            $(tar).removeAttr(preName).attr(next, preValue)
+	            $(tar).removeAttr(preName).attr(_validName(next), preValue)
 	            preValue = next
 	        }
 	    })
 	    /**
 	     *  watch attribute value expression variable changes
 	     */
-	    vvars && _watch(vm, vvars, function() {
+	    _ifValueExpr && _watch(vm, _extractVars(value), function() {
 	        var next = _execute(vm, vexpr)
 	        if (util.diff(next, preValue)) {
 	            $(tar).attr(preName, next)
