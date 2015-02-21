@@ -77,7 +77,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  private vars
 	 */
 	var preset = __webpack_require__(7) // preset directives getter
-	var directives = [null, {}] // [preset, global]
+	var directives = [preset(Zect), {}] // [preset, global]
 	var gdirs = directives[1]
 
 	/**
@@ -190,7 +190,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        if (aname.match(exprReg)) {
 	                            // variable attribute name
 	                            ast.attributes[aname] = v
-	                        } else if(aname.indexOf(conf.namespace == 0)) {
+	                        } else if(aname.indexOf(conf.namespace) === 0) {
 	                            // directive
 	                            ast.directives[aname] = v
 	                        } else if(v.trim().match(exprReg)) {
@@ -210,11 +210,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    /**
 	                     *  Directives binding
 	                     */
-	                    util.objEach(ast.directives, function(d) {
+	                    directives.forEach(function(d) {
 	                        util.objEach(d, function(id, def) {
-	                            if(vm.$el.contains(node)) return false
-	                            if (ast.directives[id]) {
-	                                new Directive(vm, node, id, def)
+	                            var dirName = conf.namespace + id
+	                            var expr = ast.directives[dirName]
+	                            
+	                            if (ast.directives.hasOwnProperty(dirName)) {
+	                                new Directive(vm, node, def, dirName, expr)
 	                            }
 	                        })
 	                    })
@@ -1584,15 +1586,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 	    walk: function(node, fn) {
 	        var into = fn(node) !== false
-	        console.log(node, into)
-	        node = into 
-	            ? node.firstChild 
-	            : node.nextSibling
-	        
-
-	        while (node) {
-	            this.walk(node, fn)
-	            node = node.nextSibling
+	        var that = this
+	        if (into) {
+	            var children = [].slice.call(node.childNodes)
+	            children.forEach(function (i) {
+	                that.walk(i, fn)
+	            })
 	        }
 	    }
 	}
@@ -1622,6 +1621,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var util = __webpack_require__(4)
 
 	function _extractVars(t) {
+	    if (!t) return null
+
 	    var reg = /("|').+?[^\\]\1|\.\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)/gi
 	    var vars = t.match(reg)
 	    vars = !vars ? [] : vars.filter(function(i) {
@@ -1684,15 +1685,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var prev
 
 	    function _update() {
-	        var nexv = _execute(vm, exp)
+	        var nexv = _execute(vm, expr)
 	        if (util.diff(nexv, prev)) {
 	            var p = prev
 	            prev = nexv
-	            upda.apply(d, nexv, p)
+	            upda.call(d, nexv, p)
 	        }
 	    }
-	    bind.call(d, expr)
-	    upda.call(d, _execute(vm, expr))
+	    bind && bind.call(d, expr)
+	    upda && upda.call(d, _execute(vm, expr))
 	    _watch(vm, _extractVars(expr), _update)
 	    return d
 	}
@@ -1896,7 +1897,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        'html': {
 	            update: function(next) {
-	                console.log(next)
 	                $(this.tar).html(next === undefined ? '' : next)
 	            }
 	        },

@@ -7,7 +7,7 @@
 <body>
     <div id="app">
         <span>{title} {disabled}</span>
-        <span v-html="{'switer' + title}"></span>
+        <p z-html="{'name is : ' + title}"></p>
     </div>
     <script src="../dist/zect.js"></script>
     <script>
@@ -34,7 +34,8 @@
             ready: function () {
                 console.timeEnd('p')
                 setTimeout( function() {
-                    this.$data.person = {name: 'switer'}
+                    this.$data.title = 'switer'
+                    // this.$data.person = {name: 'switer'}
                 }.bind(this), 1000);
             },
             methods: {
