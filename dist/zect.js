@@ -1967,9 +1967,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'class': {
-	            bind: function(wkey, className) {
+	            multi: true,
+	            bind: function(className) {
 	                this.className = className
-	                return [wkey]
 	            },
 	            update: function(next) {
 	                var $el = $(this.tar)
