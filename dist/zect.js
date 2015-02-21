@@ -76,8 +76,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  private vars
 	 */
-	var preset = __webpack_require__(7) // preset directives getter
-	var directives = [preset(Zect), {}] // [preset, global]
+	var preset = __webpack_require__(7)(Zect) // preset directives getter
+	var directives = [preset, {}] // [preset, global]
 	var gdirs = directives[1]
 
 	/**
@@ -112,7 +112,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        el.innerHTML = options.template
 	    } else if (util.type(el) == 'string') {
 	        el = document.querySelector(el)
-	    } else if (!(el instanceof HTMLElement)) {
+	    } else if (!(el instanceof HTMLElement) && util.type(el) != 'documentfragment') {
 	        throw new Error('Unmatch el option')
 	    }
 	    vm.$el = el
@@ -156,16 +156,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // TODO
 	    }
 
+	    function isIfSyntax(tn) {
+	        return tn == 'Z-IF'
+	    }
+
 	    var exprReg = /^\{.*?\}$/
 
 	    util.walk(el, function(node) {
-	        var type = node.nodeType // 1. ELEMENT_NODE; 2. ATTRIBUTE_NODE; 3. TEXT_NODE; 8. COMMENT_NODE; 9. DOCUMENT_NODE 
+	        // 1. ELEMENT_NODE; 2. ATTRIBUTE_NODE; 3. TEXT_NODE; 8. COMMENT_NODE; 9. DOCUMENT_NODE 
+	        var type = node.nodeType
 	        var value = node.nodeValue
 	        var tagName = node.tagName
 
 	        switch (type) {
 	            case 1:
-	                if (isComponent(tagName)) {
+	                if (isIfSyntax(tagName)) {
+	                    new Directive(vm, node, preset['blockif'], conf.namespace + 'blockif', $(node).attr('is'))
+	                    return false
+
+	                } else if (isComponent(tagName)) {
 	                    // child component
 	                    new Zect({
 	                        el: node,
@@ -175,23 +184,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	                } else {
 	                    var attrs = [].slice.call(node.attributes)
 	                    var ast = {
-	                        attrs: {},
-	                        dires: {}
-	                    }
-	                    /**
-	                     *  attributes walk
-	                     */
-	                    attrs.forEach(function (att){
+	                            attrs: {},
+	                            dires: {}
+	                        }
+	                        /**
+	                         *  attributes walk
+	                         */
+	                    attrs.forEach(function(att) {
 	                        var aname = att.name
 	                        var v = att.value
-	                        // parse att
+	                            // parse att
 	                        if (aname.match(exprReg)) {
 	                            // variable attribute name
 	                            ast.attrs[aname] = v
-	                        } else if(aname.indexOf(conf.namespace) === 0) {
+	                        } else if (aname.indexOf(conf.namespace) === 0) {
 	                            // directive
 	                            ast.dires[aname] = v
-	                        } else if(v.trim().match(exprReg)) {
+	                        } else if (v.trim().match(exprReg)) {
 	                            // named attribute with expression
 	                            ast.attrs[aname] = v
 	                        }
@@ -201,7 +210,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    /**
 	                     *  Attributes binding
 	                     */
-	                    util.objEach(ast.attrs, function (name, value) {
+	                    util.objEach(ast.attrs, function(name, value) {
 	                        new AttributeDirective(vm, node, name, value)
 	                    })
 
@@ -234,19 +243,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	var definition = {}
+
 	function extractExp(node) {
 	    var attrs = node.attributes
-	    for (var i = 0; i < attrs.length; i ++) {
+	    for (var i = 0; i < attrs.length; i++) {
 	        var name = attrs[i].name
 	        var value = attrs[i].value
 	        if (name.match(/[\w]-[\w]/)) {
 
 	        } else if (value.match(/^\s*\{.*?\}\s*$/)) {
 	            new Directive(vm, node, name, {
-	                bind: function () {
+	                bind: function() {
 	                    return []
 	                },
-	                update:function () {
+	                update: function() {
 
 	                }
 	            })
@@ -296,7 +306,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var nodes = util.copyArray(document.querySelectorAll(sel))
 	        return Wrap(nodes)
 	    } else if (sel instanceof Wrap) return sel
-	    else if (sel instanceof HTMLElement) {
+	    else if (sel instanceof HTMLElement || util.type(sel) == 'documentfragment') {
 	        return Wrap([sel])
 	    } else {
 	        throw new Error('Unexpect selector !')
@@ -1549,6 +1559,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }
 	    },
+	    merge: function (src, dest) {
+	        this.objEach(dest, function (key, value) {
+	            src[key] = value
+	        })
+	        return src
+	    },
 	    /**
 	     *  two level diff
 	     */
@@ -1846,6 +1862,43 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = function(Zect) {
 	    return {
+	        'blockif': {
+	            bind: function () {
+	                var parent = this.parent = this.tar.parentNode
+	                this.$holder = document.createComment(conf.namespace + 'blockif')
+	                this.$container = document.createDocumentFragment()
+	                this.$children = [].slice.call(this.tar.childNodes)
+	                // insert ref
+	                parent.insertBefore(this.$holder, this.tar)
+	                parent.removeChild(this.tar)
+	            },
+	            update: function (next) {
+	                var that = this
+	                function mount() {
+	                    that.$children.forEach(function (n) {
+	                        that.$container.appendChild(n)
+	                    })
+	                    that.parent.insertBefore(that.$container, that.$holder)
+	                }
+	                function unmount() {
+	                    if (!that.parent.contains(that.$children[0])) return
+	                    that.$children.forEach(function (n) {
+	                        that.$container.appendChild(n)
+	                    })
+	                }
+	                if (!next) {
+	                    unmount()
+	                } else if (this.childVM) {
+	                    mount()
+	                } else {
+	                    this.childVM = new Zect({
+	                        el: this.$container,
+	                        $data: this.vm.$data
+	                    })
+	                    mount()
+	                }
+	            }
+	        },
 	        'if': {
 	            bind: function() {
 	                var parent = this.parent = this.tar.parentNode
@@ -1880,7 +1933,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            },
 	            update: function () {
-	                
+
 	            }
 	        },
 	        'repeat': {
