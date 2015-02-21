@@ -121,7 +121,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     *  assign methods
 	     */
-	    var methods = options.methods
+	    var methods = vm.$methods = options.methods
 	    util.objEach(methods, function(k, v) {
 	        vm[k] = v
 	    })
@@ -1646,7 +1646,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    util.objEach(vm.$data, function(k, v) {
 	        scope[k] = v
 	    })
-	    util.objEach(vm.methods, function(k, f) {
+	    util.objEach(vm.$methods, function(k, f) {
 	        scope[k] = f
 	    })
 	    return eval('with(scope){%s}'.replace('%s', expression))
@@ -1715,10 +1715,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 
+	    var primary = _execute(vm, expr)
+	    bindParams.push(primary)
+	    bindParams.push(expr)
 	    bind && bind.apply(d, bindParams)
+	    upda && upda.call(d, primary)
 
-	    upda && upda.call(d, _execute(vm, expr))
-	    _watch(vm, _extractVars(expr), _update)
+	    if (definition.watch !== false) {
+	        _watch(vm, _extractVars(expr), _update)
+	    }
 	}
 
 	Directive.Text = function(vm, tar) {
@@ -1945,8 +1950,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'on': {
-	            bind: function(wkey, evtType) {
-	                var fn = this.vm[wkey]
+	            multi: true,
+	            watch: false,
+	            bind: function(evtType, handler/*, expression*/) {
+	                var fn = handler
 	                if (util.type(fn) !== 'function') throw new Error('"' + conf.namespace + 'on" only accept function')
 	                this.fn = fn.bind(this.vm)
 	                this.type = evtType
