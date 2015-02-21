@@ -5,13 +5,19 @@
     <title></title>
 </head>
 <body>
-    <div id="app">
+    <!-- <div id="app"> -->
         <!-- <span z-attr="disabled: !disabled">{title} {disabled}</span> -->
         <!-- <p z-html="{'name is : ' + title}"></p> -->
         <!-- <p z-if="{!disabled}">{title}</p> -->
         <!-- <button z-on="click: onAlert">click me</button> -->
         <!-- <div z-class="show: isShow">z-class</div> -->
-    </div>
+        <!-- <div z-show="isShow">z-show show</div>
+        <div z-show="!isShow">z-show hide</div> -->
+        <!-- <div z-repeat="items">
+            <div z-repeat="$value">{$value}</div>
+        </div> -->
+    <!-- </div> -->
+    <div id="app"><div z-repeat="items"><div z-repeat="{$value}">{$value}</div></div></div>
     <script src="../dist/zect.js"></script>
     <script>
         console.time('p')
@@ -19,7 +25,7 @@
             el: '#app',
             data: function () {
                 return {
-                    items: [[1]],
+                    items: [[1],[2]],
                     title: 'zect data-binding',
                     disabled: false,
                     isShow: true,

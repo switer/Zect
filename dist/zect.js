@@ -99,7 +99,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    conf.namespace = ns
 	}
 
-
 	function ViewModel(options) {
 	    var proto = this.__proto__
 	    var vm = this
@@ -186,22 +185,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        var att = attrs[i]
 	                        var aname = att.name
 	                        var v = att.value
-	                        var removed
 	                        // parse att
 	                        if (aname.match(exprReg)) {
 	                            // variable attribute name
 	                            ast.attributes[aname] = v
-	                            removed = true
 	                        } else if(aname.indexOf(conf.namespace) === 0) {
 	                            // directive
 	                            ast.directives[aname] = v
-	                            removed = true
 	                        } else if(v.trim().match(exprReg)) {
 	                            // named attribute with expression
 	                            ast.attributes[aname] = v
-	                            removed = true
+	                        } else {
+	                            continue
 	                        }
-	                        removed && node.removeAttribute(aname)
+	                        node.removeAttribute(aname)
 	                    }
 
 	                    /**
@@ -219,12 +216,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        util.objEach(d, function(id, def) {
 	                            var dirName = conf.namespace + id
 	                            var expr = ast.directives[dirName]
-
 	                            if (ast.directives.hasOwnProperty(dirName)) {
 	                                new Directive(vm, node, def, dirName, expr)
 	                            }
 	                        })
 	                    })
+	                    if (!el.contains(node)) return false
 	                }
 	                break
 	            case 3:
@@ -1642,6 +1639,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  Calc expression value
 	 */
 	function _execute(vm, expression) {
+
 	    var scope = {}
 	    util.objEach(vm.$data, function(k, v) {
 	        scope[k] = v
@@ -1649,7 +1647,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    util.objEach(vm.$methods, function(k, f) {
 	        scope[k] = f
 	    })
-	    return eval('with(scope){%s}'.replace('%s', expression))
+	    try {
+	        var result = eval('with(scope){%s}'.replace('%s', expression))
+	        return result
+	    } catch (e) {
+	        throw new Error('Catch error "%s" when execute expression "{%s}" '
+	            .replace('%s', e.message)
+	            .replace('%s', expression))
+	    }
 	}
 
 	function _watch(vm, vars, update) {
@@ -1678,7 +1683,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _id = 0
 
 	function Directive(vm, tar, definition, name, expr) {
-
 	    var d = this
 	    var multiSep = ','
 
@@ -1739,7 +1743,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (!exprs || !exprs.length) return
 
 	    var cache = new Array(exprs.length)
-	    
+
 	    exprs.forEach(function(exp, index) {
 	        // watch change
 	        exp = _strip(exp)
@@ -1825,55 +1829,52 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = function(Zect) {
 	    return {
-	        'if': {
-	            bind: function() {
-	                var parent = this.parent = this.tar.parentNode
-	                this.$holder = document.createComment(conf.namespace + 'if')
+	        // 'if': {
+	        //     bind: function() {
+	        //         var parent = this.parent = this.tar.parentNode
+	        //         this.$holder = document.createComment(conf.namespace + 'if')
 
-	                // insert ref
-	                parent.insertBefore(this.$holder, this.tar)
-	                parent.removeChild(this.tar)
-	            },
-	            // next: true show || false unmount
-	            update: function(next, pre) {
-	                var that = this
+	        //         // insert ref
+	        //         parent.insertBefore(this.$holder, this.tar)
+	        //         parent.removeChild(this.tar)
+	        //     },
+	        //     // next: true show || false unmount
+	        //     update: function(next, pre) {
+	        //         var that = this
 
-	                function mount(tar) {
-	                    that.parent.insertBefore(that.tar, that.$holder)
-	                }
-	                if (!next) {
-	                    this.parent.contains(this.tar) && this.parent.removeChild(this.tar)
-	                } else if (this.childVM) {
-	                    mount()
-	                } else {
-	                    this.childVM = new Zect({
-	                        el: this.tar,
-	                        $data: this.vm.$data
-	                    })
-	                    mount()
-	                }
-	            }
-	        },
+	        //         function mount(tar) {
+	        //             that.parent.insertBefore(that.tar, that.$holder)
+	        //         }
+	        //         if (!next) {
+	        //             this.parent.contains(this.tar) && this.parent.removeChild(this.tar)
+	        //         } else if (this.childVM) {
+	        //             mount()
+	        //         } else {
+	        //             this.childVM = new Zect({
+	        //                 el: this.tar,
+	        //                 $data: this.vm.$data
+	        //             })
+	        //             mount()
+	        //         }
+	        //     }
+	        // },
 	        'repeat': {
-	            bind: function(wkey) {
+	            bind: function() {
 	                var $el = $(this.tar)
 	                this.$parent = $el.parent()
 	                this.$holder = document.createComment(conf.namespace + 'repeat')
 	                $el.replace(this.$holder, this.tar)
-	                return [wkey]
 	            },
 	            update: function(items) {
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data')
 	                }
 	                var that = this
-
 	                function createSubVM(item, index) {
 	                    var $subEl = that.tar.cloneNode(true)
 	                    var $data = util.type(item) == 'object' ? item : {}
 	                    $data.$index = index
 	                    $data.$value = item
-
 	                    var subVM = new Zect({
 	                        el: $subEl,
 	                        data: $data
@@ -1923,60 +1924,57 @@ return /******/ (function(modules) { // webpackBootstrap
 	                })
 	            }
 	        },
-	        'html': {
-	            update: function(next) {
-	                $(this.tar).html(next === undefined ? '' : next)
-	            }
-	        },
-	        'attr': {
-	            multi: true,
-	            bind: function(attname) {
-	                this.attname = attname
-	            },
-	            update: function(next) {
-	                if (!next && next !== '') {
-	                    $(this.tar).removeAttr(this.attname)
-	                } else {
-	                    $(this.tar).attr(this.attname, next)
-	                }
-	            }
-	        },
-	        'show': {
-	            bind: function(wkey) {
-	                return [wkey] // those dependencies need to watch
-	            },
-	            update: function(next) {
-	                this.tar.style.display = next ? '' : 'none'
-	            }
-	        },
-	        'on': {
-	            multi: true,
-	            watch: false,
-	            bind: function(evtType, handler/*, expression*/) {
-	                var fn = handler
-	                if (util.type(fn) !== 'function') throw new Error('"' + conf.namespace + 'on" only accept function')
-	                this.fn = fn.bind(this.vm)
-	                this.type = evtType
-	                this.tar.addEventListener(evtType, this.fn, false)
-	            },
-	            unbind: function() {
-	                if (this.fn) {
-	                    this.tar.removeEventLisnter(this.type, this.fn)
-	                    this.fn = null
-	                }
-	            }
-	        },
-	        'class': {
-	            multi: true,
-	            bind: function(className) {
-	                this.className = className
-	            },
-	            update: function(next) {
-	                var $el = $(this.tar)
-	                if (next) $el.addClass(this.className)
-	                else $el.removeClass(this.className)
-	            }
-	        }
+	        // 'html': {
+	        //     update: function(next) {
+	        //         $(this.tar).html(next === undefined ? '' : next)
+	        //     }
+	        // },
+	        // 'attr': {
+	        //     multi: true,
+	        //     bind: function(attname) {
+	        //         this.attname = attname
+	        //     },
+	        //     update: function(next) {
+	        //         if (!next && next !== '') {
+	        //             $(this.tar).removeAttr(this.attname)
+	        //         } else {
+	        //             $(this.tar).attr(this.attname, next)
+	        //         }
+	        //     }
+	        // },
+	        // 'show': {
+	        //     update: function(next) {
+	        //         this.tar.style.display = next ? '' : 'none'
+	        //     }
+	        // },
+	        // 'on': {
+	        //     multi: true,
+	        //     watch: false,
+	        //     bind: function(evtType, handler /*, expression*/ ) {
+	        //         var fn = handler
+	        //         if (util.type(fn) !== 'function') throw new Error('"' + conf.namespace + 'on" only accept function')
+	        //         this.fn = fn.bind(this.vm)
+	        //         this.type = evtType
+	        //         this.tar.addEventListener(evtType, this.fn, false)
+	        //     },
+	        //     unbind: function() {
+	        //         if (this.fn) {
+	        //             this.tar.removeEventLisnter(this.type, this.fn)
+	        //             this.fn = null
+	        //         }
+	        //     }
+	        // },
+	        // 'class': {
+	        //     multi: true,
+	        //     bind: function(className) {
+	        //         this.className = className
+	        //     },
+	        //     update: function(next) {
+	        //         var $el = $(this.tar)
+	        //         if (next) $el.addClass(this.className)
+	        //         else $el.removeClass(this.className)
+	        //     }
+	        // }
 	    }
 	}
 
