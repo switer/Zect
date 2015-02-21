@@ -186,17 +186,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        var att = attrs[i]
 	                        var aname = att.name
 	                        var v = att.value
+	                        var removed
 	                        // parse att
 	                        if (aname.match(exprReg)) {
 	                            // variable attribute name
 	                            ast.attributes[aname] = v
+	                            removed = true
 	                        } else if(aname.indexOf(conf.namespace) === 0) {
 	                            // directive
 	                            ast.directives[aname] = v
+	                            removed = true
 	                        } else if(v.trim().match(exprReg)) {
 	                            // named attribute with expression
 	                            ast.attributes[aname] = v
+	                            removed = true
 	                        }
+	                        removed && node.removeAttribute(aname)
 	                    }
 
 	                    /**
@@ -214,7 +219,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        util.objEach(d, function(id, def) {
 	                            var dirName = conf.namespace + id
 	                            var expr = ast.directives[dirName]
-	                            
+
 	                            if (ast.directives.hasOwnProperty(dirName)) {
 	                                new Directive(vm, node, def, dirName, expr)
 	                            }
@@ -1673,7 +1678,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _id = 0
 
 	function Directive(vm, tar, definition, name, expr) {
+
 	    var d = this
+	    var multiSep = ','
+
+	    var bindParams = []
+
+	    if (definition.multi) {
+	        if (expr.match(multiSep)) {
+	            var parts = expr.split(multiSep)
+	            return parts.map(function (item) {
+	                return new Directive(vm, tar, definition, name, item)
+	            })
+	        }
+	        // do with single
+	        var exprFrag = expr.split(':')
+	        bindParams.push(exprFrag[0].trim())
+	        expr = exprFrag[1].trim()
+	    }
 
 	    d.tar = tar
 	    d.vm = vm
@@ -1692,10 +1714,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            upda.call(d, nexv, p)
 	        }
 	    }
-	    bind && bind.call(d, expr)
+
+	    bind && bind.apply(d, bindParams)
+
 	    upda && upda.call(d, _execute(vm, expr))
 	    _watch(vm, _extractVars(expr), _update)
-	    return d
 	}
 
 	Directive.Text = function(vm, tar) {
@@ -1901,16 +1924,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'attr': {
-	            bind: function(wkey, attname) {
+	            multi: true,
+	            bind: function(attname) {
 	                this.attname = attname
-	                return [wkey] // those dependencies need to watch
 	            },
 	            update: function(next) {
 	                if (!next && next !== '') {
 	                    $(this.tar).removeAttr(this.attname)
 	                } else {
 	                    $(this.tar).attr(this.attname, next)
-
 	                }
 	            }
 	        },
