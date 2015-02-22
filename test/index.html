@@ -9,7 +9,9 @@
         <z-if is="{disabled}">
             <div>z-if0~~~~~</div>
             <div>z-if1~~~~~</div>
-            <div>z-if2~~~~~</div>
+            <z-if is="{!disabled}">
+                <div>z-if2~~~~~</div>
+            </z-if>
         </z-if>
         <span z-attr="{disabled: !disabled}" {'checked'}>{title} {disabled} \{cosu\}</span>
         <p z-html="{'name is : ' + title}"></p>
