@@ -13,6 +13,7 @@
                 <div>z-if2~~~~~</div>
             </z-if>
         </z-if>
+        <my-component></my-component>
         <span z-attr="{disabled: !disabled}" {'checked'}>{title} {disabled} \{cosu\}</span>
         <p z-html="{'name is : ' + title}"></p>
         <p z-if="{!disabled}">{title}</p>
@@ -27,6 +28,14 @@
     <script src="../dist/zect.js"></script>
     <script>
         console.time('p')
+        Zect.component('my-component', {
+            template: '<div></div>',
+            data: {},
+            methods: {
+
+            }
+        })
+        
         new Zect({
             el: '#app',
             data: function () {
