@@ -80,9 +80,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	var directives = [preset, {}] // [preset, global]
 	var gdirs = directives[1]
 
-	/**
-	 *  Global API
-	 */
+	var components = [{}, {}] // []
+	var gcomps = components[0]
+	    /**
+	     *  Global API
+	     */
+
 	function Zect(options) {
 	    return ViewModel.call(this, options || {})
 	}
@@ -91,6 +94,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        _insertProto(this, Zect.prototype)
 	        return ViewModel.call(this, options || {})
 	    }
+	}
+	Zect.component = function(id, definition) {
+	    gcomps[id] = definition
 	}
 	Zect.directive = function(id, definition) {
 	    gdirs[id] = definition
@@ -103,16 +109,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var proto = this.__proto__
 	    var vm = this
 	    var el = options.el
-
+	    var children
 	    /**
 	     *  Mounted element detect
 	     */
-	    if (!el && options.template) {
+	    if (el && options.template) {
+	        children = el.childNodes
+	        el.innerHTML = options.template
+	    } else if (options.template) {
 	        el = document.createElement('div')
 	        el.innerHTML = options.template
 	    } else if (util.type(el) == 'string') {
 	        el = document.querySelector(el)
-	    } else if (!(el instanceof HTMLElement) && util.type(el) != 'documentfragment') {
+	    } else if (!isElement(el)) {
 	        throw new Error('Unmatch el option')
 	    }
 	    vm.$el = el
@@ -156,6 +165,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // TODO
 	    }
 
+	    function isElement(el) {
+	        return el instanceof HTMLElement || el instanceof DocumentFragment
+	    }
+
 	    function isIfSyntax(tn) {
 	        return tn == 'Z-IF'
 	    }
@@ -167,7 +180,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var type = node.nodeType
 	        var value = node.nodeValue
 	        var tagName = node.tagName
-
 	        switch (type) {
 	            case 1:
 	                if (isIfSyntax(tagName)) {
@@ -231,6 +243,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                break
 	            case 3:
 	                new TextDirective(vm, node)
+	                break
+	            case 11:
+	                // document fragment
+	                break
 	            default:
 	                return false
 	        }
@@ -1863,29 +1879,54 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = function(Zect) {
 	    return {
 	        'blockif': {
-	            bind: function () {
+	            bind: function() {
 	                var parent = this.parent = this.tar.parentNode
-	                this.$holder = document.createComment(conf.namespace + 'blockif')
+	                this.$before = document.createComment(conf.namespace + 'blockif-start')
+	                this.$after = document.createComment(conf.namespace + 'blockif-end')
 	                this.$container = document.createDocumentFragment()
-	                this.$children = [].slice.call(this.tar.childNodes)
+
+	                this.getChildren = function() {
+	                    var children = []
+	                    var nodes = this.parent.childNodes
+	                    var start = false
+	                    for (var i = 0; i < nodes.length; i++) {
+	                        var tar = nodes[i]
+	                        if (tar === this.$after) break
+	                        else if (start) {
+	                            children.push(tar)
+	                        } else if (tar == this.$before) {
+	                            start = true
+	                        }
+	                    }
+	                    return children
+	                }
 	                // insert ref
-	                parent.insertBefore(this.$holder, this.tar)
+	                parent.insertBefore(this.$before, this.tar)
+	                parent.insertBefore(this.$after, this.tar.nextSibling)
 	                parent.removeChild(this.tar)
+
+	                var children = [].slice.call(this.tar.childNodes)
+	                // migrate to document fragment container
+	                children.forEach(function (e) {
+	                    this.$container.appendChild(e)
+	                }.bind(this))
+
+	                this.mounted = false
 	            },
-	            update: function (next) {
+	            update: function(next) {
 	                var that = this
+
 	                function mount() {
-	                    that.$children.forEach(function (n) {
-	                        that.$container.appendChild(n)
-	                    })
-	                    that.parent.insertBefore(that.$container, that.$holder)
+	                    that.parent.insertBefore(that.$container, that.$after)
 	                }
+
 	                function unmount() {
-	                    if (!that.parent.contains(that.$children[0])) return
-	                    that.$children.forEach(function (n) {
+	                    var children = that.$children = that.getChildren()
+	                    children.forEach(function(n) {
 	                        that.$container.appendChild(n)
 	                    })
 	                }
+
 	                if (!next) {
 	                    unmount()
 	                } else if (this.childVM) {
@@ -1929,10 +1970,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'component': {
-	            bind: function () {
+	            bind: function() {
 
 	            },
-	            update: function () {
+	            update: function() {
 
 	            }
 	        },
