@@ -5,7 +5,28 @@
     <title></title>
 </head>
 <body>
-    <div id="app"><my-component></my-component></div>
+    <div id="app">
+        <!-- <z-if is="{!disabled}">
+            <div>z-if0~~~~~</div>
+            <div>z-if1~~~~~</div>
+            <z-if is="{!disabled}">
+                <div>z-if2~~~~~</div>
+            </z-if>
+        </z-if> -->
+        <z-repeat items="{items}">
+                <my-component></my-component>
+        </z-repeat>
+<!--    <span z-attr="{disabled: !disabled}" {'checked'}>{title} {disabled} \{cosu\}</span>
+        <p z-html="{'name is : ' + title}"></p>
+        <p z-if="{!disabled}">{title}</p>
+        <button z-on="click: onAlert">click me</button>
+        <div z-class="show: isShow">z-class</div>
+        <div z-show="isShow">z-show show</div>
+        <div z-show="!isShow">z-show hide</div>
+        <div z-repeat="items">
+            <div z-repeat="$value">{$value}</div>
+        </div> -->
+    </div>
     <script src="../dist/zect.js"></script>
     <script>
         console.time('p')
