@@ -5,32 +5,20 @@
     <title></title>
 </head>
 <body>
-    <div id="app">
-        <z-if is="{!disabled}">
-            <div>z-if0~~~~~</div>
-            <div>z-if1~~~~~</div>
-            <z-if is="{!disabled}">
-                <div>z-if2~~~~~</div>
-            </z-if>
-        </z-if>
-<!--         <my-component></my-component>
-        <span z-attr="{disabled: !disabled}" {'checked'}>{title} {disabled} \{cosu\}</span>
-        <p z-html="{'name is : ' + title}"></p>
-        <p z-if="{!disabled}">{title}</p>
-        <button z-on="click: onAlert">click me</button>
-        <div z-class="show: isShow">z-class</div>
-        <div z-show="isShow">z-show show</div>
-        <div z-show="!isShow">z-show hide</div>
-        <div z-repeat="items">
-            <div z-repeat="$value">{$value}</div>
-        </div> -->
-    </div>
+    <div id="app"><my-component></my-component></div>
     <script src="../dist/zect.js"></script>
     <script>
         console.time('p')
         Zect.component('my-component', {
-            template: '<div></div>',
-            data: {},
+            template: '<div>{subtitle}</div>',
+            data: {
+                subtitle: 'sub title'
+            },
+            ready: function () {
+                setTimeout(function () {
+                    this.$data.subtitle = 'modify'
+                }.bind(this), 1000)
+            },
             methods: {
 
             }
