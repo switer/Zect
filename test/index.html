@@ -13,9 +13,10 @@
                 <div>z-if2~~~~~</div>
             </z-if>
         </z-if> -->
-        <z-repeat items="{items}">
-                <my-component></my-component>
-        </z-repeat>
+<!--         <z-repeat items="{items}">
+            <my-component></my-component>
+        </z-repeat> -->
+        <my-component2></my-component2>
 <!--    <span z-attr="{disabled: !disabled}" {'checked'}>{title} {disabled} \{cosu\}</span>
         <p z-html="{'name is : ' + title}"></p>
         <p z-if="{!disabled}">{title}</p>
@@ -47,6 +48,11 @@
 
         new Zect({
             el: '#app',
+            components: {
+                'my-component2': Zect.extend({
+                    template: '<img z-attr="{src:\'https://www.google.com.hk/images/srpr/logo11w.png\'}" alt="" />'
+                })
+            },
             data: function () {
                 return {
                     items: [[1],[2]],

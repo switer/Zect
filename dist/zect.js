@@ -96,7 +96,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 	Zect.component = function(id, definition) {
-	    gcomps[id.toLowerCase()] = definition
+	    var Comp = Zect.extend(definition)
+	    gcomps[id.toLowerCase()] = Comp
+	    return Comp
 	}
 	Zect.directive = function(id, definition) {
 	    gdirs[id] = definition
@@ -109,9 +111,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var proto = this.__proto__
 	    var vm = this
 	    var el = options.el
-	    var components = [gcomps, {}]
-	    var lcomps = components[1]
-
+	    var components = [gcomps, options.components || {}]
 	    /**
 	     *  get component define by tagName
 	     */
@@ -209,12 +209,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	                } else if (getComponent(tagName)) {
 	                    if (node === el) break
 	                    // child component
-	                    var def = util.merge({
+	                    var Comp = getComponent(tagName)
+
+	                    new Comp({
 	                        el: node,
 	                        $parent: vm
-	                    }, getComponent(tagName))
-
-	                    new Zect(def)
+	                    })
 	                    return false
 	                } else {
 	                    var attrs = [].slice.call(node.attributes)
@@ -222,13 +222,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            attrs: {},
 	                            dires: {}
 	                        }
-	                        /**
-	                         *  attributes walk
-	                         */
+	                    /**
+	                     *  attributes walk
+	                     */
 	                    attrs.forEach(function(att) {
 	                        var aname = att.name
 	                        var v = att.value
-	                            // parse att
+	                        console.log(aname, '=', v)    
+	                        // parse att
 	                        if (aname.match(exprReg)) {
 	                            // variable attribute name
 	                            ast.attrs[aname] = v
@@ -1743,7 +1744,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var isExpr = !!_isExpr(expr)
 
 	    isExpr && (expr = _strip(expr))
-
 	    if (definition.multi) {
 	        if (expr.match(multiSep)) {
 	            var parts = expr.split(multiSep)
@@ -1752,9 +1752,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            })
 	        }
 	        // do with single
-	        var exprFrag = expr.split(':')
-	        bindParams.push(exprFrag[0].trim())
-	        expr = exprFrag[1].trim()
+	        var propertyName 
+	        expr = expr.replace(/^[^:]+:/, function (m) {
+	            propertyName = m.replace(/:$/, '').trim()
+	            return ''
+	        }).trim()
+
+	        bindParams.push(propertyName)
 	    }
 
 	    d.tar = tar
