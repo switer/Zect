@@ -79,9 +79,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	var preset = __webpack_require__(7)(Zect) // preset directives getter
 	var directives = [preset, {}] // [preset, global]
 	var gdirs = directives[1]
-
 	var gcomps = {} // global define components
+	var componentProps = ['binding']
 
+	function funcOrObject(obj, prop) {
+	    var tar = obj[prop]
+	    return util.type(tar) == 'function' ? tar.call(obj):tar
+	}
 	/**
 	 *  Global API
 	 */
@@ -90,9 +94,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	Zect.extend = function(options) {
 	    return function(opt) {
-	        var insOpt = util.merge({}, options)
-	        _insertProto(this, Zect.prototype)
-	        return ViewModel.call(this, util.merge(insOpt, opt))
+	        var insOpt = {}
+	        util.extend(insOpt, options, opt)
+	        // merge data property
+	        insOpt.data = {}
+	        util.extend(insOpt.data, funcOrObject(options, 'data'), funcOrObject(opt, 'data'))
+
+	        util.insertProto(this, Zect.prototype)
+	        return ViewModel.call(this, insOpt)
 	    }
 	}
 	Zect.component = function(id, definition) {
@@ -107,8 +116,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    conf.namespace = ns
 	}
 
+	/*******************************
+	          UTILS
+	*******************************/
+	function isElement(el) {
+	    return el instanceof HTMLElement || el instanceof DocumentFragment
+	}
+	function isIfSyntax(tn) {
+	    return tn == (conf.namespace + 'if').toUpperCase()
+	}
+	function isRepeatSyntax(tn) {
+	    return tn == (conf.namespace + 'repeat').toUpperCase()
+	}
+
+	/*******************************
+	      ViewModel Constructor
+	*******************************/
 	function ViewModel(options) {
-	    var proto = this.__proto__
+	    // var proto = this.__proto__
 	    var vm = this
 	    var el = options.el
 	    var components = [gcomps, options.components || {}]
@@ -141,130 +166,78 @@ return /******/ (function(modules) { // webpackBootstrap
 	    })
 
 	    var $data
-	    if (options.$data) {
-	        $data = options.$data
-	    } else {
-	        /**
-	         *  Init state model
-	         */
-	        var mopts = {
-	            deep: true,
-	            props: options.data,
-	            computed: options.computed
-	        }
-	        var $data = new Mux(mopts)
-	    }
+	    var dataOpt = {}
+
 	    Object.defineProperty(vm, '$data', {
 	        enumerable: true,
 	        get: function() {
-	            return $data
+	            // $data will be undefined in created calling, so using dataOpt as temporary
+	            return $data || dataOpt
 	        },
 	        set: function(v) {
 	            $data.$set(v)
 	        }
 	    })
+	    if (options.$data) {
+	        $data = options.$data
+	        // if state model instance passsing, call after set
+	        options.created && options.created()
+	    } else {
+	        // Call before vm-$data instance
+	        options.created && options.created()
+
+	        util.merge(dataOpt, funcOrObject(options, 'data'))
+	        // Instance observable state model
+
+	        var mopts = {
+	            deep: true,
+	            props: dataOpt,
+	            computed: options.computed
+	        }
+	        $data = new Mux(mopts)
+	    }
 
 	    /**
-	     *  Component tag detect
+	     *  DOM Compile
 	     */
-	    function getComponent(tagName) {
-	        var compDef
-	        components.some(function (comp) {
-	            var cid = tagName.toLowerCase()
-	            if (comp.hasOwnProperty(cid)) {
-	                compDef = comp[cid]
-	                return true
-	            }
-	        })
-	        return compDef
+	    vm.$compile = function (el, deep) {
+	        if (deep) {
+	            util.walk(el, compile)
+	        } else {
+	            compile(el)
+	        }
 	    }
 
-	    function isElement(el) {
-	        return el instanceof HTMLElement || el instanceof DocumentFragment
-	    }
+	    vm.$compile(el, true)
 
-	    function isIfSyntax(tn) {
-	        return tn == 'Z-IF'
-	    }
-	    function isRepeatSyntax(tn) {
-	        return tn == 'Z-REPEAT'
-	    }
 
-	    var exprReg = /^\{.*?\}$/
-	    util.walk(el, function(node) {
-	        // 1. ELEMENT_NODE; 2. ATTRIBUTE_NODE; 3. TEXT_NODE; 8. COMMENT_NODE; 9. DOCUMENT_NODE 
-	        var type = node.nodeType
-	        var value = node.nodeValue
-	        var tagName = node.tagName
-	        switch (type) {
+	    /**
+	     *  Call ready after compile
+	     */
+	    options.ready && options.ready.call(vm)
+
+	    /**
+	     *  @closure vm
+	     */
+	    function compile(node) {
+	        /**
+	         *  1. ELEMENT_NODE; 
+	         *  2. ATTRIBUTE_NODE; 
+	         *  3. TEXT_NODE; 
+	         *  8. COMMENT_NODE; 
+	         *  9. DOCUMENT_NODE; 
+	         *  11. DOCUMENT_FRAGMENT;
+	         */
+	        switch (node.nodeType) {
 	            case 1:
-	                if (isIfSyntax(tagName)) {
-	                    new Directive(vm, node, preset['blockif'], conf.namespace + 'blockif', $(node).attr('is'))
+	                if (compileBlock(node) !== false) 
 	                    return false
-	                } else if (isRepeatSyntax(tagName)) {
-	                    var tar = node.firstElementChild
-	                    $(node).replace(tar)
-	                    new Directive(vm, tar, preset['repeat'], conf.namespace + 'if', $(node).attr('items'))
+	                else {
+	                    compileDirective(node)
+	                }
+
+	                if (!vm.$el.contains(node) || compileComponent(node, vm)) {
 	                    return false
-	                } else if (getComponent(tagName)) {
-	                    if (node === el) break
-	                    // child component
-	                    var Comp = getComponent(tagName)
-
-	                    new Comp({
-	                        el: node,
-	                        $parent: vm
-	                    })
-	                    return false
-	                } else {
-	                    var attrs = [].slice.call(node.attributes)
-	                    var ast = {
-	                            attrs: {},
-	                            dires: {}
-	                        }
-	                    /**
-	                     *  attributes walk
-	                     */
-	                    attrs.forEach(function(att) {
-	                        var aname = att.name
-	                        var v = att.value
-	                        console.log(aname, '=', v)    
-	                        // parse att
-	                        if (aname.match(exprReg)) {
-	                            // variable attribute name
-	                            ast.attrs[aname] = v
-	                        } else if (aname.indexOf(conf.namespace) === 0) {
-	                            // directive
-	                            ast.dires[aname] = v
-	                        } else if (v.trim().match(exprReg)) {
-	                            // named attribute with expression
-	                            ast.attrs[aname] = v
-	                        } else {
-	                            return
-	                        }
-	                        node.removeAttribute(aname)
-	                    })
-
-	                    /**
-	                     *  Attributes binding
-	                     */
-	                    util.objEach(ast.attrs, function(name, value) {
-	                        new AttributeDirective(vm, node, name, value)
-	                    })
-
-	                    /**
-	                     *  Directives binding
-	                     */
-	                    directives.forEach(function(d) {
-	                        util.objEach(d, function(id, def) {
-	                            var dirName = conf.namespace + id
-	                            var expr = ast.dires[dirName]
-	                            if (ast.dires.hasOwnProperty(dirName)) {
-	                                new Directive(vm, node, def, dirName, expr)
-	                            }
-	                        })
-	                    })
-	                    if (!el.contains(node)) return false
 	                }
 	                break
 	            case 3:
@@ -276,57 +249,132 @@ return /******/ (function(modules) { // webpackBootstrap
 	            default:
 	                return false
 	        }
-	    }.bind(this))
-
+	    }
 	    /**
-	     *  Life cycle methods
+	     *  Reverse component Constructor by tagName
 	     */
-	    options.ready && options.ready.call(vm)
-	}
+	    function getComponent(tn) {
+	        var compDef
+	        components.some(function (comp) {
+	            var cid = tn.toLowerCase()
+	            if (comp.hasOwnProperty(cid)) {
+	                compDef = comp[cid]
+	                return true
+	            }
+	        })
+	        return compDef
+	    }
+	    /**
+	     *  Compile element for block syntax handling
+	     */
+	    function compileBlock(node) {
+	        var tagName = node.tagName
 
-	var definition = {}
-
-	function extractExp(node) {
-	    var attrs = node.attributes
-	    for (var i = 0; i < attrs.length; i++) {
-	        var name = attrs[i].name
-	        var value = attrs[i].value
-	        if (name.match(/[\w]-[\w]/)) {
-
-	        } else if (value.match(/^\s*\{.*?\}\s*$/)) {
-	            new Directive(vm, node, name, {
-	                bind: function() {
-	                    return []
-	                },
-	                update: function() {
-
-	                }
-	            })
+	        switch(true) {
+	            /**
+	             *  <*-if></*-if>
+	             */
+	            case isIfSyntax(tagName):
+	                new Directive(
+	                        vm, 
+	                        node, 
+	                        preset['blockif'], 
+	                        conf.namespace + 'blockif', 
+	                        $(node).attr('is')
+	                )
+	                break
+	            /**
+	             *  <*-repeat></*-repeat>
+	             */
+	            case isRepeatSyntax(tagName):
+	                var tar = node.firstElementChild
+	                $(node).replace(tar)
+	                new Directive(
+	                        vm, 
+	                        tar, 
+	                        preset['repeat'], 
+	                        conf.namespace + 'if', 
+	                        $(node).attr('items')
+	                )
+	                break
+	            default:
+	                return false
 	        }
 	    }
-	}
 
-	function parseDirective(vm, id, definition) {
-	    var atn = conf.namespace + id
+	    /**
+	     *  comment
+	     */
+	    function compileComponent (node, parentVM) {
+	        var Comp = getComponent(node.tagName)
 	        /**
-	         *  using selector to parse declare syntax
+	         *  Tag is not a custom element
 	         */
-	    vm.$el.hasAttribute(atn) && new Directive(vm, vm.$el, atn, definition)
+	        if (!Comp) return false
+	        // need deep into self
+	        if (node === parentVM.$el) return
 
-	    $(vm.$el).find('[' + atn + ']').each(function(tar) {
-	        if (!vm.$el.contains(tar)) return
-	        new Directive(vm, tar, atn, definition)
-	    })
-	}
+	        new Comp({
+	            el: node,
+	            $parent: parentVM
+	        })
+	        return true
+	    }
 
+	    /**
+	     *  Compile attributes to directive
+	     */
+	    function compileDirective (node) {
+	        var value = node.nodeValue
+	        var attrs = [].slice.call(node.attributes)
+	        var ast = {
+	                attrs: {},
+	                dires: {}
+	            }
+	        /**
+	         *  attributes walk
+	         */
+	        attrs.forEach(function(att) {
+	            var aname = att.name
+	            var v = att.value
+	            // parse att
+	            if (~componentProps.indexOf(aname)) {
+	                return
+	            }else if (util.isExpr(aname)) {
+	                // variable attribute name
+	                ast.attrs[aname] = v
+	            } else if (aname.indexOf(conf.namespace) === 0) {
+	                // directive
+	                ast.dires[aname] = v
+	            } else if (util.isExpr(v.trim())) {
+	                // named attribute with expression
+	                ast.attrs[aname] = v
+	            } else {
+	                return
+	            }
+	            node.removeAttribute(aname)
+	        })
 
-	/**
-	 *  utils
-	 */
-	function _insertProto(obj, proto) {
-	    var end = obj.__proto__
-	    obj.__proto__ = proto
-	    obj.__proto__.__proto__ = end
+	        /**
+	         *  Attributes binding
+	         */
+	        util.objEach(ast.attrs, function(name, value) {
+	            new AttributeDirective(vm, node, name, value)
+	        })
+
+	        /**
+	         *  Directives binding
+	         */
+	        directives.forEach(function(d) {
+	            util.objEach(d, function(id, def) {
+	                var dirName = conf.namespace + id
+	                var expr = ast.dires[dirName]
+	                if (ast.dires.hasOwnProperty(dirName)) {
+	                    new Directive(vm, node, def, dirName, expr)
+	                }
+	            })
+	        })
+	    }
 	}
 
 	module.exports = Zect
@@ -1607,6 +1655,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        })
 	        return src
 	    },
+	    extend: function(obj) {
+	        if (this.type(obj) != 'object') return obj;
+	        var source, prop;
+	        for (var i = 1, length = arguments.length; i < length; i++) {
+	            source = arguments[i];
+	            for (prop in source) {
+	                obj[prop] = source[prop];
+	            }
+	        }
+	        return obj;
+	    },
 	    /**
 	     *  two level diff
 	     */
@@ -1649,6 +1708,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	                that.walk(i, fn)
 	            })
 	        }
+	    },
+	    insertProto: function (obj, proto) {
+	        var end = obj.__proto__
+	        obj.__proto__ = proto
+	        obj.__proto__.__proto__ = end
+	    },
+	    /**
+	     *  Whether a text is with express syntax
+	     */
+	    isExpr: function (c) {
+	        return c ? c.trim().match(/^\{.*?\}$/) : false
 	    }
 	}
 
@@ -1676,11 +1746,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	var $ = __webpack_require__(2)
 	var util = __webpack_require__(4)
 
-	function _extractVars(t) {
-	    if (!t) return null
+	/**
+	 *  Get varibales of expression
+	 */
+	function _extractVars(expr) {
+	    if (!expr) return null
 
 	    var reg = /("|').+?[^\\]\1|\.\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)/gi
-	    var vars = t.match(reg)
+	    var vars = expr.match(reg)
 	    vars = !vars ? [] : vars.filter(function(i) {
 	        if (!i.match(/^[."']/)) {
 	            return i
@@ -1705,12 +1778,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var result = eval('with(scope){%s}'.replace('%s', expression))
 	        return result
 	    } catch (e) {
-	        throw new Error((label ? '"' + label + '": ' : '') + 'Catch error "%s" when execute expression "%s"'
-	            .replace('%s', e.message)
-	            .replace('%s', expression))
+	        console.error(
+	            (label ? '"' + label + '": ' : '') + 
+	            'Execute expression "%s" with error "%s"'.replace('%s', expression).replace('%s', e.message)
+	        )
+	        return ''
 	    }
 	}
 
+	/**
+	 *  watch changes of variable-name of keypath
+	 */
 	function _watch(vm, vars, update) {
 	    if (vars && vars.length) {
 	        vm.$data.$watch(function(kp) {
@@ -1724,9 +1802,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  Whether a text is with express syntax
 	 */
-	function _isExpr(c) {
-	    return c ? c.trim().match(/^\{.*?\}$/) : false
-	}
+	_isExpr = util.isExpr
 
 	function _strip(t) {
 	    return t.trim().match(/^\{(.*?)\}$/)[1]
@@ -1738,13 +1814,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function Directive(vm, tar, definition, name, expr) {
 	    var d = this
-	    var multiSep = ','
 
 	    var bindParams = []
 	    var isExpr = !!_isExpr(expr)
 
 	    isExpr && (expr = _strip(expr))
 	    if (definition.multi) {
+	        var multiSep = ','
 	        if (expr.match(multiSep)) {
 	            var parts = expr.split(multiSep)
 	            return parts.map(function(item) {
@@ -1770,10 +1846,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var upda = definition.update
 	    var prev
 
+	    /**
+	     *  execute wrap with directive name
+	     */
 	    function _exec(vm, expr) {
 	        return _execute.call(null, vm, expr, name)
 	    }
 
+	    /**
+	     *  update handler
+	     */
 	    function _update() {
 	        var nexv = _exec(vm, expr)
 	        if (util.diff(nexv, prev)) {
@@ -1783,13 +1865,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 
-	    var primary = _exec(vm, expr)
+	    /**
+	     *  If expression is a string iteral, use it as value
+	     */
+	    var primary = isExpr ? _exec(vm, expr):expr
+
 	    bindParams.push(primary)
 	    bindParams.push(expr)
+	    // ([property-name], expression-value, expression) 
 	    bind && bind.apply(d, bindParams)
 	    upda && upda.call(d, primary)
 
-	    if (definition.watch !== false) {
+	    // if expression is expressive and watch option not false, 
+	    // watch variable changes of expression
+	    if (isExpr && definition.watch !== false) {
 	        _watch(vm, _extractVars(expr), _update)
 	    }
 	}
@@ -1908,10 +1997,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = function(Zect) {
 	    return {
 	        'blockif': {
-	            bind: function() {
+	            bind: function(cnd, expr) {
 	                var parent = this.parent = this.tar.parentNode
-	                this.$before = document.createComment(conf.namespace + 'blockif-start')
-	                this.$after = document.createComment(conf.namespace + 'blockif-end')
+	                this.$before = document.createComment(conf.namespace + 'blockif-{' + expr + '}-start')
+	                this.$after = document.createComment(conf.namespace + 'blockif-{' + expr + '}-end')
 	                this.$container = document.createDocumentFragment()
 
 	                this.getChildren = function() {
@@ -1936,7 +2025,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                var children = [].slice.call(this.tar.childNodes)
 	                // migrate to document fragment container
-	                children.forEach(function (e) {
+	                children.forEach(function(e) {
 	                    this.$container.appendChild(e)
 	                }.bind(this))
 
@@ -1958,21 +2047,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                if (!next) {
 	                    unmount()
-	                } else if (this.childVM) {
+	                } else if (this.compiled) {
 	                    mount()
 	                } else {
-	                    this.childVM = new Zect({
-	                        el: this.$container,
-	                        $data: this.vm.$data
-	                    })
+	                    this.compiled = true
+	                    this.vm.$compile(this.$container, true)
 	                    mount()
 	                }
 	            }
 	        },
 	        'if': {
-	            bind: function() {
+	            bind: function(cnd, expr) {
 	                var parent = this.parent = this.tar.parentNode
-	                this.$holder = document.createComment(conf.namespace + 'if')
+	                this.$holder = document.createComment(conf.namespace + 'if-{' + expr +'}')
 
 	                // insert ref
 	                parent.insertBefore(this.$holder, this.tar)
@@ -1987,13 +2074,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	                if (!next) {
 	                    this.parent.contains(this.tar) && this.parent.removeChild(this.tar)
-	                } else if (this.childVM) {
+	                } else if (this.compiled) {
 	                    mount()
 	                } else {
-	                    this.childVM = new Zect({
-	                        el: this.tar,
-	                        $data: this.vm.$data
-	                    })
+	                    this.compiled = true
+	                    this.vm.$compile(this.tar, true)
+	                    // this.childVM = new Zect({
+	                    //     el: this.tar,
+	                    //     $data: this.vm.$data,
+	                    //     methods: this.vm.$methods
+	                    // })
 	                    mount()
 	                }
 	            }
@@ -2030,14 +2120,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        el: $subEl,
 	                        data: $data
 	                    }
-
-	                    var subComponent = that.vm.$component(tagName)
+	                    console.log($subEl)
+	                    var Comp = that.vm.$component(tagName)
 	                    var subVM
-	                    if (subComponent) {
-	                        subComponent.data = util.merge($data, subComponent.data)
-	                        util.merge(opts, subComponent)
+
+	                    if (Comp) {
+	                        subVM = new Comp(opts)
+	                    } else {
+	                        subVM = new Zect(opts)
 	                    }
-	                    subVM = new Zect(opts)
 
 	                    subVM.$parentVM = that.vm
 	                    return subVM
@@ -2071,7 +2162,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.last = util.copyArray(items)
 
 	                var $floor = this.$holder
-	                    // from rear to head
+	                // from rear to head
 	                var len = vms.length
 	                while (len--) {
 	                    var v = vms[len]
