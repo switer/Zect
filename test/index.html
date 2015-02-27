@@ -6,22 +6,26 @@
 </head>
 <body>
     <div id="app">
-<!--         <z-if is="{!disabled}">
+        <z-if is="{!disabled}">
             <div>z-if0~~~~~</div>
             <div>z-if1~~~~~</div>
             <z-if is="{!disabled}">
                 <div>z-if2~~~~~</div>
             </z-if>
-        </z-if> -->
-        <z-repeat items="{items}">
-            <my-component2 title="{title}"></my-component2>
-        </z-repeat>
+        </z-if>
+        <p z-if="{!disabled}">{title}</p>
+<!--         <z-repeat items="{items}">
+            <div>
+                <z-repeat items="{$value}">
+                    <my-component2 title="{$value}"></my-component2>
+                </z-repeat>
+            </div>
+        </z-repeat> -->
         <!-- <my-component2 binding="{show: !disabled}" data-title="{title}"></my-component2> -->
-
-<!--         <span z-attr="{disabled: !disabled}" {'checked'}>{title} {disabled} \{cosu\}</span>
+<!-- 
+        <span z-attr="{disabled: !disabled}" {'checked'}>{title} {disabled} \{cosu\}</span>
 
         <p z-html="{'name is : ' + title}"></p>
-        <p z-if="{!disabled}">{title}</p>
         <button z-on="{click: onAlert}">click me</button>
         <div z-class="{show: isShow}">z-class</div>
         <div z-show="{isShow}">z-show show</div>
@@ -76,8 +80,10 @@
                 console.timeEnd('p')
                 setTimeout( function() {
                     this.$data.title = 'switer'
-                    // this.$data.disabled = true
-                    // this.$data.person = {name: 'switer'}
+                    this.$data.disabled = true
+                    setTimeout(function () {
+                        this.$data.disabled = false
+                    }.bind(this), 2000)
                 }.bind(this), 1000);
             },
             methods: {
