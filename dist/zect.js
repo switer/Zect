@@ -65,21 +65,23 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var $ = __webpack_require__(3)
-	var Mux = __webpack_require__(2)
+	var $ = __webpack_require__(2)
+	var Mux = __webpack_require__(3)
 	var util = __webpack_require__(4)
 	var conf = __webpack_require__(5)
-	var Directive = __webpack_require__(6)
-	var AttributeDirective = Directive.Attribute
-	var TextDirective = Directive.Text
+	var compiler = __webpack_require__(6)
+	var Directive = compiler.Directive
+	var AttributeDirective = compiler.Attribute
+	var TextDirective = compiler.Text
 
 	/**
 	 *  private vars
 	 */
-	var preset = __webpack_require__(7)(Zect) // preset directives getter
-	var directives = [preset, {}] // [preset, global]
-	var gdirs = directives[1]
-	var gcomps = {} // global define components
+	var directives = __webpack_require__(7)(Zect)  // preset directives getter
+	var elements = __webpack_require__(8)(Zect)      // preset directives getter
+	var allDirectives = [directives, {}]                // [preset, global]
+	var gdirs = allDirectives[1]
+	var gcomps = {}                                 // global define components
 	var componentProps = ['binding']
 
 	function funcOrObject(obj, prop) {
@@ -201,28 +203,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  DOM Compile
 	     *  @TODO the unique interface for a compiled node($el, $remove)
 	     */
-	    vm.$compile = function (el, deep, scope) {
-	        if (deep) {
-	            util.walk(el, function (node) {
-	                compile(node, scope)
-	            })
-	        } else {
-	            compile(el, scope)
-	        }
+	    vm.$compile = function (el, scope) {
+	        var expt
+	        util.walk(el, function (node) {
+	            var result = compile(node, scope)
+	            if (node === el) expt = result.export
+	            return result.into
+	        })
+	        return expt
 	    }
 
-	    vm.$compile(el, true)
+	    vm.$compile(el)
 
-
-	    /**
-	     *  Call ready after compile
-	     */
-	    options.ready && options.ready.call(vm)
-
-	    /**
-	     *  @closure vm
-	     */
-	    function compile(node, scope) {
+	    function compile (node, scope) {
 	        /**
 	         *  1. ELEMENT_NODE; 
 	         *  2. ATTRIBUTE_NODE; 
@@ -231,28 +224,51 @@ return /******/ (function(modules) { // webpackBootstrap
 	         *  9. DOCUMENT_NODE; 
 	         *  11. DOCUMENT_FRAGMENT;
 	         */
+	        var into = false
+	        var inst
 	        switch (node.nodeType) {
 	            case 1:
-	                if (compileBlock(node, scope) !== false) 
-	                    return false
-	                else {
-	                    compileDirective(node, scope)
+	                /**
+	                 *  scope syntax
+	                 */
+	                if (inst = compileBlock(node, scope)) {
+	                    into = false
+	                    break
 	                }
-	                if (compileComponent(node, vm, scope)) {
-	                    return false
+	                /**
+	                 *  Attribute directive
+	                 */
+	                compileDirective(node, scope)
+	                /**
+	                 *  Compile custom-element
+	                 */
+	                if (inst = compileComponent(node, vm, scope)) {
+	                    into = false
+	                    break
 	                }
-	                // !vm.$el.contains(node) 
 	                break
 	            case 3:
-	                new TextDirective(vm, scope, node)
+	                inst = new TextDirective(vm, scope, node)
+	                into = false
 	                break
 	            case 11:
 	                // document fragment
 	                break
 	            default:
-	                return false
+	                into = false
+	        }
+
+	        return {
+	            into: !!into,
+	            inst: inst || node
 	        }
 	    }
+
+
+	    /**
+	     *  Call ready after compile
+	     */
+	    options.ready && options.ready.call(vm)
 	    /**
 	     *  Reverse component Constructor by tagName
 	     */
@@ -278,32 +294,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *  <*-if></*-if>
 	             */
 	            case isIfSyntax(tagName):
-	                new Directive(
+	                return new Directive(
 	                        vm, 
 	                        scope,
 	                        node, 
-	                        preset['blockif'], 
-	                        conf.namespace + 'blockif', 
+	                        elements['if'], 
+	                        conf.namespace + 'if', 
 	                        $(node).attr('is')
 	                )
-	                break
 	            /**
 	             *  <*-repeat></*-repeat>
 	             */
 	            case isRepeatSyntax(tagName):
 	                var tar = node.firstElementChild
+	                if (!tar) {
+	                    console.error('"' + conf.namespace + '-repeat"\'s childNode must has a HTMLElement node')
+	                    break
+	                }
 	                $(node).replace(tar)
-	                new Directive(
+	                return Directive(
 	                        vm, 
 	                        scope,
 	                        tar, 
-	                        preset['repeat'], 
-	                        conf.namespace + 'if', 
+	                        elements['repeat'],
+	                        conf.namespace + 'repeat', 
 	                        $(node).attr('items')
 	                )
-	                break
-	            default:
-	                return false
 	        }
 	    }
 
@@ -371,7 +387,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         *  Directives binding
 	         */
-	        directives.forEach(function(d) {
+	        allDirectives.forEach(function(d) {
 	            util.objEach(d, function(id, def) {
 	                var dirName = conf.namespace + id
 	                var expr = ast.dires[dirName]
@@ -388,6 +404,141 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 *  DOM manipulations
+	 */
+
+	'use strict';
+	var util = __webpack_require__(4)
+
+	function Selector(sel) {
+	    if (util.type(sel) == 'string') {
+	        var nodes = util.copyArray(document.querySelectorAll(sel))
+	        return Wrap(nodes)
+	    }
+	    else if (util.type(sel) == 'array') {
+	        return Wrap(sel)
+	    } 
+	    else if (sel instanceof Wrap) return sel
+	    else if (sel instanceof HTMLElement || sel instanceof DocumentFragment || sel instanceof Comment) {
+	        return Wrap([sel])
+	    }
+	    else {
+	        throw new Error('Unexpect selector !')
+	    }
+	}
+
+	function Wrap(nodes) {
+	    if (nodes instanceof Wrap) return nodes
+	    nodes.__proto__ = proto
+	    return nodes
+	}
+
+	var proto = {
+	    find: function(sel) {
+	        var subs = []
+	        this.forEach(function(n) {
+	            subs = subs.concat(util.copyArray(n.querySelectorAll(sel)))
+	        })
+	        return Wrap(subs)
+	    },
+	    attr: function(attname, attvalue) {
+	        var len = arguments.length
+	        var el = this[0]
+	        if (len > 1) {
+	            el.setAttribute(attname, attvalue)
+	        } else if (len == 1) {
+	            return (el.getAttribute(attname) || '').toString()
+	        }
+	        return this
+	    },
+	    removeAttr: function(attname) {
+	        this.forEach(function(el) {
+	            el.removeAttribute(attname)
+	        })
+	        return this
+	    },
+	    addClass: function(clazz) {
+	        this.forEach(function(el) {
+	            var classes = util.copyArray(el.classList)
+	            if (!~classes.indexOf(clazz)) classes.push(clazz)
+	            el.className = classes.join(' ')
+	        })
+	        return this
+	    },
+	    removeClass: function(clazz) {
+	        this.forEach(function(el) {
+	            el.className = classes.reduce(function(r, n) {
+	                if (n != clazz) r.push(n)
+	                return r
+	            }, []).join(' ')
+	        })
+	        return this
+	    },
+	    each: function(fn) {
+	        this.forEach(fn)
+	        return this
+	    },
+	    on: function(type, listener, capture) {
+	        this.forEach(function(el) {
+	            el.addEventListener(type, listener, capture)
+	        })
+	        return this
+	    },
+	    off: function(type, listener) {
+	        this.forEach(function(el) {
+	            el.removeEventListener(type, listener)
+	        })
+	        return this
+	    },
+	    html: function(html) {
+	        var len = arguments.length
+	        if (len >= 1) {
+	            this.forEach(function(el) {
+	                el.innerHTML = html
+	            })
+	        } else if (this.length) {
+	            return this[0].innerHTML
+	        }
+	        return this
+	    },
+	    parent: function() {
+	        if (!this.length) return null
+	        return Wrap([this[0].parentNode])
+	    },
+	    remove: function() {
+	        this.forEach(function(el) {
+	            var parent = el.parentNode
+	            parent && parent.removeChild(el)
+	        })
+	        return this
+	    },
+	    // return element by index
+	    get: function(i) {
+	        return this[i]
+	    },
+	    append: function(n) {
+	        if (this.length) this.get(0).appendChild(n)
+	        return this
+	    },
+	    replace: function(n) {
+	        var $parent = this.parent()
+	        if (!$parent) return this
+	        $parent.get(0).replaceChild(n, this.get(0))
+	        return this
+	    }
+	}
+	proto.__proto__ = Wrap.prototype
+	proto.__proto__.__proto__ = Array.prototype
+
+
+	module.exports = Selector
+
+
+/***/ },
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -1501,142 +1652,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 *  DOM manipulations
-	 */
-
-	'use strict';
-	var util = __webpack_require__(4)
-
-	function Selector(sel) {
-	    if (util.type(sel) == 'string') {
-	        var nodes = util.copyArray(document.querySelectorAll(sel))
-	        return Wrap(nodes)
-	    }
-	    else if (util.type(sel) == 'array') {
-	        return Wrap(sel)
-	    } 
-	    else if (sel instanceof Wrap) return sel
-	    else if (sel instanceof HTMLElement || sel instanceof DocumentFragment || sel instanceof Comment) {
-	        return Wrap([sel])
-	    }
-	    else {
-	        throw new Error('Unexpect selector !')
-	    }
-	}
-
-	function Wrap(nodes) {
-	    if (nodes instanceof Wrap) return nodes
-	    nodes.__proto__ = proto
-	    return nodes
-	}
-
-	var proto = {
-	    find: function(sel) {
-	        var subs = []
-	        this.forEach(function(n) {
-	            subs = subs.concat(util.copyArray(n.querySelectorAll(sel)))
-	        })
-	        return Wrap(subs)
-	    },
-	    attr: function(attname, attvalue) {
-	        var len = arguments.length
-	        var el = this[0]
-	        if (len > 1) {
-	            el.setAttribute(attname, attvalue)
-	        } else if (len == 1) {
-	            return (el.getAttribute(attname) || '').toString()
-	        }
-	        return this
-	    },
-	    removeAttr: function(attname) {
-	        this.forEach(function(el) {
-	            el.removeAttribute(attname)
-	        })
-	        return this
-	    },
-	    addClass: function(clazz) {
-	        this.forEach(function(el) {
-	            var classes = util.copyArray(el.classList)
-	            if (!~classes.indexOf(clazz)) classes.push(clazz)
-	            el.className = classes.join(' ')
-	        })
-	        return this
-	    },
-	    removeClass: function(clazz) {
-	        this.forEach(function(el) {
-	            el.className = classes.reduce(function(r, n) {
-	                if (n != clazz) r.push(n)
-	                return r
-	            }, []).join(' ')
-	        })
-	        return this
-	    },
-	    each: function(fn) {
-	        this.forEach(fn)
-	        return this
-	    },
-	    on: function(type, listener, capture) {
-	        this.forEach(function(el) {
-	            el.addEventListener(type, listener, capture)
-	        })
-	        return this
-	    },
-	    off: function(type, listener) {
-	        this.forEach(function(el) {
-	            el.removeEventListener(type, listener)
-	        })
-	        return this
-	    },
-	    html: function(html) {
-	        var len = arguments.length
-	        if (len >= 1) {
-	            this.forEach(function(el) {
-	                el.innerHTML = html
-	            })
-	        } else if (this.length) {
-	            return this[0].innerHTML
-	        }
-	        return this
-	    },
-	    parent: function() {
-	        if (!this.length) return null
-	        return Wrap([this[0].parentNode])
-	    },
-	    remove: function() {
-	        this.forEach(function(el) {
-	            var parent = el.parentNode
-	            parent && parent.removeChild(el)
-	        })
-	        return this
-	    },
-	    // return element by index
-	    get: function(i) {
-	        return this[i]
-	    },
-	    append: function(n) {
-	        if (this.length) this.get(0).appendChild(n)
-	        return this
-	    },
-	    replace: function(n) {
-	        var $parent = this.parent()
-	        if (!$parent) return this
-	        
-	        $parent.get(0).replaceChild(n, this.get(0))
-	        return this
-	    }
-	}
-	proto.__proto__ = Wrap.prototype
-	proto.__proto__.__proto__ = Array.prototype
-
-
-	module.exports = Selector
-
-
-/***/ },
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -1739,6 +1754,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    isExpr: function (c) {
 	        return c ? c.trim().match(/^\{.*?\}$/) : false
+	    },
+	    domRange: function (tar, before, after) {
+	        var children = []
+	        var nodes = tar.childNodes
+	        var start = false
+	        for (var i = 0; i < nodes.length; i++) {
+	            var item = nodes[i]
+	            if (item === after) break
+	            else if (start) {
+	                children.push(item)
+	            } else if (item == before) {
+	                start = true
+	            }
+	        }
+	        return children
 	    }
 	}
 
@@ -1763,7 +1793,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var $ = __webpack_require__(3)
+	var $ = __webpack_require__(2)
 	var util = __webpack_require__(4)
 
 	/**
@@ -1823,12 +1853,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _strip(t) {
 	    return t.trim().match(/^\{(.*?)\}$/)[1]
 	}
+
+
+	var compiler = function () {}
+
+	compiler.inherit = function (Ctor) {
+	    Ctor.prototype.__proto__ = compiler.prototype
+	    return function () {
+	        this.__proto__ = Ctor
+	        Ctor.apply(this, arguments)
+	    }
+	}
+
+	compiler.prototype.remove = function (t) {
+
+	}
+
 	/**
 	 *  Standard directive
 	 */
-	var _id = 0
-
-	function Directive(vm, scope, tar, def, name, expr) {
+	var _did = 0
+	compiler.Directive = compiler.inherit(function (vm, scope, tar, def, name, expr) {
 	    var d = this
 
 	    var bindParams = []
@@ -1856,24 +1901,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.tar = tar
 	    d.vm = vm
 	    d.mounted = vm.$el
-	    d.id = _id++
-	    var mounted = true
-	    d.mount = function () {
-	        if (mounted) return
-	        mounted = true
-	        def.mount && def.mount.call(d)
-	    }
-	    d.unmount = function () {
-	        if (!mounted) return
-	        mounted = false
-	        def.unmount && def.unmount.call(d)
-	    }
-	    d.mounted = function () {
-	        return mounted
-	    }
-	    d.container = function () {
-	        return def.container ? def.container.call(d) : tar
-	    }
+	    d.id = _did++
 
 	    var bind = def.bind
 	    var upda = def.update
@@ -1901,22 +1929,54 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     *  If expression is a string iteral, use it as value
 	     */
-	    var primary = isExpr ? _exec(expr):expr
+	    prev = isExpr ? _exec(expr):expr
 
-	    bindParams.push(primary)
+	    bindParams.push(prev)
 	    bindParams.push(expr)
 	    // ([property-name], expression-value, expression) 
 	    bind && bind.apply(d, bindParams)
-	    upda && upda.call(d, primary)
+	    upda && upda.call(d, prev)
 
 	    // if expression is expressive and watch option not false, 
 	    // watch variable changes of expression
 	    if (isExpr && def.watch !== false) {
 	        _watch(vm, _extractVars(expr), _update)
 	    }
-	}
+	})
 
-	Directive.Text = function(vm, scope, tar) {
+
+	// var _eid = 0
+	// compiler.Element = compiler.inherit(function (vm, scope, tar, def, expr) {
+	//     var e = this
+	//     e.id = _eid ++
+	//     var bind = def.bind
+	//     var upda = def.update
+	//     var prev
+
+	//     /**
+	//      *  update handler
+	//      */
+	//     function _update() {
+	//         var nexv = _exec(expr)
+	//         if (util.diff(nexv, prev)) {
+	//             var p = prev
+	//             prev = nexv
+	//             upda.call(d, nexv, p)
+	//         }
+	//     }
+
+	//     prev = isExpr ? _exec(expr):expr
+
+	//     bind && bind.apply(d, prev)
+	//     upda && upda.call(d, prev)
+
+	//     if (isExpr && def.watch !== false) {
+	//         _watch(vm, _extractVars(expr), _update)
+	//     }
+	// })
+
+
+	compiler.Text = compiler.inherit(function(vm, scope, tar) {
 
 	    function _exec (expr) {
 	        return _execute(vm, scope, expr)
@@ -1969,9 +2029,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  initial render
 	     */
 	    render()
-	}
+	})
 
-	Directive.Attribute = function(vm, scope, tar, name, value) {
+	compiler.Attribute = function(vm, scope, tar, name, value) {
 
 	    function _exec(expr) {
 	        return _execute(vm, scope, expr)
@@ -2018,7 +2078,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 
-	module.exports = Directive
+	module.exports = compiler
 
 
 /***/ },
@@ -2031,101 +2091,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var $ = __webpack_require__(3)
+	var $ = __webpack_require__(2)
 	var conf = __webpack_require__(5)
 	var util = __webpack_require__(4)
 
 	module.exports = function(Zect) {
 	    return {
-	        'blockif': {
-	            atom: true,
-	            mount: function () {
-	                this.parent.insertBefore(this.$container, this.$after)
-	            },
-	            unmount: function () {
-	                var that = this
-	                if (!this.inited) {
-
-	                    this.inited = true
-	                    // insert ref
-	                    this.parent
-	                        .insertBefore(this.$before, this.tar)
-
-	                    $(this.tar).replace(this.$after)
-	                    // migrate to document fragment container
-	                    ;[].slice
-	                        .call(this.tar.childNodes)
-	                        .forEach(function(e) {
-	                            this.$container.appendChild(e)
-	                        }.bind(this))
-
-	                } else {
-	                    this.getChildren()
-	                        .forEach(function(n) {
-	                            that.$container.appendChild(n)
-	                        })
-	                    
-	                }
-	            },
-	            container: function () {
-	                if (this.mounted()) {
-	                    return this.getChildren()
-	                } else {
-	                    return this.$container
-	                }
-	            },
-	            bind: function(cnd, expr) {
-	                var parent = this.parent = this.tar.parentNode
-	                this.$before = document.createComment(conf.namespace + 'blockif-{' + expr + '}-start')
-	                this.$after = document.createComment(conf.namespace + 'blockif-{' + expr + '}-end')
-	                this.$container = document.createDocumentFragment()
-
-	                this.getChildren = function() {
-	                    var children = []
-	                    var nodes = parent.childNodes
-	                    var start = false
-	                    for (var i = 0; i < nodes.length; i++) {
-	                        var tar = nodes[i]
-	                        if (tar === this.$after) break
-	                        else if (start) {
-	                            children.push(tar)
-	                        } else if (tar == this.$before) {
-	                            start = true
-	                        }
-	                    }
-	                    return children
-	                }
-
-	                this.unmount()
-	            },
-	            update: function(next) {
-	                var that = this
-
-	                if (!next) {
-	                    this.unmount()
-	                } else if (this.compiled) {
-	                    this.mount()
-	                } else {
-	                    this.compiled = true
-	                    this.vm.$compile(this.$container, true)
-	                    this.mount()
-	                }
-	            }
-	        },
 	        'if': {
 	            atom: true,
-	            container: function () {
-	                if (this.mounted()) return this.tar
-	                else return this.holder
-	            },
-	            mount: function () {
-	                $(this.holder).replace(this.tar)
-	            },
-	            unmount: function () {
-	                $(this.tar).replace(this.holder)
-	            },
 	            bind: function(cnd, expr) {
 	                this.holder = document.createComment(conf.namespace + 'if-{' + expr +'}')
+	                this.mount = function () {
+	                    $(this.holder).replace(this.tar)
+	                }
+	                this.unmount = function () {
+	                    $(this.tar).replace(this.holder)
+	                }
 	                this.unmount()
 	            },
 	            // next: true show || false unmount
@@ -2136,93 +2117,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    this.mount()
 	                } else {
 	                    this.compiled = true
-	                    this.vm.$compile(this.tar, true)
+	                    this.vm.$compile(this.tar)
 	                    this.mount()
 	                }
-	            }
-	        },
-	        'component': {
-	            bind: function() {
-
-	            },
-	            update: function() {
-
-	            }
-	        },
-	        'repeat': {
-	            atom: true,
-	            container: function () {
-	                return this.vms.map(function (v) {
-	                    return v.$el
-	                })
-	            },
-	            bind: function(items, expr) {
-	                var $el = $(this.tar)
-	                this.parent = this.tar.parentNode
-	                this.holder = document.createComment(conf.namespace + 'repeat-{' +  expr + '}')
-	                $el.replace(this.holder)
-	            },
-	            update: function(items) {
-	                if (!items || !items.forEach) {
-	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data')
-	                }
-	                var that = this
-
-	                function createSubVM(item, index) {
-	                    var subEl = that.tar.cloneNode(true)
-	                    var data = util.type(item) == 'object' ? util.copyObject(item) : {}
-
-	                    data.$index = index
-	                    data.$value = item
-
-	                    that.vm.$compile(subEl, true, {
-	                        data: data
-	                    })
-	                    return {
-	                        $index: index,
-	                        $value: item,
-	                        $el: subEl
-	                    }
-	                }
-
-	                var vms = new Array(items.length)
-	                var olds = this.last ? util.copyArray(this.last) : olds
-	                var oldVms = this.$vms ? util.copyArray(this.$vms) : oldVms
-
-	                items.forEach(function(item, index) {
-	                    var v
-	                    if (!olds) {
-	                        v = createSubVM(item, index)
-	                    } else {
-	                        var i = olds.indexOf(item)
-	                        if (~i && !util.diff(olds[i], item)) {
-	                            // reused
-	                            v = oldVms[i]
-	                            // clean
-	                            olds.splice(i, 1)
-	                            oldVms.splice(i, 1)
-	                            // reset $index
-	                            v.$index = i
-	                        } else {
-	                            v = createSubVM(item, index)
-	                        }
-	                    }
-	                    vms[index] = v
-	                })
-	                this.$vms = vms
-	                this.last = util.copyArray(items)
-
-	                var $floor = this.holder
-	                // from rear to head
-	                var len = vms.length
-	                while (len--) {
-	                    var v = vms[len]
-	                    that.parent.insertBefore(v.$el, $floor)
-	                    $floor = v.$el
-	                }
-	                oldVms && oldVms.forEach(function(v) {
-	                    $(v.$el).remove()
-	                })
 	            }
 	        },
 	        'html': {
@@ -2274,6 +2171,152 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var $el = $(this.tar)
 	                if (next) $el.addClass(this.className)
 	                else $el.removeClass(this.className)
+	            }
+	        }
+	    }
+	}
+
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 *  Preset Global Custom-Elements
+	 */
+
+	'use strict';
+
+	var $ = __webpack_require__(2)
+	var conf = __webpack_require__(5)
+	var util = __webpack_require__(4)
+
+	module.exports = function(Zect) {
+	    return {
+	        'if': {
+	            bind: function(cnd, expr) {
+	                var parent = this.parent = this.tar.parentNode
+	                this.$before = document.createComment(conf.namespace + 'blockif-{' + expr + '}-start')
+	                this.$after = document.createComment(conf.namespace + 'blockif-{' + expr + '}-end')
+	                this.$container = document.createDocumentFragment()
+
+
+	                /**
+	                 *  Initial unmount childNodes
+	                 */
+	                parent.insertBefore(this.$before, this.tar)
+	                $(this.tar).replace(this.$after)
+	                // migrate to document fragment container
+	                ;[].slice
+	                    .call(this.tar.childNodes)
+	                    .forEach(function(e) {
+	                        this.$container.appendChild(e)
+	                    }.bind(this))
+
+
+	                console.log(parent)
+	                /**
+	                 *  Instance method
+	                 */
+	                var mounted
+	                this.mount = function () {
+	                    if (mounted) return
+	                    mounted = true
+	                    parent.insertBefore(this.$container, this.$after)
+
+	                }
+	                this.unmount = function () {
+	                    if (!mounted) return
+	                    mounted = false
+	                    var that = this
+	                    util.domRange(parent, this.$before, this.$after)
+	                        .forEach(function(n) {
+	                            that.$container.appendChild(n)
+	                        })
+	                        
+	                }
+	            },
+	            update: function(next) {
+	                var that = this
+
+	                if (!next) {
+	                    this.unmount()
+	                } else if (this.compiled) {
+	                    this.mount()
+	                } else {
+	                    this.compiled = true
+	                    this.vm.$compile(this.$container)
+	                    this.mount()
+	                }
+	            }
+	        },
+	        'repeat': {
+	            bind: function(items, expr) {
+	                var $el = $(this.tar)
+	                this.parent = this.tar.parentNode
+	                this.holder = document.createComment(conf.namespace + 'repeat-{' +  expr + '}')
+	                $el.replace(this.holder)
+	            },
+	            update: function(items) {
+	                if (!items || !items.forEach) {
+	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data')
+	                }
+	                var that = this
+
+	                function createSubVM(item, index) {
+	                    var subEl = that.tar.cloneNode(true)
+	                    var data = util.type(item) == 'object' ? util.copyObject(item) : {}
+
+	                    data.$index = index
+	                    data.$value = item
+	                    that.vm.$compile(subEl, {
+	                        data: data
+	                    })
+	                    return {
+	                        $index: index,
+	                        $value: item,
+	                        $el: subEl
+	                    }
+	                }
+
+	                var vms = new Array(items.length)
+	                var olds = this.last ? util.copyArray(this.last) : olds
+	                var oldVms = this.$vms ? util.copyArray(this.$vms) : oldVms
+
+	                items.forEach(function(item, index) {
+	                    var v
+	                    if (!olds) {
+	                        v = createSubVM(item, index)
+	                    } else {
+	                        var i = olds.indexOf(item)
+	                        if (~i && !util.diff(olds[i], item)) {
+	                            // reused
+	                            v = oldVms[i]
+	                            // clean
+	                            olds.splice(i, 1)
+	                            oldVms.splice(i, 1)
+	                            // reset $index
+	                            v.$index = i
+	                        } else {
+	                            v = createSubVM(item, index)
+	                        }
+	                    }
+	                    vms[index] = v
+	                })
+	                this.$vms = vms
+	                this.last = util.copyArray(items)
+
+	                var $floor = this.holder
+	                // from rear to head
+	                var len = vms.length
+	                while (len--) {
+	                    var v = vms[len]
+	                    that.parent.insertBefore(v.$el, $floor)
+	                    $floor = v.$el
+	                }
+	                oldVms && oldVms.forEach(function(v) {
+	                    $(v.$el).remove()
+	                })
 	            }
 	        }
 	    }

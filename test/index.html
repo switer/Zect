@@ -6,14 +6,15 @@
 </head>
 <body>
     <div id="app">
-        <z-if is="{!disabled}">
+<!--         <z-if is="{!disabled}">
             <div>z-if0~~~~~</div>
             <div>z-if1~~~~~</div>
+            <my-component2 binding="{show: !disabled}" data-title="{title}"></my-component2>        
             <z-if is="{!disabled}">
                 <div>z-if2~~~~~</div>
             </z-if>
-        </z-if>
-        <p z-if="{!disabled}">{title}</p>
+        </z-if> -->
+        <!-- <p z-if="{!disabled}">{title}</p> -->
 <!--         <z-repeat items="{items}">
             <div>
                 <z-repeat items="{$value}">
@@ -21,7 +22,6 @@
                 </z-repeat>
             </div>
         </z-repeat> -->
-        <!-- <my-component2 binding="{show: !disabled}" data-title="{title}"></my-component2> -->
 <!-- 
         <span z-attr="{disabled: !disabled}" {'checked'}>{title} {disabled} \{cosu\}</span>
 
@@ -30,9 +30,10 @@
         <div z-class="{show: isShow}">z-class</div>
         <div z-show="{isShow}">z-show show</div>
         <div z-show="{!isShow}">z-show hide</div>
-        <div z-repeat="{items}">
-            <div z-repeat="{$value}">{$value}</div>
-        </div> -->
+         -->
+        <z-repeat items="{items}">
+            <z-repeat items="{$value}">items</z-repeat>            
+        </z-repeat>
     </div>
     <script src="../dist/zect.js"></script>
     <script>
@@ -61,7 +62,8 @@
             },
             data: function () {
                 return {
-                    items: [[1],[2]],
+                    // items: [[1],[2]],
+                    items: [[1]],
                     title: 'zect data-binding',
                     disabled: false,
                     isShow: true,
@@ -83,7 +85,7 @@
                     this.$data.disabled = true
                     setTimeout(function () {
                         this.$data.disabled = false
-                    }.bind(this), 2000)
+                    }.bind(this), 1000)
                 }.bind(this), 1000);
             },
             methods: {
