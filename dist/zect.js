@@ -69,10 +69,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Mux = __webpack_require__(3)
 	var util = __webpack_require__(4)
 	var conf = __webpack_require__(5)
-	var compiler = __webpack_require__(6)
-	var Directive = compiler.Directive
-	var AttributeDirective = compiler.Attribute
-	var TextDirective = compiler.Text
+	var Compiler = __webpack_require__(6)
+	var Directive = Compiler.Directive
+	var AttributeDirective = Compiler.Attribute
+	var TextDirective = Compiler.Text
 
 	/**
 	 *  private vars
@@ -135,7 +135,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      ViewModel Constructor
 	*******************************/
 	function ViewModel(options) {
-	    // var proto = this.__proto__
+	    // inherit Compile
 	    var vm = this
 	    var el = options.el
 	    var components = [gcomps, options.components || {}]
@@ -204,16 +204,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  @TODO the unique interface for a compiled node($el, $remove)
 	     */
 	    vm.$compile = function (el, scope) {
-	        var expt
+	        var compiler
 	        util.walk(el, function (node) {
 	            var result = compile(node, scope)
-	            if (node === el) expt = result.export
+	            if (node === el) compiler = result.inst
 	            return result.into
 	        })
-	        return expt
+	        return compiler
 	    }
 
-	    vm.$compile(el)
+	    vm.$compiler = vm.$compile(el, {
+	        root: el
+	    })
 
 	    function compile (node, scope) {
 	        /**
@@ -224,7 +226,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	         *  9. DOCUMENT_NODE; 
 	         *  11. DOCUMENT_FRAGMENT;
 	         */
-	        var into = false
+	        var into = true
 	        var inst
 	        switch (node.nodeType) {
 	            case 1:
@@ -242,7 +244,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                /**
 	                 *  Compile custom-element
 	                 */
-	                if (inst = compileComponent(node, vm, scope)) {
+	                if (compileComponent(node, vm, scope)) {
+	                    inst = new Compiler(node)
 	                    into = false
 	                    break
 	                }
@@ -257,10 +260,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            default:
 	                into = false
 	        }
-
 	        return {
 	            into: !!into,
-	            inst: inst || node
+	            inst: inst || new Compiler(node)
 	        }
 	    }
 
@@ -288,7 +290,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    function compileBlock(node, scope) {
 	        var tagName = node.tagName
-
 	        switch(true) {
 	            /**
 	             *  <*-if></*-if>
@@ -306,16 +307,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *  <*-repeat></*-repeat>
 	             */
 	            case isRepeatSyntax(tagName):
-	                var tar = node.firstElementChild
-	                if (!tar) {
-	                    console.error('"' + conf.namespace + '-repeat"\'s childNode must has a HTMLElement node')
-	                    break
-	                }
-	                $(node).replace(tar)
-	                return Directive(
+	                return new Directive(
 	                        vm, 
 	                        scope,
-	                        tar, 
+	                        node, 
 	                        elements['repeat'],
 	                        conf.namespace + 'repeat', 
 	                        $(node).attr('items')
@@ -524,9 +519,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this
 	    },
 	    replace: function(n) {
-	        var $parent = this.parent()
-	        if (!$parent) return this
-	        $parent.get(0).replaceChild(n, this.get(0))
+	        var tar = this.get(0)
+	        tar.parentNode.replaceChild(n, tar)
 	        return this
 	    }
 	}
@@ -1855,27 +1849,61 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 
-	var compiler = function () {}
+	 function compiler (node) {
+	    this.tar = node
+	}
 
 	compiler.inherit = function (Ctor) {
 	    Ctor.prototype.__proto__ = compiler.prototype
-	    return function () {
-	        this.__proto__ = Ctor
+	    return function Compiler() {
+	        this.__proto__ = Ctor.prototype
 	        Ctor.apply(this, arguments)
 	    }
 	}
-
-	compiler.prototype.remove = function (t) {
-
+	compiler.prototype.root = function () {
+	    return this.tar
 	}
+	compiler.prototype.pack = function () {
+	    return this.root()
+	}
+	compiler.prototype.mount = function (pos/*con, pos*/) {
+	    // var args = arguments
+	    // var len = args.length
+	    // var con, post
+	    // if (len >= 2) {
+	    //     con = args[0]
+	    //     pos = args[1]
+	    // } else if (len == 1) {
+	    //     pos = args[0]
+	    //     con = pos.parentNode
+	    // } else {
+	    //     con = this.tar.parentNode
+	    //     pos = this.tar
+	    // }
+	    // if (!con) {
+	    //     return console.warn('Can not mount to null container')
+	    // }
+	    // if (this.container instanceof DocumentFragment && 
+	    //     (!this.container.firstChild || con.contains(this.container.firstChild))) {
+	    //     return
+	    // }
+	    // if (con.contains(this.container)) return
 
+	    pos.parentNode.insertBefore(this.pack(), pos)
+	}
+	compiler.prototype.floor = function () {
+	    return this.root()
+	}
+	compiler.prototype.destroy = function () {
+	    // TODO
+	    return this
+	}
 	/**
 	 *  Standard directive
 	 */
 	var _did = 0
 	compiler.Directive = compiler.inherit(function (vm, scope, tar, def, name, expr) {
 	    var d = this
-
 	    var bindParams = []
 	    var isExpr = !!_isExpr(expr)
 
@@ -1900,13 +1928,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    d.tar = tar
 	    d.vm = vm
-	    d.mounted = vm.$el
 	    d.id = _did++
+	    d.scope = scope
 
 	    var bind = def.bind
 	    var upda = def.update
 	    var prev
 
+	    ;['mount', 'pack', 'root', 'floor', 'destroy'].forEach(function (prop) {
+	        if (def.hasOwnProperty(prop)) {
+	            d[prop] = def[prop]
+	        }
+	    })
 	    /**
 	     *  execute wrap with directive name
 	     */
@@ -2098,7 +2131,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = function(Zect) {
 	    return {
 	        'if': {
-	            atom: true,
 	            bind: function(cnd, expr) {
 	                this.holder = document.createComment(conf.namespace + 'if-{' + expr +'}')
 	                this.mount = function () {
@@ -2200,7 +2232,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.$after = document.createComment(conf.namespace + 'blockif-{' + expr + '}-end')
 	                this.$container = document.createDocumentFragment()
 
-
 	                /**
 	                 *  Initial unmount childNodes
 	                 */
@@ -2213,8 +2244,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        this.$container.appendChild(e)
 	                    }.bind(this))
 
-
-	                console.log(parent)
 	                /**
 	                 *  Instance method
 	                 */
@@ -2251,31 +2280,52 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'repeat': {
+	            pack: function () {
+	                if (!this.container.contains(this.after)) {
+	                    var that = this
+	                    util.domRange(this.after.parentNode, this.before, this.after)
+	                        .forEach(function(n) {
+	                            that.container.appendChild(n)
+	                        })
+	                }
+	                return this.container
+	            },
+	            floor: function () {
+	                return this.before
+	            },
 	            bind: function(items, expr) {
-	                var $el = $(this.tar)
-	                this.parent = this.tar.parentNode
-	                this.holder = document.createComment(conf.namespace + 'repeat-{' +  expr + '}')
-	                $el.replace(this.holder)
+	                this.child = this.tar.firstElementChild
+
+	                this.container = document.createDocumentFragment()
+	                if (!this.child) {
+	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node')
+	                }
+
+	                this.before = document.createComment(conf.namespace + 'repeat-{' +  expr + '}-before')
+	                this.after = document.createComment(conf.namespace + 'repeat-{' +  expr + '}-after')
+
+	                this.container.appendChild(this.before)
+	                this.container.appendChild(this.after)
 	            },
 	            update: function(items) {
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data')
 	                }
 	                var that = this
-
 	                function createSubVM(item, index) {
-	                    var subEl = that.tar.cloneNode(true)
+	                    var subEl = that.child.cloneNode(true)
 	                    var data = util.type(item) == 'object' ? util.copyObject(item) : {}
 
 	                    data.$index = index
 	                    data.$value = item
-	                    that.vm.$compile(subEl, {
-	                        data: data
+	                    var cvm = that.vm.$compile(subEl, {
+	                        data: data,
+	                        root: that.child
 	                    })
 	                    return {
 	                        $index: index,
 	                        $value: item,
-	                        $el: subEl
+	                        $compiler: cvm
 	                    }
 	                }
 
@@ -2306,17 +2356,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.$vms = vms
 	                this.last = util.copyArray(items)
 
-	                var $floor = this.holder
+	                var $floor = this.after
 	                // from rear to head
 	                var len = vms.length
 	                while (len--) {
 	                    var v = vms[len]
-	                    that.parent.insertBefore(v.$el, $floor)
-	                    $floor = v.$el
+	                    v.$compiler.mount($floor)
+	                    $floor = v.$compiler.floor()
 	                }
 	                oldVms && oldVms.forEach(function(v) {
-	                    $(v.$el).remove()
+	                    $(v.$compiler.pack()).remove()
+	                    v.$compiler.destroy()
 	                })
+
+	                if (this.mounted) return
+	                this.mounted = true
+
+	                if (!this.tar.parentNode) {
+	                    $(this.scope.root).replace(this.container)
+	                } else {
+	                    $(this.tar).replace(this.container)
+	                }
 	            }
 	        }
 	    }
