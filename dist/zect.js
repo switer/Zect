@@ -69,10 +69,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Mux = __webpack_require__(3)
 	var util = __webpack_require__(4)
 	var conf = __webpack_require__(5)
+
 	var Compiler = __webpack_require__(6)
 	var Directive = Compiler.Directive
 	var AttributeDirective = Compiler.Attribute
 	var TextDirective = Compiler.Text
+	var ElementDirective = Compiler.Element
 
 	/**
 	 *  private vars
@@ -295,7 +297,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *  <*-if></*-if>
 	             */
 	            case isIfSyntax(tagName):
-	                return new Directive(
+	                return new ElementDirective(
 	                        vm, 
 	                        scope,
 	                        node, 
@@ -307,7 +309,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *  <*-repeat></*-repeat>
 	             */
 	            case isRepeatSyntax(tagName):
-	                return new Directive(
+	                return new ElementDirective(
 	                        vm, 
 	                        scope,
 	                        node, 
@@ -331,8 +333,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // need deep into self
 	        if (node === parentVM.$el) return
 
+	        var binding = $(node).attr('binding')
+	        var bindingData = Compiler.execute(parentVM, scope, binding)
+
+	        /**
+	         *  Watch
+	         */
+	        var multiSep = ','
+	        if (binding.match(multiSep)) {
+	            var parts = binding.split(multiSep)
+	            binding.split(multiSep).map(function(expr) {
+	                // do with single
+	                var propertyName
+	                expr = expr.replace(/^[^:]+:/, function (m) {
+	                    propertyName = m.replace(/:$/, '').trim()
+	                    return ''
+	                }).trim()
+	            })
+	        }
+
+
 	        new Comp({
 	            el: node,
+	            data: bindingData,
 	            $parent: parentVM
 	        })
 	        return true
@@ -1849,9 +1872,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 
-	 function compiler (node) {
+	function compiler (node) {
 	    this.tar = node
 	}
+	compiler.execute = _execute
 
 	compiler.inherit = function (Ctor) {
 	    Ctor.prototype.__proto__ = compiler.prototype
@@ -1867,28 +1891,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return this.root()
 	}
 	compiler.prototype.mount = function (pos/*con, pos*/) {
-	    // var args = arguments
-	    // var len = args.length
-	    // var con, post
-	    // if (len >= 2) {
-	    //     con = args[0]
-	    //     pos = args[1]
-	    // } else if (len == 1) {
-	    //     pos = args[0]
-	    //     con = pos.parentNode
-	    // } else {
-	    //     con = this.tar.parentNode
-	    //     pos = this.tar
-	    // }
-	    // if (!con) {
-	    //     return console.warn('Can not mount to null container')
-	    // }
-	    // if (this.container instanceof DocumentFragment && 
-	    //     (!this.container.firstChild || con.contains(this.container.firstChild))) {
-	    //     return
-	    // }
-	    // if (con.contains(this.container)) return
-
 	    pos.parentNode.insertBefore(this.pack(), pos)
 	}
 	compiler.prototype.floor = function () {
@@ -1929,17 +1931,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.tar = tar
 	    d.vm = vm
 	    d.id = _did++
-	    d.scope = scope
 
 	    var bind = def.bind
 	    var upda = def.update
 	    var prev
-
-	    ;['mount', 'pack', 'root', 'floor', 'destroy'].forEach(function (prop) {
-	        if (def.hasOwnProperty(prop)) {
-	            d[prop] = def[prop]
-	        }
-	    })
 	    /**
 	     *  execute wrap with directive name
 	     */
@@ -1978,35 +1973,61 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 
-	// var _eid = 0
-	// compiler.Element = compiler.inherit(function (vm, scope, tar, def, expr) {
-	//     var e = this
-	//     e.id = _eid ++
-	//     var bind = def.bind
-	//     var upda = def.update
-	//     var prev
+	var _eid = 0
+	compiler.Element = compiler.inherit(function (vm, scope, tar, def, name, expr) {
 
-	//     /**
-	//      *  update handler
-	//      */
-	//     function _update() {
-	//         var nexv = _exec(expr)
-	//         if (util.diff(nexv, prev)) {
-	//             var p = prev
-	//             prev = nexv
-	//             upda.call(d, nexv, p)
-	//         }
-	//     }
+	    var d = this
+	    var bind = def.bind
+	    var upda = def.update
+	    var isExpr = !!_isExpr(expr)
+	    var prev
+	    
+	    d.id = _eid ++
+	    d.vm = vm
+	    d.tar = tar
+	    d.scope = scope
+	    d.holder = document.createElement('z-repeat')
 
-	//     prev = isExpr ? _exec(expr):expr
+	    if (tar.parentNode) {
+	        $(tar).replace(d.holder)
+	    } else {
+	        $(scope.root).replace(d.holder)
+	    }
 
-	//     bind && bind.apply(d, prev)
-	//     upda && upda.call(d, prev)
+	    /**
+	     *  execute wrap with directive name
+	     */
+	    function _exec(expr) {
+	        return _execute(vm, scope, expr, name)
+	    }
 
-	//     if (isExpr && def.watch !== false) {
-	//         _watch(vm, _extractVars(expr), _update)
-	//     }
-	// })
+	    ;['mount', 'pack', 'root', 'floor', 'destroy'].forEach(function (prop) {
+	        if (def.hasOwnProperty(prop)) {
+	            d[prop] = def[prop]
+	        }
+	    })
+
+	    /**
+	     *  update handler
+	     */
+	    function _update() {
+	        var nexv = _exec(expr)
+	        if (util.diff(nexv, prev)) {
+	            var p = prev
+	            prev = nexv
+	            upda.call(d, nexv, p)
+	        }
+	    }
+
+	    prev = isExpr ? _exec(expr):expr
+
+	    bind && bind.call(d, prev)
+	    upda && upda.call(d, prev)
+
+	    if (isExpr && def.watch !== false) {
+	        _watch(vm, _extractVars(expr), _update)
+	    }
+	})
 
 
 	compiler.Text = compiler.inherit(function(vm, scope, tar) {
@@ -2301,6 +2322,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node')
 	                }
 
+	                this.holder = document.createComment('repeat-holder')
 	                this.before = document.createComment(conf.namespace + 'repeat-{' +  expr + '}-before')
 	                this.after = document.createComment(conf.namespace + 'repeat-{' +  expr + '}-after')
 
@@ -2365,18 +2387,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    $floor = v.$compiler.floor()
 	                }
 	                oldVms && oldVms.forEach(function(v) {
-	                    $(v.$compiler.pack()).remove()
+	                    v.$compiler.pack()
 	                    v.$compiler.destroy()
 	                })
 
 	                if (this.mounted) return
 	                this.mounted = true
-
-	                if (!this.tar.parentNode) {
-	                    $(this.scope.root).replace(this.container)
-	                } else {
-	                    $(this.tar).replace(this.container)
-	                }
+	                console.log(this.holder, this.pack())
 	            }
 	        }
 	    }
