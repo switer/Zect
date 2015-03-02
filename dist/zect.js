@@ -208,8 +208,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    vm.$compile = function (el, scope) {
 	        var compiler
 	        util.walk(el, function (node) {
-	            var result = compile(node, scope)
-	            if (node === el) compiler = result.inst
+	            var isRoot = node === el
+	            var result = compile(node, scope, isRoot)
+	            if (isRoot) compiler = result.inst
 	            return result.into
 	        })
 	        return compiler
@@ -219,7 +220,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        root: el
 	    })
 
-	    function compile (node, scope) {
+	    function compile (node, scope, isRoot) {
 	        /**
 	         *  1. ELEMENT_NODE; 
 	         *  2. ATTRIBUTE_NODE; 
@@ -235,7 +236,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                /**
 	                 *  scope syntax
 	                 */
-	                if (inst = compileBlock(node, scope)) {
+	                if (inst = compileBlock(node, scope, isRoot)) {
 	                    into = false
 	                    break
 	                }
@@ -290,7 +291,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     *  Compile element for block syntax handling
 	     */
-	    function compileBlock(node, scope) {
+	    function compileBlock(node, scope, isRoot) {
 	        var tagName = node.tagName
 	        switch(true) {
 	            /**
@@ -309,7 +310,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *  <*-repeat></*-repeat>
 	             */
 	            case isRepeatSyntax(tagName):
-	                return new ElementDirective(
+	                var inst = new ElementDirective(
 	                        vm, 
 	                        scope,
 	                        node, 
@@ -317,6 +318,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        conf.namespace + 'repeat', 
 	                        $(node).attr('items')
 	                )
+
+	                if (!isRoot) {
+	                    var holder = document.createElement('repeat')
+	                    $(node).replace(holder)
+	                    inst.mount(holder)
+	                }
+	                return inst
 	        }
 	    }
 
@@ -339,18 +347,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         *  Watch
 	         */
-	        var multiSep = ','
-	        if (binding.match(multiSep)) {
-	            var parts = binding.split(multiSep)
-	            binding.split(multiSep).map(function(expr) {
-	                // do with single
-	                var propertyName
-	                expr = expr.replace(/^[^:]+:/, function (m) {
-	                    propertyName = m.replace(/:$/, '').trim()
-	                    return ''
-	                }).trim()
-	            })
-	        }
+	        // var multiSep = ','
+	        // if (binding.match(multiSep)) {
+	        //     var parts = binding.split(multiSep)
+	        //     binding.split(multiSep).map(function(expr) {
+	        //         // do with single
+	        //         var propertyName
+	        //         expr = expr.replace(/^[^:]+:/, function (m) {
+	        //             propertyName = m.replace(/:$/, '').trim()
+	        //             return ''
+	        //         }).trim()
+	        //     })
+	        // }
 
 
 	        new Comp({
@@ -1890,10 +1898,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	compiler.prototype.pack = function () {
 	    return this.root()
 	}
-	compiler.prototype.mount = function (pos/*con, pos*/) {
-	    pos.parentNode.insertBefore(this.pack(), pos)
+	compiler.prototype.mount = function (pos, replace) {
+	    if (replace) {
+	        $(pos).replace(this.pack())
+	    } else {
+	        pos.parentNode.insertBefore(this.pack(), pos)
+	    }
 	}
 	compiler.prototype.floor = function () {
+	    return this.root()
+	}
+	compiler.prototype.ceil = function () {
 	    return this.root()
 	}
 	compiler.prototype.destroy = function () {
@@ -1986,14 +2001,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.vm = vm
 	    d.tar = tar
 	    d.scope = scope
-	    d.holder = document.createElement('z-repeat')
+	    d.$before = document.createComment(name + '-{' + expr + '}-before')
+	    d.$after = document.createComment(name + '-{' + expr + '}-after')
+	    d.$container = document.createDocumentFragment()
 
-	    if (tar.parentNode) {
-	        $(tar).replace(d.holder)
-	    } else {
-	        $(scope.root).replace(d.holder)
-	    }
-
+	    d.$container.appendChild(d.$before)
+	    d.$container.appendChild(d.$after)
 	    /**
 	     *  execute wrap with directive name
 	     */
@@ -2249,9 +2262,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        'if': {
 	            bind: function(cnd, expr) {
 	                var parent = this.parent = this.tar.parentNode
-	                this.$before = document.createComment(conf.namespace + 'blockif-{' + expr + '}-start')
-	                this.$after = document.createComment(conf.namespace + 'blockif-{' + expr + '}-end')
-	                this.$container = document.createDocumentFragment()
+	                // this.$before = document.createComment(conf.namespace + 'blockif-{' + expr + '}-start')
+	                // this.$after = document.createComment(conf.namespace + 'blockif-{' + expr + '}-end')
+	                // this.$container = document.createDocumentFragment()
 
 	                /**
 	                 *  Initial unmount childNodes
@@ -2302,32 +2315,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        'repeat': {
 	            pack: function () {
-	                if (!this.container.contains(this.after)) {
+	                if (!this.$container.contains(this.$before)) {
 	                    var that = this
-	                    util.domRange(this.after.parentNode, this.before, this.after)
+	                    util.domRange(this.$before.parentNode, this.$before, this.after)
 	                        .forEach(function(n) {
-	                            that.container.appendChild(n)
+	                            that.$container.appendChild(n)
 	                        })
 	                }
-	                return this.container
+	                return this.$container
 	            },
 	            floor: function () {
-	                return this.before
+	                return this.$after
+	            },
+	            ceil: function () {
+	                return this.$before
 	            },
 	            bind: function(items, expr) {
 	                this.child = this.tar.firstElementChild
 
-	                this.container = document.createDocumentFragment()
 	                if (!this.child) {
 	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node')
 	                }
-
-	                this.holder = document.createComment('repeat-holder')
-	                this.before = document.createComment(conf.namespace + 'repeat-{' +  expr + '}-before')
-	                this.after = document.createComment(conf.namespace + 'repeat-{' +  expr + '}-after')
-
-	                this.container.appendChild(this.before)
-	                this.container.appendChild(this.after)
 	            },
 	            update: function(items) {
 	                if (!items || !items.forEach) {
@@ -2378,22 +2386,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.$vms = vms
 	                this.last = util.copyArray(items)
 
-	                var $floor = this.after
+	                var $floor = this.floor()
 	                // from rear to head
 	                var len = vms.length
-	                while (len--) {
-	                    var v = vms[len]
-	                    v.$compiler.mount($floor)
-	                    $floor = v.$compiler.floor()
+	                var i = 0
+	                while (i < len) {
+	                    var v = vms[i++]
+	                    $floor.parentNode.insertBefore(v.$compiler.pack(), $floor)
 	                }
 	                oldVms && oldVms.forEach(function(v) {
 	                    v.$compiler.pack()
 	                    v.$compiler.destroy()
 	                })
-
-	                if (this.mounted) return
-	                this.mounted = true
-	                console.log(this.holder, this.pack())
 	            }
 	        }
 	    }
