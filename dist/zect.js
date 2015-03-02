@@ -1760,7 +1760,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    arrayDiff: function(next, pre) {
 	        if (next.length !== pre.length) return true
 	        var that = this
-	        next.some(function(item, index) {
+	        return next.some(function(item, index) {
 	            return that.valueDiff(item, pre[index])
 	        })
 	    },
@@ -2033,9 +2033,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    function _update() {
 	        var nexv = _exec(expr)
+	        console.log(util.diff(nexv, prev))
 	        if (util.diff(nexv, prev)) {
 	            var p = prev
 	            prev = nexv
+	            console.log('---------upda')
 	            upda.call(d, nexv, p)
 	        }
 	    }
