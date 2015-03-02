@@ -1900,11 +1900,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        Ctor.apply(this, arguments)
 	    }
 	}
-	compiler.prototype.root = function () {
-	    return this.tar
-	}
 	compiler.prototype.pack = function () {
-	    return this.root()
+	    return this.tar
 	}
 	compiler.prototype.mount = function (pos, replace) {
 	    if (replace) {
@@ -1914,13 +1911,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 	compiler.prototype.floor = function () {
-	    return this.root()
+	    return this.tar
 	}
 	compiler.prototype.ceil = function () {
-	    return this.root()
+	    return this.tar
 	}
 	compiler.prototype.destroy = function () {
 	    // TODO
+	    $(this.tar).remove()
+	    this.tar = null
 	    return this
 	}
 	/**
@@ -2022,7 +2021,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return _execute(vm, scope, expr, name)
 	    }
 
-	    ;['mount', 'pack', 'root', 'floor', 'destroy'].forEach(function (prop) {
+	    ;['pack', 'ceil', 'floor', 'destroy'].forEach(function (prop) {
 	        if (def.hasOwnProperty(prop)) {
 	            d[prop] = def[prop]
 	        }
@@ -2033,11 +2032,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    function _update() {
 	        var nexv = _exec(expr)
-	        console.log(util.diff(nexv, prev))
 	        if (util.diff(nexv, prev)) {
 	            var p = prev
 	            prev = nexv
-	            console.log('---------upda')
 	            upda.call(d, nexv, p)
 	        }
 	    }
@@ -2327,7 +2324,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            pack: function () {
 	                if (!this.$container.contains(this.$before)) {
 	                    var that = this
-	                    util.domRange(this.$before.parentNode, this.$before, this.after)
+	                    util.domRange(this.$before.parentNode, this.$before, this.$after)
 	                        .forEach(function(n) {
 	                            that.$container.appendChild(n)
 	                        })
@@ -2346,6 +2343,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (!this.child) {
 	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node')
 	                }
+	            },
+	            destroy: function () {
+	                this.$container = null
+	                this.$before = null
+	                this.$after = null
 	            },
 	            update: function(items) {
 	                if (!items || !items.forEach) {
@@ -2368,11 +2370,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        $compiler: cvm
 	                    }
 	                }
-
 	                var vms = new Array(items.length)
 	                var olds = this.last ? util.copyArray(this.last) : olds
 	                var oldVms = this.$vms ? util.copyArray(this.$vms) : oldVms
-
 	                items.forEach(function(item, index) {
 	                    var v
 	                    if (!olds) {
