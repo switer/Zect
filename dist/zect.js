@@ -288,7 +288,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *  <*-if></*-if>
 	             */
 	            case is.IfElement(tagName):
-	                return new ElementDirective(
+	                var inst = new ElementDirective(
 	                        vm, 
 	                        scope,
 	                        node, 
@@ -296,6 +296,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        conf.namespace + 'if', 
 	                        $(node).attr('is')
 	                )
+	                if (!isRoot) {
+	                    inst.mount(node, true)
+	                }
+	                return inst
 	            /**
 	             *  <*-repeat></*-repeat>
 	             */
@@ -1904,6 +1908,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return this.tar
 	}
 	compiler.prototype.mount = function (pos, replace) {
+	    console.log(pos, replace)
 	    if (replace) {
 	        $(pos).replace(this.pack())
 	    } else {
@@ -2267,56 +2272,79 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = function(Zect) {
 	    return {
 	        'if': {
-	            bind: function(cnd, expr) {
-	                var parent = this.parent = this.tar.parentNode
-	                // this.$before = document.createComment(conf.namespace + 'blockif-{' + expr + '}-start')
-	                // this.$after = document.createComment(conf.namespace + 'blockif-{' + expr + '}-end')
-	                // this.$container = document.createDocumentFragment()
+	            pack: function () {
+	                var $ceil = this.ceil()
+	                var $floor = this.floor()
+	                var $con = this.$container
+	                var that = this
 
+	                if (!$con.contains($ceil)) {
+	                    
+	                    $con.appendChild($ceil)
+	                    util.domRange($ceil.parentNode, $ceil, $floor)
+	                        .forEach(function(n) {
+	                            that.$container.appendChild(n)
+	                        })
+	                    $con.appendChild($floor)
+	                }
+	                return $con
+	            },
+	            destroy: function () {
+	                this.$container = null
+	                this.$before = null
+	                this.$after = null
+	            },
+	            floor: function () {
+	                return this.$after
+	            },
+	            ceil: function () {
+	                return this.$before
+	            },
+	            bind: function(cnd, expr) {
+	                this._tmpCon = document.createDocumentFragment()
 	                /**
 	                 *  Initial unmount childNodes
 	                 */
-	                parent.insertBefore(this.$before, this.tar)
-	                $(this.tar).replace(this.$after)
-	                // migrate to document fragment container
 	                ;[].slice
 	                    .call(this.tar.childNodes)
 	                    .forEach(function(e) {
-	                        this.$container.appendChild(e)
+	                        this.$container.insertBefore(e, this.floor())
 	                    }.bind(this))
 
 	                /**
 	                 *  Instance method
 	                 */
 	                var mounted
-	                this.mount = function () {
+	                this._mount = function () {
 	                    if (mounted) return
 	                    mounted = true
-	                    parent.insertBefore(this.$container, this.$after)
+	                    var $floor = this.floor()
+	                    $floor.parentNode.insertBefore(this._tmpCon, $floor)
 
 	                }
-	                this.unmount = function () {
+	                this._unmount = function () {
 	                    if (!mounted) return
 	                    mounted = false
-	                    var that = this
-	                    util.domRange(parent, this.$before, this.$after)
+	                    var $ceil = this.ceil()
+	                    var $floor = this.floor()
+
+	                    util.domRange($ceil.parentNode, $ceil, $floor)
 	                        .forEach(function(n) {
-	                            that.$container.appendChild(n)
+	                            this._tmpCon.appendChild(n)
 	                        })
-	                        
 	                }
 	            },
 	            update: function(next) {
 	                var that = this
 
 	                if (!next) {
-	                    this.unmount()
+	                    this._unmount()
 	                } else if (this.compiled) {
-	                    this.mount()
+	                    this._mount()
 	                } else {
 	                    this.compiled = true
 	                    this.vm.$compile(this.$container)
-	                    this.mount()
+	                    this._mount()
 	                }
 	            }
 	        },
@@ -2324,10 +2352,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            pack: function () {
 	                if (!this.$container.contains(this.$before)) {
 	                    var that = this
+	                    this.$container.appendChild(this.$before)
 	                    util.domRange(this.$before.parentNode, this.$before, this.$after)
 	                        .forEach(function(n) {
 	                            that.$container.appendChild(n)
 	                        })
+	                    this.$container.appendChild(this.$after)
 	                }
 	                return this.$container
 	            },
