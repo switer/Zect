@@ -58,11 +58,12 @@
             ready: function () {
                 console.timeEnd('p')
                 setTimeout( function() {
-                    this.$data.title = 'switer'
-                    this.$data.disabled = true
-                    setTimeout(function () {
-                        this.$data.disabled = false
-                    }.bind(this), 1000)
+                    // this.$data.title = 'switer'
+                    // this.$data.disabled = true
+                    this.$data.$set('items[0]', [])
+                    // setTimeout(function () {
+                    //     this.$data.disabled = false
+                    // }.bind(this), 1000)
                 }.bind(this), 1000);
             },
             methods: {

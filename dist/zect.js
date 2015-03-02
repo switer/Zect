@@ -237,7 +237,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                /**
 	                 *  Compile custom-element
 	                 */
-	                if (compileComponent(node, vm, scope)) {
+	                if (compileComponent(node, vm, scope, isRoot)) {
 	                    inst = new Compiler(node)
 	                    into = false
 	                    break
@@ -1802,6 +1802,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }
 	        return children
+	    },
+	    immutable: function (obj) {
+	        var that = this
+	        var _t = this.type(obj)
+	        var n
+
+	        if (_t == 'array') {
+	            n = obj.map(function (item) {
+	                return that.immutable(item)
+	            })
+	        } else if (_t == 'object') {
+	            n = {}
+	            this.objEach(obj, function (k, v) {
+	                n[k] = that.immutable(v)
+	            })
+	        } else {
+	            n = obj
+	        }
+	        return n
 	    }
 	}
 
@@ -1826,9 +1845,15 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
 	var $ = __webpack_require__(2)
 	var util = __webpack_require__(5)
-
+	var _execute = __webpack_require__(10)
+	/**
+	 *  Whether a text is with express syntax
+	 */
+	var _isExpr = util.isExpr
 	/**
 	 *  Get varibales of expression
 	 */
@@ -1846,26 +1871,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	/**
-	 *  Calc expression value
-	 */
-	function _execute(vm, extScope, expression, label) {
-	    extScope = extScope || {}
-
-	    var scope = {}
-	    util.extend(scope, vm.$methods, vm.$data, extScope.methods, extScope.data)
-	    try {
-	        var result = eval('with(scope){%s}'.replace('%s', expression))
-	        return result
-	    } catch (e) {
-	        console.error(
-	            (label ? '"' + label + '": ' : '') + 
-	            'Execute expression "%s" with error "%s"'.replace('%s', expression).replace('%s', e.message)
-	        )
-	        return ''
-	    }
-	}
-
-	/**
 	 *  watch changes of variable-name of keypath
 	 */
 	function _watch(vm, vars, update) {
@@ -1877,11 +1882,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        })
 	    }
 	}
-
-	/**
-	 *  Whether a text is with express syntax
-	 */
-	_isExpr = util.isExpr
 
 	function _strip(t) {
 	    return t.trim().match(/^\{(.*?)\}$/)[1]
@@ -2411,6 +2411,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var util = __webpack_require__(5)
+
+	/**
+	 *  Calc expression value
+	 */
+	function _execute(vm, extScope, expression, label) {
+	    extScope = extScope || {}
+
+	    var scope = {}
+	    var result = ''
+	    util.extend(scope, vm.$methods, vm.$data, extScope.methods, extScope.data)
+	    try {
+	        var result = util.immutable(eval('with(scope){%s}'.replace('%s', expression)))
+	    } catch (e) {
+	        console.error(
+	            (label ? '"' + label + '": ' : '') + 
+	            'Execute expression "%s" with error "%s"'.replace('%s', expression).replace('%s', e.message)
+	        )
+	    }
+	    return result
+	}
+	module.exports = _execute
 
 /***/ }
 /******/ ])
