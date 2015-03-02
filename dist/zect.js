@@ -287,7 +287,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            /**
 	             *  <*-if></*-if>
 	             */
-	            case is.IfSyntax(tagName):
+	            case is.IfElement(tagName):
 	                return new ElementDirective(
 	                        vm, 
 	                        scope,
@@ -299,7 +299,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            /**
 	             *  <*-repeat></*-repeat>
 	             */
-	            case is.RepeatSyntax(tagName):
+	            case is.RepeatElement(tagName):
 	                var inst = new ElementDirective(
 	                        vm, 
 	                        scope,
@@ -553,6 +553,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+	var conf = __webpack_require__(6)
 
 	module.exports = {
 	    Element: function(el) {
