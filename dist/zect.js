@@ -66,11 +66,12 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var $ = __webpack_require__(2)
-	var Mux = __webpack_require__(3)
-	var util = __webpack_require__(4)
-	var conf = __webpack_require__(5)
+	var is = __webpack_require__(3)
+	var Mux = __webpack_require__(4)
+	var util = __webpack_require__(5)
+	var conf = __webpack_require__(6)
 
-	var Compiler = __webpack_require__(6)
+	var Compiler = __webpack_require__(7)
 	var Directive = Compiler.Directive
 	var AttributeDirective = Compiler.Attribute
 	var TextDirective = Compiler.Text
@@ -79,8 +80,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  private vars
 	 */
-	var directives = __webpack_require__(7)(Zect)  // preset directives getter
-	var elements = __webpack_require__(8)(Zect)      // preset directives getter
+	var directives = __webpack_require__(8)(Zect)  // preset directives getter
+	var elements = __webpack_require__(9)(Zect)      // preset directives getter
 	var allDirectives = [directives, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
 	var gcomps = {}                                 // global define components
@@ -120,18 +121,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    conf.namespace = ns
 	}
 
-	/*******************************
-	          UTILS
-	*******************************/
-	function isElement(el) {
-	    return el instanceof HTMLElement || el instanceof DocumentFragment
-	}
-	function isIfSyntax(tn) {
-	    return tn == (conf.namespace + 'if').toUpperCase()
-	}
-	function isRepeatSyntax(tn) {
-	    return tn == (conf.namespace + 'repeat').toUpperCase()
-	}
 
 	/*******************************
 	      ViewModel Constructor
@@ -156,7 +145,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        el.innerHTML = options.template
 	    } else if (util.type(el) == 'string') {
 	        el = document.querySelector(el)
-	    } else if (!isElement(el)) {
+	    } else if (!is.Element(el)) {
 	        throw new Error('Unmatch el option')
 	    }
 	    vm.$el = el
@@ -210,6 +199,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        util.walk(el, function (node) {
 	            var isRoot = node === el
 	            var result = compile(node, scope, isRoot)
+
 	            if (isRoot) compiler = result.inst
 	            return result.into
 	        })
@@ -297,7 +287,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            /**
 	             *  <*-if></*-if>
 	             */
-	            case isIfSyntax(tagName):
+	            case is.IfSyntax(tagName):
 	                return new ElementDirective(
 	                        vm, 
 	                        scope,
@@ -309,7 +299,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            /**
 	             *  <*-repeat></*-repeat>
 	             */
-	            case isRepeatSyntax(tagName):
+	            case is.RepeatSyntax(tagName):
 	                var inst = new ElementDirective(
 	                        vm, 
 	                        scope,
@@ -318,11 +308,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        conf.namespace + 'repeat', 
 	                        $(node).attr('items')
 	                )
-
 	                if (!isRoot) {
-	                    var holder = document.createElement('repeat')
-	                    $(node).replace(holder)
-	                    inst.mount(holder)
+	                    inst.mount(node, true)
 	                }
 	                return inst
 	        }
@@ -359,8 +346,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        //         }).trim()
 	        //     })
 	        // }
-
-
 	        new Comp({
 	            el: node,
 	            data: bindingData,
@@ -437,7 +422,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	'use strict';
-	var util = __webpack_require__(4)
+	var util = __webpack_require__(5)
+	var is = __webpack_require__(3)
 
 	function Selector(sel) {
 	    if (util.type(sel) == 'string') {
@@ -448,7 +434,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return Wrap(sel)
 	    } 
 	    else if (sel instanceof Wrap) return sel
-	    else if (sel instanceof HTMLElement || sel instanceof DocumentFragment || sel instanceof Comment) {
+	    else if (is.DOM(sel)) {
 	        return Wrap([sel])
 	    }
 	    else {
@@ -564,6 +550,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = {
+	    Element: function(el) {
+	        return el instanceof HTMLElement || el instanceof DocumentFragment
+	    },
+	    DOM: function (el) {
+	        return el instanceof HTMLElement || el instanceof DocumentFragment || el instanceof Comment
+	    },
+	    IfElement: function(tn) {
+	        return tn == (conf.namespace + 'if').toUpperCase()
+	    },
+	    RepeatElement: function(tn) {
+	        return tn == (conf.namespace + 'repeat').toUpperCase()
+	    }
+	}
+
+/***/ },
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -1677,7 +1684,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 4 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1799,7 +1806,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1815,11 +1822,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 }
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var $ = __webpack_require__(2)
-	var util = __webpack_require__(4)
+	var util = __webpack_require__(5)
 
 	/**
 	 *  Get varibales of expression
@@ -2149,7 +2156,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2159,8 +2166,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var conf = __webpack_require__(5)
-	var util = __webpack_require__(4)
+	var conf = __webpack_require__(6)
+	var util = __webpack_require__(5)
 
 	module.exports = function(Zect) {
 	    return {
@@ -2244,7 +2251,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2254,8 +2261,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var conf = __webpack_require__(5)
-	var util = __webpack_require__(4)
+	var conf = __webpack_require__(6)
+	var util = __webpack_require__(5)
 
 	module.exports = function(Zect) {
 	    return {
