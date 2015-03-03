@@ -17,6 +17,7 @@
             <h1>switer</h1>
         </z-if> -->
         <my-component
+            z-tap="{items}"
             state="{
                 items: items
             }"
@@ -49,6 +50,13 @@
                 'my-component2': Zect.extend({
                     template: '<img z-attr="{src:\'http://www.baidu.com/img/bdlogo.png\'}" alt="" />'
                 })
+            },
+            directives: {
+                tap: {
+                    bind: function () {
+                        console.log(this.tar)
+                    }
+                }
             },
             data: function () {
                 return {

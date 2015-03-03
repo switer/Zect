@@ -32,7 +32,7 @@ var app = new Zect({
 - Global API
     * [Zect()]()
     * [Zect.extend()]()
-    * [Zect.component()]() // TBD
+    * [Zect.component()]()
     * [Zect.namespace(namespace)]()
     * [Zect.directive(id, definition)]()
 
@@ -42,8 +42,8 @@ var app = new Zect({
     * [methods]()
     * [template]()
     * [computed]()
-    * [directives]() // TBD
-    * [components]() // TBD
+    * [directives]()
+    * [components]()
 
 - Instance Methods
     * [$set]()
