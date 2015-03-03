@@ -6,16 +6,22 @@
 </head>
 <body>
     <div id="app">
-<!--         <z-if is="{!disabled}">
+        <!-- if-repeat-component -->
+        <z-if is="{!disabled}">
             <z-repeat items="{items}" xname="parent">
                 <z-repeat items="{$value}" xname="child-repeat">
-                    <my-component data-value="{$value}"></my-component>
+                    <my-component data-value="{$value}"
+                        method="{
+                            onClick: onAlert
+                        }"
+                    ></my-component>
                 </z-repeat>
             </z-repeat>
             <span>1</span>
             <div>hello</div>
             <h1>switer</h1>
-        </z-if> -->
+        </z-if>
+        <!-- component-state -->
         <my-component
             z-tap="{items}"
             state="{
@@ -32,6 +38,7 @@
         Zect.component('my-component', {
             template: '<div z-on="{click: onClick}">{subtitle}-{items}</div>',
             data: {
+                items: [],
                 subtitle: 'sub title'
             },
             ready: function () {

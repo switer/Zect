@@ -2070,7 +2070,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var upda = def.update
 	    var isExpr = !!_isExpr(expr)
 	    var prev
-	    
+
+	    isExpr && (expr = _strip(expr))
+
 	    d.id = _eid ++
 	    d.vm = vm
 	    d.tar = tar
@@ -2132,7 +2134,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 
-	    prev = isExpr ? _exec(expr):expr
+	    prev = isExpr ? _exec(expr) : expr
 
 	    bind && bind.call(d, prev)
 	    upda && upda.call(d, prev)
@@ -2215,7 +2217,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    function _validName (n) {
 	        if (n.match(' ')) {
-	            console.error('Attribute-name can not contains any white space.')
+	            console.warn('Attribute-name can not contains any white space.')
 	        }
 	        return n
 	    }
@@ -2340,7 +2342,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = function(Zect) {
 	    return {
 	        'if': {
-	            bind: function(cnd, expr) {
+	            bind: function(/*cnd, expr*/) {
 	                this._tmpCon = document.createDocumentFragment()
 	                /**
 	                 *  Initial unmount childNodes
@@ -2389,7 +2391,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'repeat': {
-	            bind: function(items, expr) {
+	            bind: function(/*items, expr*/) {
 	                this.child = this.tar.firstElementChild
 
 	                if (!this.child) {
@@ -2501,7 +2503,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } catch (e) {
 	        console.error(
 	            (arguments[3] ? '"' + arguments[3] + '": ' : '') + 
-	            'Execute expression "%s" with error "%s"'.replace('%s', arguments[2]).replace('%s', e.message)
+	            'Execute {%s} with error "%s"'.replace('%s', arguments[2]).replace('%s', e.message)
 	        )
 	        return ''
 	    }
