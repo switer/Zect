@@ -85,7 +85,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var allDirectives = [presetDirts, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
 	var gcomps = {}                                 // global define components
-	var componentProps = ['state', 'method']
+	var componentProps = ['state', 'method', conf.namespace + 'component']
 
 	function funcOrObject(obj, prop) {
 	    var tar = obj[prop]

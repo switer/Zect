@@ -66,20 +66,19 @@ var app = new Zect({
 ## Guide
 - **Custom Directive**
 
-Options's Methods: `exp`, `bind`, `update`. `exp` is optional. Example below:
+Options's Methods: `bind`, `update`, 'unbind'. `update`, `unbind` is optional. Example below:
+
+```html
+<div z-tap="{onClick}"></div>
+```
 
 ```js
-Zect.directive('', {
-    exp: function (exp) {
-        // parse directive's attribute value to key
-        return [exp.split(':')[0], exp.split(':')[1]]
+Zect.directive('tap', {
+    bind: function (fn, expr) {
+        // do something when init bind
     },
-    bind: function (key1, key2) {
-        // do something
-        return [key2] // keys that need to watch changes
-    },
-    update: function (value) {
-        // do some with state
+    update: function (fn) {
+        // do some with state change or init
     }
 })
 ```
