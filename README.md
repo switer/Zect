@@ -46,8 +46,13 @@ var app = new Zect({
     * [components]() // TBD
 
 - Instance Methods
-    * [$set]() // TBD
-    * [$get]() // TBD
+    * [$set]()
+    * [$get]()
+
+- Template Syntax
+    * [if]()
+    * [repeat]()
+    * [{expression}]()
 
 - Direcitves
 
@@ -55,11 +60,10 @@ var app = new Zect({
     * [on]()
     * [show]()
     * [attr]()
-    * [html]() // TBD: syntax sugar
+    * [html]()
     * [class]()
     * [style]() // TBD
     * [width]() // TBD
-    * [repeat]()
     * [component]() // TBD
 
 
