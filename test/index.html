@@ -17,8 +17,6 @@
                     ></my-component>
                 </z-repeat>
             </z-repeat>
-            <span>1</span>
-            <div>hello</div>
             <h1>switer</h1>
         </z-if>
         <!-- component-state -->
@@ -31,6 +29,14 @@
                 onClick: onAlert
             }"
         ></my-component>
+        <!-- local-component -->
+        <my-component2></my-component2>
+        <!-- directives-filter -->
+        <p 
+            z-class="{show: isShow, hide: !isShow}" 
+            z-attr="{disabled: !isShow}" 
+            z-on="{click: onChangeClass}"
+        >{part(title)}</p>
     </div>
     <script src="../dist/zect.js"></script>
     <script>
@@ -85,12 +91,22 @@
             ready: function () {
                 console.timeEnd('p')
                 setTimeout( function() {
+                    // this.$data.isShow = false
                     this.$set('items', [[1, 2]])
                 }.bind(this), 3000);
             },
+            destroy: function () {
+
+            },
             methods: {
+                part: function (text) {
+                    return text.split(' ')[0]
+                },
                 onAlert: function () {
                     alert('click')
+                },
+                onChangeClass: function () {
+                    this.$data.isShow = false
                 }
             }
         })

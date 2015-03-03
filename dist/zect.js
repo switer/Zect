@@ -423,6 +423,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                attrs: {},
 	                dires: {}
 	            }
+
 	        /**
 	         *  attributes walk
 	         */
@@ -541,6 +542,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 	    removeClass: function(clazz) {
 	        this.forEach(function(el) {
+	            var classes = util.copyArray(el.classList)
 	            el.className = classes.reduce(function(r, n) {
 	                if (n != clazz) r.push(n)
 	                return r
@@ -1994,18 +1996,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  Standard directive
 	 */
 	var _did = 0
-	compiler.Directive = compiler.inherit(function (vm, scope, tar, def, name, expr) {
+	var Directive = compiler.Directive = compiler.inherit(function (vm, scope, tar, def, name, expr) {
 	    var d = this
 	    var bindParams = []
 	    var isExpr = !!_isExpr(expr)
 
 	    isExpr && (expr = _strip(expr))
+
 	    if (def.multi) {
 	        var multiSep = ','
 	        if (expr.match(multiSep)) {
 	            var parts = expr.split(multiSep)
 	            return parts.map(function(item) {
-	                return new Directive(vm, tar, def, name, '{' + item + '}')
+	                return new Directive(vm, scope, tar, def, name, '{' + item + '}')
 	            })
 	        }
 	        // do with single

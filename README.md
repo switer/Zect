@@ -83,6 +83,34 @@ Zect.directive('tap', {
 })
 ```
 
+- **Two Binding**
+
+```html
+<input type="text" z-on="{change: onChange}" id="con" v-model="search" />
+```
+
+```js
+Zect.directive('model', {
+    bind: function (state) {
+        this.vm.$data.$watch(function)
+    }
+})
+new Zect({
+    el: '#con',
+    data: {
+        search: ''
+    },
+    ready: function () {
+        
+    },
+    methods: {
+        onChange: function (e) {
+            
+        }
+    }
+})
+```
+
 ## License
 
 MIT
