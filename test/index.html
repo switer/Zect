@@ -57,7 +57,7 @@
             }
         })
 
-        new Zect({
+        var app = new Zect({
             el: '#app',
             components: {
                 'my-component2': Zect.extend({
@@ -67,7 +67,7 @@
             directives: {
                 tap: {
                     bind: function () {
-                        console.log(this.tar)
+                        console.log(this.$el)
                     }
                 }
             },

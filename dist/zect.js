@@ -129,7 +129,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      ViewModel Constructor
 	*******************************/
 	function ViewModel(options) {
-
+	    // inherit Compiler
+	    util.insertProto(this, Compiler.prototype)
 	    // inherit Compile
 	    var vm = this
 	    var el = options.el
@@ -247,8 +248,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                /**
 	                 *  Compile custom-element
 	                 */
-	                if (compileComponent(node, vm, scope, isRoot)) {
-	                    inst = new Compiler(node)
+	                if (inst = compileComponent(node, vm, scope, isRoot)) {
+	                    // inst = new Compiler(node)
 	                    into = false
 	                    break
 	                }
@@ -1957,7 +1958,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	function compiler (node) {
-	    this.tar = node
+	    this.$el = node
 	}
 	compiler.execute = _execute
 	compiler.stripExpr = _strip
@@ -1971,7 +1972,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 	compiler.prototype.bundle = function () {
-	    return this.tar
+	    return this.$el
 	}
 	compiler.prototype.mount = function (pos, replace) {
 	    if (replace) {
@@ -1981,15 +1982,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 	compiler.prototype.floor = function () {
-	    return this.tar
+	    return this.$el
 	}
 	compiler.prototype.ceil = function () {
-	    return this.tar
+	    return this.$el
 	}
 	compiler.prototype.destroy = function () {
 	    // TODO
-	    $(this.tar).remove()
-	    this.tar = null
+	    $(this.$el).remove()
+	    this.$el = null
 	    return this
 	}
 	/**
@@ -2021,7 +2022,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        bindParams.push(propertyName)
 	    }
 
-	    d.tar = tar
+	    d.$el = tar
 	    d.vm = vm
 	    d.id = _did++
 
@@ -2078,7 +2079,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    d.id = _eid ++
 	    d.vm = vm
-	    d.tar = tar
+	    d.$el = tar
 	    d.scope = scope
 
 	    var tagHTML = util.tagHTML(tar)
@@ -2275,11 +2276,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.attname = attname
 	            },
 	            update: function(next) {
-	                console.log(next)
 	                if (!next && next !== '') {
-	                    $(this.tar).removeAttr(this.attname)
+	                    $(this.$el).removeAttr(this.attname)
 	                } else {
-	                    $(this.tar).attr(this.attname, next)
+	                    $(this.$el).attr(this.attname, next)
 	                }
 	            }
 	        },
@@ -2289,7 +2289,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.className = className
 	            },
 	            update: function(next) {
-	                var $el = $(this.tar)
+	                var $el = $(this.$el)
 	                if (next) $el.addClass(this.className)
 	                else $el.removeClass(this.className)
 	            }
@@ -2302,18 +2302,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (util.type(fn) !== 'function') return console.warn('"' + conf.namespace + 'on" only accept function')
 	                this.fn = fn.bind(this.vm)
 	                this.type = evtType
-	                this.tar.addEventListener(evtType, this.fn, false)
+	                this.$el.addEventListener(evtType, this.fn, false)
 	            },
 	            unbind: function() {
 	                if (this.fn) {
-	                    this.tar.removeEventLisnter(this.type, this.fn)
+	                    this.$el.removeEventLisnter(this.type, this.fn)
 	                    this.fn = null
 	                }
 	            }
 	        },
 	        'show': {
 	            update: function(next) {
-	                this.tar.style.display = next ? '' : 'none'
+	                this.$el.style.display = next ? '' : 'none'
 	            }
 	        },
 	        'style': {
@@ -2322,7 +2322,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.sheet = sheet
 	            },
 	            update: function (next) {
-	                this.tar.style && (this.tar.style[this.sheet] = next)
+	                this.$el.style && (this.$el.style[this.sheet] = next)
 	            }
 	        }
 	    }
@@ -2352,7 +2352,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                 *  Initial unmount childNodes
 	                 */
 	                ;[].slice
-	                    .call(this.tar.childNodes)
+	                    .call(this.$el.childNodes)
 	                    .forEach(function(e) {
 	                        this._tmpCon.appendChild(e)
 	                    }.bind(this))
@@ -2396,7 +2396,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        'repeat': {
 	            bind: function(/*items, expr*/) {
-	                this.child = this.tar.firstElementChild
+	                this.child = this.$el.firstElementChild
 
 	                if (!this.child) {
 	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node')
