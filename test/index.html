@@ -34,7 +34,7 @@
         <!-- directives-filter -->
         <p 
             z-class="{show: isShow, hide: !isShow}" 
-            z-attr="{disabled: !isShow}" 
+            z-attr="{disabled: isShow ? isShow : ''}" 
             z-on="{click: onChangeClass}"
         >{part(title)}</p>
     </div>

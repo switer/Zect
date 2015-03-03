@@ -2275,6 +2275,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.attname = attname
 	            },
 	            update: function(next) {
+	                console.log(next)
 	                if (!next && next !== '') {
 	                    $(this.tar).removeAttr(this.attname)
 	                } else {
