@@ -213,9 +213,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return compiler
 	    }
 
-	    vm.$compiler = vm.$compile(el, {
-	        root: el
-	    })
+	    vm.$compiler = vm.$compile(el)
 
 	    function compile (node, scope, isRoot) {
 	        /**
@@ -2319,7 +2317,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                ;[].slice
 	                    .call(this.tar.childNodes)
 	                    .forEach(function(e) {
-	                        this.$container.insertBefore(e, this.floor())
+	                        this._tmpCon.appendChild(e)
 	                    }.bind(this))
 
 	                /**
@@ -2354,7 +2352,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    this._mount()
 	                } else {
 	                    this.compiled = true
-	                    this.vm.$compile(this._tmpCon)
+	                    var cvm = this.vm.$compile(this._tmpCon)
 	                    this._mount()
 	                }
 	            }
@@ -2383,9 +2381,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                    data.$index = index
 	                    data.$value = item
+
 	                    var cvm = that.vm.$compile(subEl, {
 	                        data: data,
-	                        root: that.child
+	                        $parent: that.scope || {}
 	                    })
 	                    return {
 	                        $index: index,
@@ -2393,6 +2392,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        $compiler: cvm
 	                    }
 	                }
+
+	                /**
+	                 *  vms diff
+	                 */
 	                var vms = new Array(items.length)
 	                var olds = this.last ? util.copyArray(this.last) : olds
 	                var oldVms = this.$vms ? util.copyArray(this.$vms) : oldVms
@@ -2401,8 +2404,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    if (!olds) {
 	                        v = createSubVM(item, index)
 	                    } else {
-	                        var i = olds.indexOf(item)
-	                        if (~i && !util.diff(olds[i], item)) {
+
+	                        var i = -1
+	                        olds.some(function (dest, index) {
+	                            // one level diff
+	                            if (!util.diff(dest, item)) {
+	                                i = index
+	                                return true
+	                            }
+	                        })
+
+	                        if (~i) {
 	                            // reused
 	                            v = oldVms[i]
 	                            // clean
@@ -2447,21 +2459,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  Calc expression value
 	 */
-	function _execute(vm, extScope, expression, label) {
-	    extScope = extScope || {}
+	function _execute($vm, $scope/*, expression, _label*/) {
 
-	    var scope = {}
-	    var result = ''
-	    util.extend(scope, vm.$methods, vm.$data, extScope.methods, extScope.data)
+	    var $parent = $scope && $scope.$parent ? util.extend({}, $scope.$parent.methods, $scope.$parent.data) : {}
+	    
+	    $scope = $scope || {}
+	    $scope = util.extend({}, $vm.$methods, $vm.$data, $scope.methods, $scope.data)
+
 	    try {
-	        var result = util.immutable(eval('with(scope){%s}'.replace('%s', expression)))
+	        return util.immutable(eval('with($scope){%s}'.replace('%s', arguments[2])))
 	    } catch (e) {
 	        console.error(
-	            (label ? '"' + label + '": ' : '') + 
-	            'Execute expression "%s" with error "%s"'.replace('%s', expression).replace('%s', e.message)
+	            (arguments[3] ? '"' + arguments[3] + '": ' : '') + 
+	            'Execute expression "%s" with error "%s"'.replace('%s', arguments[2]).replace('%s', e.message)
 	        )
+	        return ''
 	    }
-	    return result
 	}
 	module.exports = _execute
 

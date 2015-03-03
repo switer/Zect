@@ -6,16 +6,19 @@
 </head>
 <body>
     <div id="app">
-        <z-repeat items="{items}" xname="parent">
-            <z-repeat items="{$value}" xname="child-repeat">
-                <p>inner-child-{$value}</p>
+        <z-if is="{!disabled}">
+            <z-repeat items="{items}" xname="parent">
+                <z-repeat items="{$value}" xname="child-repeat">
+                    <span>
+                        <p>inner-child-{$value}</p>
+                        <p>$parent-{$parent.$value}</p>
+                    </span>
+                </z-repeat>
             </z-repeat>
-        </z-repeat>
-<!--         <z-if is="{!disabled}">
             <span>1</span>
             <div>hello</div>
             <h1>switer</h1>
-        </z-if> -->
+        </z-if>
     </div>
     <script src="../dist/zect.js"></script>
     <script>
@@ -44,7 +47,6 @@
             },
             data: function () {
                 return {
-                    // items: [1,2, 3,4],
                     items: [[1]],
                     title: 'zect data-binding',
                     disabled: false,
@@ -63,12 +65,7 @@
             ready: function () {
                 console.timeEnd('p')
                 setTimeout( function() {
-                    // this.$data.title = 'switer'
-                    // this.$data.disabled = true
-                    this.$set('items', [[2]])
-                    // setTimeout(function () {
-                    //     this.$data.disabled = false
-                    // }.bind(this), 1000)
+                    this.$set('items', [[1, 2]])
                 }.bind(this), 3000);
             },
             methods: {
