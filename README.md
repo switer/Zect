@@ -55,8 +55,6 @@ var app = new Zect({
     * [{expression}]()
 
 - Direcitves
-
-    * [if]()
     * [on]()
     * [show]()
     * [attr]()

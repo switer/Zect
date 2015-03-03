@@ -2213,30 +2213,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = function(Zect) {
 	    return {
-	        'if': {
-	            bind: function(cnd, expr) {
-	                this.holder = document.createComment(conf.namespace + 'if-{' + expr +'}')
-	                this.mount = function () {
-	                    $(this.holder).replace(this.tar)
-	                }
-	                this.unmount = function () {
-	                    $(this.tar).replace(this.holder)
-	                }
-	                this.unmount()
-	            },
-	            // next: true show || false unmount
-	            update: function(next, pre) {
-	                if (!next) {
-	                    this.unmount()
-	                } else if (this.compiled) {
-	                    this.mount()
-	                } else {
-	                    this.compiled = true
-	                    this.vm.$compile(this.tar)
-	                    this.mount()
-	                }
-	            }
-	        },
 	        'html': {
 	            update: function(next) {
 	                $(this.tar).html(next === undefined ? '' : next)
