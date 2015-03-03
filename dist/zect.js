@@ -85,7 +85,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var allDirectives = [directives, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
 	var gcomps = {}                                 // global define components
-	var componentProps = ['binding']
+	var componentProps = ['state', 'method']
 
 	function funcOrObject(obj, prop) {
 	    var tar = obj[prop]
@@ -333,34 +333,81 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         *  Tag is not a custom element
 	         */
-	        if (!Comp) return false
+	        if (!Comp) return
+
 	        // need deep into self
 	        if (node === parentVM.$el) return
 
-	        var binding = $(node).attr('binding')
-	        var bindingData = Compiler.execute(parentVM, scope, binding)
+	        var binding = $(node).attr('state')
+	        var _isExpr = util.isExpr(binding)
+	        var bindingData = _isExpr ? Compiler.execute(parentVM, scope, binding) : {}
+
+	        var methods = $(node).attr('method')
+	        var bindingMethods = util.isExpr(methods) ? Compiler.execute(parentVM, scope, methods) : {}
 
 	        /**
 	         *  Watch
 	         */
-	        // var multiSep = ','
-	        // if (binding.match(multiSep)) {
-	        //     var parts = binding.split(multiSep)
-	        //     binding.split(multiSep).map(function(expr) {
-	        //         // do with single
-	        //         var propertyName
-	        //         expr = expr.replace(/^[^:]+:/, function (m) {
-	        //             propertyName = m.replace(/:$/, '').trim()
-	        //             return ''
-	        //         }).trim()
-	        //     })
-	        // }
-	        new Comp({
+	        var sep = ','
+	        function parseExpr (expr) {
+	            var name
+	            var expr = expr.replace(/^[^:]+:/, function (m) {
+	                            name = m.replace(/:$/, '').trim()
+	                            return ''
+	                        }).trim()
+	            return {
+	                name: name,
+	                expr: expr,
+	                vars: Compiler.extractVars(expr)
+	            }
+	        }
+	        function setBindingObj (expr) {
+	            var r = parseExpr(expr)
+	            ast[r.name] = r
+	            ;(r.vars || []).forEach(function (v) {
+	                revealAst[v] = r.name
+	            })
+	        }
+
+	        var ast = {}
+	        var revealAst = {}
+	        var compVM
+
+	        binding = _isExpr ? Compiler.stripExpr(binding) : ''
+
+	        if (binding) {
+	            if (binding.match(sep)) {
+	                binding.split(sep)
+	                       .match(sep)
+	                       .map(setBindingObj)
+	            } else {
+	                setBindingObj(binding)
+	            }
+	        }
+
+	        compVM = new Comp({
 	            el: node,
 	            data: bindingData,
+	            methods: bindingMethods,
 	            $parent: parentVM
 	        })
-	        return true
+	        console.log(compVM)
+
+
+	        // watch and binding
+	        if (binding) {
+	            parentVM.$data.$watch(function (keyPath, nv) {
+	                var nextState
+	                util.objEach(revealAst, function (varName, bindingName) {
+	                    if (keyPath.indexOf(varName) === 0) {
+	                        !nextState && (nextState = {})
+	                        nextState[bindingName] = Compiler.execute(parentVM, scope, ast[bindingName].expr)
+	                    }
+	                })
+	                nextState && compVM.$set(nextState)
+	            })
+	        }
+	        return compVM
 	    }
 
 	    /**
@@ -1795,7 +1842,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  Whether a text is with express syntax
 	     */
 	    isExpr: function (c) {
-	        return c ? c.trim().match(/^\{.*?\}$/) : false
+	        return c ? c.trim().match(/^\{[\s\S]*?\}$/m) : false
 	    },
 	    domRange: function (tar, before, after) {
 	        var children = []
@@ -1876,10 +1923,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _extractVars(expr) {
 	    if (!expr) return null
 
-	    var reg = /("|').+?[^\\]\1|\.\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)/gi
+	    var reg = /("|').+?[^\\]\1|\.\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)\(|([a-z_]\w*)/gi
 	    var vars = expr.match(reg)
 	    vars = !vars ? [] : vars.filter(function(i) {
-	        if (!i.match(/^[."']/)) {
+	        if (!i.match(/^[."']/) && !i.match(/\($/)) {
 	            return i
 	        }
 	    })
@@ -1900,7 +1947,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function _strip(t) {
-	    return t.trim().match(/^\{(.*?)\}$/)[1]
+	    return t.trim().match(/^\{([\s\S]*)\}$/m)[1]
 	}
 
 
@@ -1908,6 +1955,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.tar = node
 	}
 	compiler.execute = _execute
+	compiler.stripExpr = _strip
+	compiler.extractVars = _extractVars
 
 	compiler.inherit = function (Ctor) {
 	    Ctor.prototype.__proto__ = compiler.prototype
@@ -1953,7 +2002,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (expr.match(multiSep)) {
 	            var parts = expr.split(multiSep)
 	            return parts.map(function(item) {
-	                return new Directive(vm, tar, def, name, item)
+	                return new Directive(vm, tar, def, name, '{' + item + '}')
 	            })
 	        }
 	        // do with single
@@ -1996,7 +2045,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  If expression is a string iteral, use it as value
 	     */
 	    prev = isExpr ? _exec(expr):expr
-
 	    bindParams.push(prev)
 	    bindParams.push(expr)
 	    // ([property-name], expression-value, expression) 
@@ -2241,7 +2289,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            watch: false,
 	            bind: function(evtType, handler /*, expression*/ ) {
 	                var fn = handler
-	                if (util.type(fn) !== 'function') throw new Error('"' + conf.namespace + 'on" only accept function')
+	                if (util.type(fn) !== 'function') return console.warn('"' + conf.namespace + 'on" only accept function')
 	                this.fn = fn.bind(this.vm)
 	                this.type = evtType
 	                this.tar.addEventListener(evtType, this.fn, false)
@@ -2436,14 +2484,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  Calc expression value
 	 */
 	function _execute($vm, $scope/*, expression, _label*/) {
-
 	    var $parent = $scope && $scope.$parent ? util.extend({}, $scope.$parent.methods, $scope.$parent.data) : {}
 	    
 	    $scope = $scope || {}
 	    $scope = util.extend({}, $vm.$methods, $vm.$data, $scope.methods, $scope.data)
 
 	    try {
-	        return util.immutable(eval('with($scope){%s}'.replace('%s', arguments[2])))
+	        return util.immutable(eval('with($scope){(%s)}'.replace('%s', arguments[2])))
 	    } catch (e) {
 	        console.error(
 	            (arguments[3] ? '"' + arguments[3] + '": ' : '') + 

@@ -6,25 +6,30 @@
 </head>
 <body>
     <div id="app">
-        <z-if is="{!disabled}">
+<!--         <z-if is="{!disabled}">
             <z-repeat items="{items}" xname="parent">
                 <z-repeat items="{$value}" xname="child-repeat">
-                    <span>
-                        <p>inner-child-{$value}</p>
-                        <p>$parent-{$parent.$value}</p>
-                    </span>
+                    <my-component data-value="{$value}"></my-component>
                 </z-repeat>
             </z-repeat>
             <span>1</span>
             <div>hello</div>
             <h1>switer</h1>
-        </z-if>
+        </z-if> -->
+        <my-component
+            state="{
+                items: items
+            }"
+            method="{
+                onClick: onAlert
+            }"
+        ></my-component>
     </div>
     <script src="../dist/zect.js"></script>
     <script>
         console.time('p')
         Zect.component('my-component', {
-            template: '<div>{subtitle}</div>',
+            template: '<div z-on="{click: onClick}">{subtitle}-{items}</div>',
             data: {
                 subtitle: 'sub title'
             },
