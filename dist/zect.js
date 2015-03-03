@@ -1918,14 +1918,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        Ctor.apply(this, arguments)
 	    }
 	}
-	compiler.prototype.pack = function () {
+	compiler.prototype.bundle = function () {
 	    return this.tar
 	}
 	compiler.prototype.mount = function (pos, replace) {
 	    if (replace) {
-	        $(pos).replace(this.pack())
+	        $(pos).replace(this.bundle())
 	    } else {
-	        pos.parentNode.insertBefore(this.pack(), pos)
+	        pos.parentNode.insertBefore(this.bundle(), pos)
 	    }
 	}
 	compiler.prototype.floor = function () {
@@ -2034,18 +2034,42 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    d.$container.appendChild(d.$before)
 	    d.$container.appendChild(d.$after)
+
+	    d.bundle = function () {
+	        var $ceil = this.ceil()
+	        var $floor = this.floor()
+	        var $con = this.$container
+	        var that = this
+
+	        if (!$con.contains($ceil)) {
+	            util.domRange($ceil.parentNode, $ceil, $floor)
+	                .forEach(function(n) {
+	                    that.$container.appendChild(n)
+	                })
+	            $con.insertBefore($ceil, $con.firstChild)
+	            $con.appendChild($floor)
+	        }
+	        return $con
+	    }
+	    d.floor = function () {
+	        return this.$after
+	    }
+	    d.ceil = function () {
+	        return this.$before
+	    }
+	    d.destroy = function () {
+	        this.$container = null
+	        this.$before = null
+	        this.$after = null
+	    }
+
+
 	    /**
 	     *  execute wrap with directive name
 	     */
 	    function _exec(expr) {
 	        return _execute(vm, scope, expr, name)
 	    }
-
-	    ;['pack', 'ceil', 'floor', 'destroy'].forEach(function (prop) {
-	        if (def.hasOwnProperty(prop)) {
-	            d[prop] = def[prop]
-	        }
-	    })
 
 	    /**
 	     *  update handler
@@ -2287,33 +2311,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = function(Zect) {
 	    return {
 	        'if': {
-	            pack: function () {
-	                var $ceil = this.ceil()
-	                var $floor = this.floor()
-	                var $con = this.$container
-	                var that = this
-
-	                if (!$con.contains($ceil)) {
-	                    util.domRange($ceil.parentNode, $ceil, $floor)
-	                        .forEach(function(n) {
-	                            that.$container.appendChild(n)
-	                        })
-	                    $con.insertBefore($ceil, $con.firstChild)
-	                    $con.appendChild($floor)
-	                }
-	                return $con
-	            },
-	            destroy: function () {
-	                this.$container = null
-	                this.$before = null
-	                this.$after = null
-	            },
-	            floor: function () {
-	                return this.$after
-	            },
-	            ceil: function () {
-	                return this.$before
-	            },
 	            bind: function(cnd, expr) {
 	                this._tmpCon = document.createDocumentFragment()
 	                /**
@@ -2363,28 +2360,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'repeat': {
-	            pack: function () {
-	                var $ceil = this.ceil()
-	                var $floor = this.floor()
-	                var $con = this.$container
-	                var that = this
-
-	                if (!$con.contains($ceil)) {
-	                    util.domRange($ceil.parentNode, $ceil, $floor)
-	                        .forEach(function(n) {
-	                            that.$container.appendChild(n)
-	                        })
-	                    $con.insertBefore($ceil, $con.firstChild)
-	                    $con.appendChild($floor)
-	                }
-	                return $con
-	            },
-	            floor: function () {
-	                return this.$after
-	            },
-	            ceil: function () {
-	                return this.$before
-	            },
 	            bind: function(items, expr) {
 	                this.child = this.tar.firstElementChild
 
@@ -2450,11 +2425,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var i = 0
 	                while (i < len) {
 	                    var v = vms[i++]
-	                    $floor.parentNode.insertBefore(v.$compiler.pack(), $floor)
+	                    $floor.parentNode.insertBefore(v.$compiler.bundle(), $floor)
 	                }
 
 	                oldVms && oldVms.forEach(function(v) {
-	                    v.$compiler.pack()
+	                    v.$compiler.bundle()
 	                    v.$compiler.destroy()
 	                })
 	            }
