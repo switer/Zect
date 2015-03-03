@@ -171,6 +171,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            $data.$set(v)
 	        }
 	    })
+	    vm.$set = function () {
+	        $data.$set.apply($data, arguments)
+	    }
+	    vm.$get = function () {
+	        return $data.$get.apply($data, arguments)
+	    }
+
 	    if (options.$data) {
 	        $data = options.$data
 	        // if state model instance passsing, call after set
@@ -1825,6 +1832,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            n = obj
 	        }
 	        return n
+	    },
+	    tagHTML: function (tag) {
+	        var h = tag.outerHTML
+	        var open = h.match(/^<[^>]+?>/)
+	        var close = h.match(/<\/[^<]+?>$/)
+	        
+	        return [open ? open[0]:'', close ? close[0]:'']
 	    }
 	}
 
@@ -1908,7 +1922,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return this.tar
 	}
 	compiler.prototype.mount = function (pos, replace) {
-	    console.log(pos, replace)
 	    if (replace) {
 	        $(pos).replace(this.pack())
 	    } else {
@@ -2013,8 +2026,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.vm = vm
 	    d.tar = tar
 	    d.scope = scope
-	    d.$before = document.createComment(name + '-{' + expr + '}-before')
-	    d.$after = document.createComment(name + '-{' + expr + '}-after')
+
+	    var tagHTML = util.tagHTML(tar)
+	    d.$before = document.createComment(tagHTML[0])
+	    d.$after = document.createComment(tagHTML[1])
 	    d.$container = document.createDocumentFragment()
 
 	    d.$container.appendChild(d.$before)
@@ -2279,12 +2294,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var that = this
 
 	                if (!$con.contains($ceil)) {
-	                    
-	                    $con.appendChild($ceil)
 	                    util.domRange($ceil.parentNode, $ceil, $floor)
 	                        .forEach(function(n) {
 	                            that.$container.appendChild(n)
 	                        })
+	                    $con.insertBefore($ceil, $con.firstChild)
 	                    $con.appendChild($floor)
 	                }
 	                return $con
@@ -2343,23 +2357,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    this._mount()
 	                } else {
 	                    this.compiled = true
-	                    this.vm.$compile(this.$container)
+	                    this.vm.$compile(this._tmpCon)
 	                    this._mount()
 	                }
 	            }
 	        },
 	        'repeat': {
 	            pack: function () {
-	                if (!this.$container.contains(this.$before)) {
-	                    var that = this
-	                    this.$container.appendChild(this.$before)
-	                    util.domRange(this.$before.parentNode, this.$before, this.$after)
+	                var $ceil = this.ceil()
+	                var $floor = this.floor()
+	                var $con = this.$container
+	                var that = this
+
+	                if (!$con.contains($ceil)) {
+	                    util.domRange($ceil.parentNode, $ceil, $floor)
 	                        .forEach(function(n) {
 	                            that.$container.appendChild(n)
 	                        })
-	                    this.$container.appendChild(this.$after)
+	                    $con.insertBefore($ceil, $con.firstChild)
+	                    $con.appendChild($floor)
 	                }
-	                return this.$container
+	                return $con
 	            },
 	            floor: function () {
 	                return this.$after
@@ -2434,6 +2452,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var v = vms[i++]
 	                    $floor.parentNode.insertBefore(v.$compiler.pack(), $floor)
 	                }
+
 	                oldVms && oldVms.forEach(function(v) {
 	                    v.$compiler.pack()
 	                    v.$compiler.destroy()
