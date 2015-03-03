@@ -58,10 +58,8 @@ var app = new Zect({
     * [on]()
     * [show]()
     * [attr]()
-    * [html]()
     * [class]()
-    * [style]() // TBD
-    * [width]() // TBD
+    * [style]()
     * [component]() // TBD
 
 

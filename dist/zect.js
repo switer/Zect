@@ -65,9 +65,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var $ = __webpack_require__(2)
-	var is = __webpack_require__(3)
-	var Mux = __webpack_require__(4)
+	var $ = __webpack_require__(4)
+	var is = __webpack_require__(2)
+	var Mux = __webpack_require__(3)
 	var util = __webpack_require__(5)
 	var conf = __webpack_require__(6)
 
@@ -473,141 +473,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/**
-	 *  DOM manipulations
-	 */
-
-	'use strict';
-	var util = __webpack_require__(5)
-	var is = __webpack_require__(3)
-
-	function Selector(sel) {
-	    if (util.type(sel) == 'string') {
-	        var nodes = util.copyArray(document.querySelectorAll(sel))
-	        return Wrap(nodes)
-	    }
-	    else if (util.type(sel) == 'array') {
-	        return Wrap(sel)
-	    } 
-	    else if (sel instanceof Wrap) return sel
-	    else if (is.DOM(sel)) {
-	        return Wrap([sel])
-	    }
-	    else {
-	        throw new Error('Unexpect selector !')
-	    }
-	}
-
-	function Wrap(nodes) {
-	    if (nodes instanceof Wrap) return nodes
-	    nodes.__proto__ = proto
-	    return nodes
-	}
-
-	var proto = {
-	    find: function(sel) {
-	        var subs = []
-	        this.forEach(function(n) {
-	            subs = subs.concat(util.copyArray(n.querySelectorAll(sel)))
-	        })
-	        return Wrap(subs)
-	    },
-	    attr: function(attname, attvalue) {
-	        var len = arguments.length
-	        var el = this[0]
-	        if (len > 1) {
-	            el.setAttribute(attname, attvalue)
-	        } else if (len == 1) {
-	            return (el.getAttribute(attname) || '').toString()
-	        }
-	        return this
-	    },
-	    removeAttr: function(attname) {
-	        this.forEach(function(el) {
-	            el.removeAttribute(attname)
-	        })
-	        return this
-	    },
-	    addClass: function(clazz) {
-	        this.forEach(function(el) {
-	            var classes = util.copyArray(el.classList)
-	            if (!~classes.indexOf(clazz)) classes.push(clazz)
-	            el.className = classes.join(' ')
-	        })
-	        return this
-	    },
-	    removeClass: function(clazz) {
-	        this.forEach(function(el) {
-	            el.className = classes.reduce(function(r, n) {
-	                if (n != clazz) r.push(n)
-	                return r
-	            }, []).join(' ')
-	        })
-	        return this
-	    },
-	    each: function(fn) {
-	        this.forEach(fn)
-	        return this
-	    },
-	    on: function(type, listener, capture) {
-	        this.forEach(function(el) {
-	            el.addEventListener(type, listener, capture)
-	        })
-	        return this
-	    },
-	    off: function(type, listener) {
-	        this.forEach(function(el) {
-	            el.removeEventListener(type, listener)
-	        })
-	        return this
-	    },
-	    html: function(html) {
-	        var len = arguments.length
-	        if (len >= 1) {
-	            this.forEach(function(el) {
-	                el.innerHTML = html
-	            })
-	        } else if (this.length) {
-	            return this[0].innerHTML
-	        }
-	        return this
-	    },
-	    parent: function() {
-	        if (!this.length) return null
-	        return Wrap([this[0].parentNode])
-	    },
-	    remove: function() {
-	        this.forEach(function(el) {
-	            var parent = el.parentNode
-	            parent && parent.removeChild(el)
-	        })
-	        return this
-	    },
-	    // return element by index
-	    get: function(i) {
-	        return this[i]
-	    },
-	    append: function(n) {
-	        if (this.length) this.get(0).appendChild(n)
-	        return this
-	    },
-	    replace: function(n) {
-	        var tar = this.get(0)
-	        tar.parentNode.replaceChild(n, tar)
-	        return this
-	    }
-	}
-	proto.__proto__ = Wrap.prototype
-	proto.__proto__.__proto__ = Array.prototype
-
-
-	module.exports = Selector
-
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
 	'use strict';
 	var conf = __webpack_require__(6)
 
@@ -627,7 +492,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 4 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -1741,6 +1606,141 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 *  DOM manipulations
+	 */
+
+	'use strict';
+	var util = __webpack_require__(5)
+	var is = __webpack_require__(2)
+
+	function Selector(sel) {
+	    if (util.type(sel) == 'string') {
+	        var nodes = util.copyArray(document.querySelectorAll(sel))
+	        return Wrap(nodes)
+	    }
+	    else if (util.type(sel) == 'array') {
+	        return Wrap(sel)
+	    } 
+	    else if (sel instanceof Wrap) return sel
+	    else if (is.DOM(sel)) {
+	        return Wrap([sel])
+	    }
+	    else {
+	        throw new Error('Unexpect selector !')
+	    }
+	}
+
+	function Wrap(nodes) {
+	    if (nodes instanceof Wrap) return nodes
+	    nodes.__proto__ = proto
+	    return nodes
+	}
+
+	var proto = {
+	    find: function(sel) {
+	        var subs = []
+	        this.forEach(function(n) {
+	            subs = subs.concat(util.copyArray(n.querySelectorAll(sel)))
+	        })
+	        return Wrap(subs)
+	    },
+	    attr: function(attname, attvalue) {
+	        var len = arguments.length
+	        var el = this[0]
+	        if (len > 1) {
+	            el.setAttribute(attname, attvalue)
+	        } else if (len == 1) {
+	            return (el.getAttribute(attname) || '').toString()
+	        }
+	        return this
+	    },
+	    removeAttr: function(attname) {
+	        this.forEach(function(el) {
+	            el.removeAttribute(attname)
+	        })
+	        return this
+	    },
+	    addClass: function(clazz) {
+	        this.forEach(function(el) {
+	            var classes = util.copyArray(el.classList)
+	            if (!~classes.indexOf(clazz)) classes.push(clazz)
+	            el.className = classes.join(' ')
+	        })
+	        return this
+	    },
+	    removeClass: function(clazz) {
+	        this.forEach(function(el) {
+	            el.className = classes.reduce(function(r, n) {
+	                if (n != clazz) r.push(n)
+	                return r
+	            }, []).join(' ')
+	        })
+	        return this
+	    },
+	    each: function(fn) {
+	        this.forEach(fn)
+	        return this
+	    },
+	    on: function(type, listener, capture) {
+	        this.forEach(function(el) {
+	            el.addEventListener(type, listener, capture)
+	        })
+	        return this
+	    },
+	    off: function(type, listener) {
+	        this.forEach(function(el) {
+	            el.removeEventListener(type, listener)
+	        })
+	        return this
+	    },
+	    html: function(html) {
+	        var len = arguments.length
+	        if (len >= 1) {
+	            this.forEach(function(el) {
+	                el.innerHTML = html
+	            })
+	        } else if (this.length) {
+	            return this[0].innerHTML
+	        }
+	        return this
+	    },
+	    parent: function() {
+	        if (!this.length) return null
+	        return Wrap([this[0].parentNode])
+	    },
+	    remove: function() {
+	        this.forEach(function(el) {
+	            var parent = el.parentNode
+	            parent && parent.removeChild(el)
+	        })
+	        return this
+	    },
+	    // return element by index
+	    get: function(i) {
+	        return this[i]
+	    },
+	    append: function(n) {
+	        if (this.length) this.get(0).appendChild(n)
+	        return this
+	    },
+	    replace: function(n) {
+	        var tar = this.get(0)
+	        tar.parentNode.replaceChild(n, tar)
+	        return this
+	    }
+	}
+	proto.__proto__ = Wrap.prototype
+	proto.__proto__.__proto__ = Array.prototype
+
+
+	module.exports = Selector
+
+
+/***/ },
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -1910,7 +1910,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var $ = __webpack_require__(2)
+	var $ = __webpack_require__(4)
 	var util = __webpack_require__(5)
 	var _execute = __webpack_require__(10)
 	/**
@@ -2255,17 +2255,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var $ = __webpack_require__(2)
+	var $ = __webpack_require__(4)
 	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
 
 	module.exports = function(Zect) {
 	    return {
-	        'html': {
-	            update: function(next) {
-	                $(this.tar).html(next === undefined ? '' : next)
-	            }
-	        },
 	        'attr': {
 	            multi: true,
 	            bind: function(attname) {
@@ -2279,9 +2274,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            }
 	        },
-	        'show': {
+	        'class': {
+	            multi: true,
+	            bind: function(className) {
+	                this.className = className
+	            },
 	            update: function(next) {
-	                this.tar.style.display = next ? '' : 'none'
+	                var $el = $(this.tar)
+	                if (next) $el.addClass(this.className)
+	                else $el.removeClass(this.className)
 	            }
 	        },
 	        'on': {
@@ -2301,15 +2302,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            }
 	        },
-	        'class': {
-	            multi: true,
-	            bind: function(className) {
-	                this.className = className
-	            },
+	        'show': {
 	            update: function(next) {
-	                var $el = $(this.tar)
-	                if (next) $el.addClass(this.className)
-	                else $el.removeClass(this.className)
+	                this.tar.style.display = next ? '' : 'none'
+	            }
+	        },
+	        'style': {
+	            multi: true,
+	            bind: function (sheet) {
+	                this.sheet = sheet
+	            },
+	            update: function (next) {
+	                this.tar.style && (this.tar.style[this.sheet] = next)
 	            }
 	        }
 	    }
@@ -2326,7 +2330,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var $ = __webpack_require__(2)
+	var $ = __webpack_require__(4)
 	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
 
