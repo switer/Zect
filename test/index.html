@@ -31,6 +31,16 @@
         ></my-component>
         <!-- local-component -->
         <my-component2></my-component2>
+        <!-- two way bindings -->
+        <input type="text" z-model="inputs.text">
+        <textarea z-model="inputs.text"></textarea>
+        <select z-model="inputs.text">
+            <option value="Please Input" checked>Please Input</option>
+            <option value="hello">hello</option>
+            <option value="world">world</option>
+            <option value="renew">renew</option>
+        </select>
+        <p>{inputs.text}</p>
         <!-- directives-filter -->
         <p 
             z-class="{show: isShow, hide: !isShow}" 
@@ -67,7 +77,7 @@
             directives: {
                 tap: {
                     bind: function () {
-                        console.log(this.$el)
+                        // console.log(this.$el)
                     }
                 }
             },
@@ -77,7 +87,11 @@
                     title: 'zect data-binding',
                     disabled: false,
                     isShow: true,
-                    person: null
+                    person: null,
+                    a: undefined,
+                    inputs: {
+                        text: 'Please Input'
+                    }
                 }
             },
             computed: {
@@ -91,6 +105,7 @@
             ready: function () {
                 console.timeEnd('p')
                 setTimeout( function() {
+                    this.$data.text = 'renew'
                     // this.$data.isShow = false
                     this.$set('items', [[1, 2]])
                 }.bind(this), 3000);

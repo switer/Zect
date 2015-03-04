@@ -56,7 +56,7 @@ var app = new Zect({
 
 - Direcitves
     * [on]()
-    * [ref]()
+    * [ref]() // TBD
     * [show]()
     * [attr]()
     * [class]()
@@ -65,7 +65,7 @@ var app = new Zect({
 
 
 ## Guide
-- **Custom Directive**
+- **Custom directive**
 
 Options's Methods: `bind`, `update`, 'unbind'. `update`, `unbind` is optional. Example below:
 
@@ -84,10 +84,10 @@ Zect.directive('tap', {
 })
 ```
 
-- **Two Binding**
+- **Two way binding**
 
 ```html
-<input type="text" z-on="{change: onChange}" id="con" v-model="search" />
+<input type="text" z-on="{change: onChange}" id="con" z-model="search" />
 ```
 
 ```js

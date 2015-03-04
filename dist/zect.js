@@ -69,9 +69,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var is = __webpack_require__(3)
 	var Mux = __webpack_require__(4)
 	var util = __webpack_require__(5)
-	var conf = __webpack_require__(6)
+	var conf = __webpack_require__(7)
 
-	var Compiler = __webpack_require__(7)
+	var Compiler = __webpack_require__(6)
 	var Directive = Compiler.Directive
 	var AttributeDirective = Compiler.Attribute
 	var TextDirective = Compiler.Text
@@ -615,7 +615,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var conf = __webpack_require__(6)
+	var conf = __webpack_require__(7)
 
 	module.exports = {
 	    Element: function(el) {
@@ -1900,22 +1900,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _namespace = 'z-'
-	module.exports = {
-	    set namespace (n) {
-	        _namespace = n + '-'
-	    },
-	    get namespace () {
-	        return _namespace
-	    }
-	 }
-
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	var $ = __webpack_require__(2)
 	var util = __webpack_require__(5)
 	var _execute = __webpack_require__(10)
@@ -2058,10 +2042,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    bind && bind.apply(d, bindParams)
 	    upda && upda.call(d, prev)
 
-	    // if expression is expressive and watch option not false, 
+
+	    var vars = _extractVars(expr)
 	    // watch variable changes of expression
-	    if (isExpr && def.watch !== false) {
-	        _watch(vm, _extractVars(expr), _update)
+	    if (def.watch !== false && isExpr) {
+	        _watch(vm, vars, _update)
 	    }
 	})
 
@@ -2143,8 +2128,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    bind && bind.call(d, prev)
 	    upda && upda.call(d, prev)
 
-	    if (isExpr && def.watch !== false) {
-	        _watch(vm, _extractVars(expr), _update)
+	    var vars = _extractVars(expr)
+	    if (def.watch !== false && isExpr) {
+	        _watch(vm, vars, _update)
 	    }
 	})
 
@@ -2255,6 +2241,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _namespace = 'z-'
+	module.exports = {
+	    set namespace (n) {
+	        _namespace = n + '-'
+	    },
+	    get namespace () {
+	        return _namespace
+	    }
+	 }
+
+/***/ },
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -2265,7 +2267,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var conf = __webpack_require__(6)
+	var conf = __webpack_require__(7)
 	var util = __webpack_require__(5)
 
 	module.exports = function(Zect) {
@@ -2292,6 +2294,52 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var $el = $(this.$el)
 	                if (next) $el.addClass(this.className)
 	                else $el.removeClass(this.className)
+	            }
+	        },
+	        'model': {
+	            bind: function (prop) {
+	                var tagName = this.$el.tagName
+
+	                switch (tagName) {
+	                    case 'INPUT':
+	                        this.evtType = 'input'
+	                        break
+	                    case 'TEXTAREA':
+	                        this.evtType = 'input'
+	                        break
+	                    case 'SELECT':
+	                        this.evtType = 'change'
+	                        break
+	                    default:
+	                        console.warn(conf.namespace + 'model only using with input/textarea/select')
+	                        return
+	                }
+
+	                var vm = this.vm
+	                var that = this
+	                /**
+	                 *  DOM input 2 state
+	                 */
+	                this._requestChange = function () {
+	                    vm.$set(prop, that.$el.value)
+	                }
+	                /**
+	                 *  State 2 DOM input
+	                 */
+	                this._update = function (kp) {
+	                    if (kp.indexOf(prop) === 0) {
+	                        that.$el.value = vm.$get(prop)
+	                    }
+	                }
+
+	                $(this.$el).on(this.evtType, this._requestChange)
+
+	                this.$el.value = this.vm.$get(prop)
+	                this.vm.$data.$watch(this._update)
+	            },
+	            unbind: function () {
+	                $(this.$el).off(this.evtType, this._requestChange)
+	                this.vm.$data.$unwatch(this._update)
 	            }
 	        },
 	        'on': {
@@ -2340,7 +2388,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var conf = __webpack_require__(6)
+	var conf = __webpack_require__(7)
 	var util = __webpack_require__(5)
 
 	module.exports = function(Zect) {
@@ -2505,10 +2553,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    try {
 	        return util.immutable(eval('with($scope){(%s)}'.replace('%s', arguments[2])))
 	    } catch (e) {
-	        console.error(
-	            (arguments[3] ? '"' + arguments[3] + '": ' : '') + 
-	            'Execute {%s} with error "%s"'.replace('%s', arguments[2]).replace('%s', e.message)
-	        )
+	        switch (e.name) {
+	            case 'ReferenceError':
+	                console.warn(e.message)
+	                break
+	            default:
+	                console.error(
+	                    (arguments[3] ? '"' + arguments[3] + '": ' : '') + 
+	                    '{%s}: "%s"'.replace('%s', arguments[2]).replace('%s', e.message)
+	                )
+	        }
 	        return ''
 	    }
 	}
