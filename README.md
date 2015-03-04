@@ -12,7 +12,8 @@ Lightweight Web components and MVVM framework.
 <script src="dist/zect.js"></script>
 <!-- mounted element -->
 <div id="app">
-    <span z-html="title"></span>
+    <span>{title}</span>
+    <input type="text" z-model="title">
 </div>
 ```
 Define and instance
