@@ -141,6 +141,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var components = [gcomps, options.components || {}]
 	    var directives = allDirectives.concat([options.directives || {}])
 
+	    var _directives = [] // private directive instance temp    
 	    /**
 	     *  Mounted element detect
 	     */
@@ -486,10 +487,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	         */
 	        directives.forEach(function(group) {
 	            util.objEach(group, function(id, def) {
-	                var dirName = conf.namespace + id
-	                var expr = ast.dires[dirName]
-	                if (ast.dires.hasOwnProperty(dirName)) {
-	                    new Directive(vm, scope, node, def, dirName, expr)
+	                var dname = conf.namespace + id
+	                var expr = ast.dires[dname]
+
+	                if (ast.dires.hasOwnProperty(dname)) {
+	                    var sep = ','
+	                    // multiple defines expression parse
+	                    if (def.multi && expr.match(sep)) {
+	                        Compiler.stripExpr(expr).split(sep).forEach(function(item) {
+	                            new Directive(vm, scope, node, def, dname, '{' + item + '}')
+	                        })
+	                    } else {
+	                        new Directive(vm, scope, node, def, dname, expr)
+	                    }
 	                }
 	            })
 	        })
@@ -1973,17 +1983,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return vars
 	}
 
+	function noop () {}
 	/**
 	 *  watch changes of variable-name of keypath
+	 *  @return <Function> unwatch
 	 */
 	function _watch(vm, vars, update) {
 	    if (vars && vars.length) {
-	        vm.$data.$watch(function(kp) {
+	        function _handler (kp) {
 	            vars.forEach(function(key, index) {
 	                if (_relative(kp, key)) update.call(null, key, index)
 	            })
-	        })
+	        }
+	        vm.$watch(_handler)
+	        return function () {
+	            vm.$unwatch(_handler)
+	        }
 	    }
+	    return noop
 	}
 
 	function _strip(t) {
@@ -2039,21 +2056,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    isExpr && (expr = _strip(expr))
 
 	    if (def.multi) {
-	        var multiSep = ','
-	        if (expr.match(multiSep)) {
-	            var parts = expr.split(multiSep)
-	            return parts.map(function(item) {
-	                return new Directive(vm, scope, tar, def, name, '{' + item + '}')
-	            })
-	        }
-	        // do with single
-	        var propertyName 
+	        // extract key and expr from "key: expression" format
+	        var key 
 	        expr = expr.replace(/^[^:]+:/, function (m) {
-	            propertyName = m.replace(/:$/, '').trim()
+	            key = m.replace(/:$/, '').trim()
 	            return ''
 	        }).trim()
-
-	        bindParams.push(propertyName)
+	        
+	        bindParams.push(key)
 	    }
 
 	    d.$el = tar
@@ -2061,6 +2071,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.id = _did++
 
 	    var bind = def.bind
+	    var unbind = def.unbind
 	    var upda = def.update
 	    var prev
 	    /**
@@ -2092,11 +2103,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    bind && bind.apply(d, bindParams)
 	    upda && upda.call(d, prev)
 
-
-	    var vars = _extractVars(expr)
 	    // watch variable changes of expression
 	    if (def.watch !== false && isExpr) {
-	        _watch(vm, vars, _update)
+	       var unwatch = _watch(vm, _extractVars(expr), _update)
+	    }
+
+	    d.$destroy = function () {
+	        unbind && unbind.call(d)
+	        unwatch && unwatch()
+	        d.$el = null
+	        d.vm = null
 	    }
 	})
 
@@ -2106,6 +2122,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var d = this
 	    var bind = def.bind
+	    var unbind = def.unbind
 	    var upda = def.update
 	    var isExpr = !!_isExpr(expr)
 	    var prev
@@ -2178,9 +2195,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    bind && bind.call(d, prev)
 	    upda && upda.call(d, prev)
 
-	    var vars = _extractVars(expr)
 	    if (def.watch !== false && isExpr) {
-	        _watch(vm, vars, _update)
+	        var unwatch = _watch(vm, _extractVars(expr), _update)
+	    }
+
+	    d.$destroy = function () {
+	        unbind && unbind.call(d)
+	        unwatch && unwatch()
+	        d.$el = null
+	        d.vm = null
+	        d.scope = null
 	    }
 	})
 
@@ -2202,6 +2226,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (!exprs || !exprs.length) return
 
 	    var cache = new Array(exprs.length)
+	    var unwatches = []
 
 	    exprs.forEach(function(exp, index) {
 	        // watch change
@@ -2217,7 +2242,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                render()
 	            }
 	        }
-	        _watch(vm, vars, _update)
+	        unwatches.push(_watch(vm, vars, _update))
 	        // initial value
 	        cache[index] = _exec(exp)
 	    })
@@ -2238,23 +2263,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  initial render
 	     */
 	    render()
+
+	    this.$destroy = function () {
+	        unwatches.forEach(function (f) {
+	            f()
+	        })
+	    }
 	})
 
 	compiler.Attribute = function(vm, scope, tar, name, value) {
+	    
+	    var _isNameExpr = _isExpr(name)
+	    var _isValueExpr = _isExpr(value)
+
+	    var nexpr = _isNameExpr ? _strip(name) : null
+	    var vexpr = _isValueExpr ? _strip(value) : null
+
+	    var unwatches = []
 
 	    function _exec(expr) {
 	        return _execute(vm, scope, expr)
 	    }
-
-	    var _ifNameExpr = _isExpr(name)
-	    var _ifValueExpr = _isExpr(value)
-
-	    var nexpr = _ifNameExpr ? _strip(name) : null
-	    var vexpr = _ifValueExpr ? _strip(value) : null
-
-	    var preName = _ifNameExpr ? _exec(nexpr) : name
-	    var preValue = _ifValueExpr ? _exec(vexpr) : value
-
 	    function _validName (n) {
 	        if (n.match(' ')) {
 	            console.warn('Attribute-name can not contains any white space.')
@@ -2262,28 +2291,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return n
 	    }
 
+	    // cache last name/value
+	    var preName = _isNameExpr ? _exec(nexpr) : name
+	    var preValue = _isValueExpr ? _exec(vexpr) : value
+
 	    tar.setAttribute(_validName(preName), preValue)
 
 	    /**
 	     *  watch attribute name expression variable changes
 	     */
-	    _ifNameExpr && _watch(vm, _extractVars(name), function() {
-	        var next = _exec(nexpr)
-	        if (util.diff(next, preName)) {
-	            $(tar).removeAttr(preName).attr(_validName(next), preValue)
-	            preValue = next
-	        }
-	    })
+	    if (_isNameExpr) {
+	        unwatches.push(_watch(vm, _extractVars(name), function() {
+	            var next = _exec(nexpr)
+	            if (util.diff(next, preName)) {
+	                $(tar).removeAttr(preName).attr(_validName(next), preValue)
+	                preValue = next
+	            }
+	        }))
+	    }
 	    /**
 	     *  watch attribute value expression variable changes
 	     */
-	    _ifValueExpr && _watch(vm, _extractVars(value), function() {
-	        var next = _exec(vexpr)
-	        if (util.diff(next, preValue)) {
-	            $(tar).attr(preName, next)
-	            preValue = next
-	        }
-	    })
+	    if (_isValueExpr) {
+	        unwatches.push(_watch(vm, _extractVars(value), function() {
+	            var next = _exec(vexpr)
+	            if (util.diff(next, preValue)) {
+	                $(tar).attr(preName, next)
+	                preValue = next
+	            }
+	        }))
+	    }
+
+	    this.$destroy = function () {
+	        unwatches.forEach(function (f) {
+	            f()
+	        })
+	    }
 	}
 
 
