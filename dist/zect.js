@@ -140,10 +140,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var el = options.el
 	    var components = [gcomps, options.components || {}]
 	    var directives = allDirectives.concat([options.directives || {}])
-	    /**
-	     *  get component define by tagName
-	     */
-	    vm.$component = getComponent
+
 	    /**
 	     *  Mounted element detect
 	     */
@@ -158,7 +155,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } else if (!is.Element(el)) {
 	        throw new Error('Unmatch el option')
 	    }
+
 	    vm.$el = el
+
+	    /**
+	     *  get component define by tagName
+	     */
+	    vm.$component = getComponent
+
+	    /**
+	     *  Component instance refs
+	     */
+	    vm.$refs = {}
 
 	    /**
 	     *  assign methods
@@ -186,6 +194,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    vm.$get = function () {
 	        return $data.$get.apply($data, arguments)
+	    }
+	    vm.$watch = function (fn) {
+	        if (util.type(fn) !== 'function') return console.warn('Listener handler is not a function.')
+	        return $data.$watch(fn)
+	    }
+	    vm.$unwatch = function (fn) {
+	        return $data.$unwatch(fn)
 	    }
 
 	    if (options.$data) {
@@ -224,6 +239,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    vm.$compiler = vm.$compile(el)
+
+	    /**
+	     *  Call ready after compile
+	     */
+	    options.ready && options.ready.call(vm)
+
+	    // TODO destroy
 
 	    function compile (node, scope, isRoot) {
 	        /**
@@ -274,11 +296,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 
-
-	    /**
-	     *  Call ready after compile
-	     */
-	    options.ready && options.ready.call(vm)
 	    /**
 	     *  Reverse component Constructor by tagName
 	     */
@@ -348,6 +365,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // need deep into self
 	        if (node === parentVM.$el) return
 
+	        var ref = $(node).attr('ref')
+
 	        var binding = $(node).attr('state')
 	        var _isExpr = util.isExpr(binding)
 	        var bindingData = _isExpr ? Compiler.execute(parentVM, scope, binding) : {}
@@ -415,6 +434,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                nextState && compVM.$set(nextState)
 	            })
 	        }
+	        // set ref to parentVM
+	        ref && (parentVM.$refs[ref] = compVM)
 	        return compVM
 	    }
 
