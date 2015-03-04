@@ -1,8 +1,8 @@
 Zect
 ====
 
-DOM's manipulation should be automatically when state change.Zect make reactive UI easy.
-**Zect**'s state tracking is power by [muxjs](https://github.com/switer/muxjs)
+Lightweight Web components and MVVM framework.
+**Zect**'s state observer is power by [muxjs](https://github.com/switer/muxjs)
 
 ## Usage
 - [zect.js](https://raw.githubusercontent.com/switer/zect/master/dist/zect.js)

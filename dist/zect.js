@@ -69,9 +69,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var is = __webpack_require__(3)
 	var Mux = __webpack_require__(4)
 	var util = __webpack_require__(5)
-	var conf = __webpack_require__(7)
+	var conf = __webpack_require__(6)
 
-	var Compiler = __webpack_require__(6)
+	var Compiler = __webpack_require__(7)
 	var Directive = Compiler.Directive
 	var AttributeDirective = Compiler.Attribute
 	var TextDirective = Compiler.Text
@@ -122,6 +122,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	Zect.namespace = function(ns) {
 	    conf.namespace = ns
+	}
+
+	Zect.utils = {
+	    'relative': util.relative
 	}
 
 
@@ -615,7 +619,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var conf = __webpack_require__(7)
+	var conf = __webpack_require__(6)
 
 	module.exports = {
 	    Element: function(el) {
@@ -1890,6 +1894,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var close = h.match(/<\/[^<]+?>$/)
 	        
 	        return [open ? open[0]:'', close ? close[0]:'']
+	    },
+	    relative: function (src, dest) {
+	        if (src == dest) return true
+	        else {
+	            var start = src.indexOf(dest) === 0
+	            var subkp = src.replace(dest, '').match(/^[\.\[]/)
+	            return start && subkp
+	        }
 	    }
 	}
 
@@ -1900,9 +1912,26 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	var _namespace = 'z-'
+	module.exports = {
+	    set namespace (n) {
+	        _namespace = n + '-'
+	    },
+	    get namespace () {
+	        return _namespace
+	    }
+	 }
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	var $ = __webpack_require__(2)
 	var util = __webpack_require__(5)
 	var _execute = __webpack_require__(10)
+	var _relative = util.relative
 	/**
 	 *  Whether a text is with express syntax
 	 */
@@ -1930,7 +1959,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (vars && vars.length) {
 	        vm.$data.$watch(function(kp) {
 	            vars.forEach(function(key, index) {
-	                if (kp.indexOf(key) === 0) update.call(null, key, index)
+	                if (_relative(kp, key)) update.call(null, key, index)
 	            })
 	        })
 	    }
@@ -2241,22 +2270,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _namespace = 'z-'
-	module.exports = {
-	    set namespace (n) {
-	        _namespace = n + '-'
-	    },
-	    get namespace () {
-	        return _namespace
-	    }
-	 }
-
-/***/ },
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -2267,8 +2280,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var conf = __webpack_require__(7)
+	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
+	var _relative = util.relative
 
 	module.exports = function(Zect) {
 	    return {
@@ -2327,7 +2341,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                 *  State 2 DOM input
 	                 */
 	                this._update = function (kp) {
-	                    if (kp.indexOf(prop) === 0) {
+	                    if (_relative(kp, prop)) {
 	                        that.$el.value = vm.$get(prop)
 	                    }
 	                }
@@ -2388,7 +2402,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var conf = __webpack_require__(7)
+	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
 
 	module.exports = function(Zect) {

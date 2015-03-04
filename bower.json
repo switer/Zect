@@ -1,0 +1,28 @@
+{
+  "name": "zect",
+  "main": "index.js",
+  "version": "0.0.0",
+  "homepage": "https://github.com/switer/Zect",
+  "authors": [
+    "switer <guankaishe@gmail.com>"
+  ],
+  "keywords": [
+    "web",
+    "component",
+    "mvvm",
+    "two",
+    "way",
+    "binding",
+    "data-binding",
+    "lightweight",
+    "directive"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
