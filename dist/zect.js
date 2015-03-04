@@ -2325,7 +2325,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        this.evtType = 'change'
 	                        break
 	                    default:
-	                        console.warn(conf.namespace + 'model only using with input/textarea/select')
+	                        if (this.$el.hasAttribute('contenteditable')) {
+	                            this.evtType = 'input'
+	                            break
+	                        }
+	                        console.warn(conf.namespace + 'model only using with input/textarea/select/contenteditable')
 	                        return
 	                }
 
