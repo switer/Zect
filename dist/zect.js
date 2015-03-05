@@ -2503,9 +2503,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        'on': {
 	            multi: true,
 	            watch: false,
-	            bind: function(evtType, handler /*, expression*/ ) {
+	            bind: function(evtType, handler, expression ) {
 	                var fn = handler
-	                if (util.type(fn) !== 'function') return console.warn('"' + conf.namespace + 'on" only accept function')
+	                if (util.type(fn) !== 'function') 
+	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + expression + '}')
 	                this.fn = fn.bind(this.vm)
 	                this.type = evtType
 	                this.$el.addEventListener(evtType, this.fn, false)
