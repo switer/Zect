@@ -63,15 +63,18 @@ var app = new Zect({
     * [style]()
     * [component]() // TBD
 
+- Other
+    * [escape for {expression}]() // TBD
+    * [unescape for {$ expression}]() // TBD
 
 ## Guide
 - **Custom directive**
 
 Options's Methods: `bind`, `update`, `unbind`. `update`, `unbind` is optional. 
 Directive instance property:
-    - $vm Mounted VM of the directive
-    - $el Mounted target Node of the directive
-    - $id Current directive instance id
+* $vm Mounted VM of the directive
+* $el Mounted target Node of the directive
+* $id Current directive instance id
 
 Example below:
 
@@ -94,7 +97,11 @@ Zect.directive('tap', {
 
 ```html
 <div id="con">
-    <input type="text" z-on="{change: onChange}" id="con" z-model="search" />
+    <input type="text" 
+        id="con"
+        z-on="{change: onChange}"  
+        z-model="search" 
+    />
     <input type="submit" z-on="onSubmit" value="submit">
 </div>
 ```
@@ -113,12 +120,12 @@ new Zect({
 })
 ```
 
-- **Filter**
+-  **Use filter**
 
 ```html
 <ul id="con">
     <z-repeat items="{lessThanFour(items)}">
-    <li>{$value}</li>
+        <li>{$value}</li>
     </z-repeat>
 </ul>
 ```
@@ -139,7 +146,7 @@ new Zect({
 })
 ```
 
-**Render:**
+Render result:
 
 ```html
 <ul id="con">
@@ -147,6 +154,27 @@ new Zect({
     <li>2</li>
     <li>3</li>
 </ul>
+```
+
+- **Template syntax**
+
+```html
+<!-- escaped HTML value -->
+<p>{title}</p>
+
+<!-- unescaped HTML value -->
+<p>{$ title}</p>
+
+<!-- if -->
+<z-if is="{title}">
+    <div>{title}</div>
+</z-if>
+
+<!-- repeat -->
+<z-repeat items="{items}">
+    <div>{$value}</div>
+</z-repeat>
+
 ```
 
 ## License
