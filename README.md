@@ -57,7 +57,6 @@ var app = new Zect({
 
 - Direcitves
     * [on]()
-    * [ref]() // TBD
     * [show]()
     * [attr]()
     * [class]()
@@ -94,7 +93,7 @@ Zect.directive('tap', {
 ```js
 Zect.directive('model', {
     bind: function (state) {
-        this.vm.$data.$watch(function)
+        this.$vm.$data.$watch(function)
     }
 })
 new Zect({

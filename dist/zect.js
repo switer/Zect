@@ -2128,8 +2128,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    d.$el = tar
-	    d.vm = vm
-	    d.id = _did++
+	    d.$vm = vm
+	    d.$id = _did++
 
 	    var bind = def.bind
 
@@ -2174,7 +2174,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        unbind && unbind.call(d)
 	        unwatch && unwatch()
 	        d.$el = null
-	        d.vm = null
+	        d.$vm = null
 	    }
 	})
 
@@ -2191,10 +2191,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    isExpr && (expr = _strip(expr))
 
-	    d.id = _eid ++
-	    d.vm = vm
+	    d.$id = _eid ++
+	    d.$vm = vm
 	    d.$el = tar
-	    d.scope = scope
+	    d.$scope = scope
 
 	    var tagHTML = util.tagHTML(tar)
 	    d.$before = document.createComment(tagHTML[0])
@@ -2265,8 +2265,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        unbind && unbind.call(d)
 	        unwatch && unwatch()
 	        d.$el = null
-	        d.vm = null
-	        d.scope = null
+	        d.$vm = null
+	        d.$scope = null
 	    }
 	})
 
@@ -2460,7 +2460,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        return
 	                }
 
-	                var vm = this.vm
+	                var vm = this.$vm
 	                var that = this
 
 	                function _updateDOM() {
@@ -2494,11 +2494,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                $(this.$el).on(this.evtType, this._requestChange)
 
 	                _updateDOM()
-	                this.vm.$data.$watch(this._update)
+	                this.$vm.$data.$watch(this._update)
 	            },
 	            unbind: function () {
 	                $(this.$el).off(this.evtType, this._requestChange)
-	                this.vm.$data.$unwatch(this._update)
+	                this.$vm.$data.$unwatch(this._update)
 	            }
 	        },
 	        'on': {
@@ -2508,7 +2508,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var fn = handler
 	                if (util.type(fn) !== 'function') 
 	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + expression + '}')
-	                this.fn = fn.bind(this.vm)
+	                
+	                this.fn = fn.bind(this.$vm)
 	                this.type = evtType
 	                this.$el.addEventListener(evtType, this.fn, false)
 	            },
@@ -2597,7 +2598,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    this._mount()
 	                } else {
 	                    this.compiled = true
-	                    this.vm.$compile(this._tmpCon)
+	                    this.$vm.$compile(this._tmpCon)
 	                    this._mount()
 	                }
 	            }
@@ -2622,9 +2623,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    data.$index = index
 	                    data.$value = item
 
-	                    var cvm = that.vm.$compile(subEl, {
+	                    var cvm = that.$vm.$compile(subEl, {
 	                        data: data,
-	                        $parent: that.scope || {}
+	                        $parent: that.$scope || {}
 	                    })
 	                    return {
 	                        $index: index,
