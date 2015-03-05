@@ -72,9 +72,9 @@ var app = new Zect({
 
 Options's Methods: `bind`, `update`, `unbind`. `update`, `unbind` is optional. 
 Directive instance property:
-* $vm Mounted VM of the directive
-* $el Mounted target Node of the directive
-* $id Current directive instance id
+* **$vm** Mounted VM of the directive
+* **$el**   Mounted target Node of the directive
+* **$id**   Current directive instance id
 
 Example below:
 
