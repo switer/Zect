@@ -93,29 +93,60 @@ Zect.directive('tap', {
 - **Two way binding**
 
 ```html
-<input type="text" z-on="{change: onChange}" id="con" z-model="search" />
+<div id="con">
+    <input type="text" z-on="{change: onChange}" id="con" z-model="search" />
+    <input type="submit" z-on="onSubmit" value="submit">
+</div>
 ```
 
 ```js
-Zect.directive('model', {
-    bind: function (state) {
-        this.$vm.$data.$watch(function)
-    }
-})
 new Zect({
     el: '#con',
     data: {
-        search: ''
-    },
-    ready: function () {
-        
+        search: 'Please input'
     },
     methods: {
-        onChange: function (e) {
-            
+        onSubmit: function () {
+            this.$data.search // input value
         }
     }
 })
+```
+
+- **Filter**
+
+```html
+<ul id="con">
+    <z-repeat items="{lessThanFour(items)}">
+    <li>{$value}</li>
+    </z-repeat>
+</ul>
+```
+
+```js
+new Zect({
+    el: '#con',
+    data: function () {
+        return [1,2,3,4,5]
+    },
+    methods: {
+        lessThanFour: function (items) {
+            return items.filter(function (item) {
+                if (item < 4) return true
+            })
+        }
+    }
+})
+```
+
+**Render:**
+
+```html
+<ul id="con">
+    <li>1</li>
+    <li>2</li>
+    <li>3</li>
+</ul>
 ```
 
 ## License
