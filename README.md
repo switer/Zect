@@ -67,7 +67,13 @@ var app = new Zect({
 ## Guide
 - **Custom directive**
 
-Options's Methods: `bind`, `update`, 'unbind'. `update`, `unbind` is optional. Example below:
+Options's Methods: `bind`, `update`, `unbind`. `update`, `unbind` is optional. 
+Directive instance property:
+    - $vm Mounted VM of the directive
+    - $el Mounted target Node of the directive
+    - $id Current directive instance id
+
+Example below:
 
 ```html
 <div z-tap="{onClick}"></div>
