@@ -1833,6 +1833,15 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+	var escapeCharMap = {
+	    '&': '&amp;',
+	    '<': '&lt;',
+	    '>': '&gt;',
+	    '\"': '&quot;',
+	    '\'': '&#x27;',
+	    '/': '&#x2F;'
+	}
+	var escapeRex = new RegExp(escapeCharMap.keys().join('|'), 'g')
 
 	module.exports = {
 	    type: function(obj) {
@@ -1980,6 +1989,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var subkp = src.replace(dest, '').match(/^[\.\[]/)
 	            return start && subkp
 	        }
+	    },
+	    escape: function (str) {
+	        return str.replace(escapeRex, function (m) {
+	            return escapeCharMap(m)
+	        })
 	    }
 	}
 
