@@ -48,6 +48,10 @@
             z-attr="{disabled: isShow ? isShow : ''}" 
             z-on="{click: onChangeClass}"
         >{part(title)}</p>
+
+        <z-repeat items="{todos.call($vm)}">
+            <p></p>
+        </z-repeat>
     </div>
     <script src="../dist/zect.min.js"></script>
     <script>
@@ -115,6 +119,9 @@
 
             },
             methods: {
+                todos: function () {
+                    return []
+                },
                 part: function (text) {
                     return text.split(' ')[0]
                 },
