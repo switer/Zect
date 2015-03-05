@@ -1989,13 +1989,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _namespace = 'z-'
+	var _ns = 'z-'
+
 	module.exports = {
 	    set namespace (n) {
-	        _namespace = n + '-'
+	        _ns = n + '-'
 	    },
 	    get namespace () {
-	        return _namespace
+	        return _ns
 	    }
 	 }
 
@@ -2274,7 +2275,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	compiler.Text = compiler.inherit(function(vm, scope, tar) {
 
 	    function _exec (expr) {
-	        return _execute(vm, scope, expr)
+	        return _execute(vm, scope, expr, null)
 	    }
 	    var v = tar.nodeValue
 	        .replace(/\\{/g, '\uFFF0')
@@ -2344,11 +2345,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var unwatches = []
 
 	    function _exec(expr) {
-	        return _execute(vm, scope, expr)
+	        return _execute(vm, scope, expr, name + '=' + value)
 	    }
 	    function _validName (n) {
 	        if (n.match(' ')) {
-	            console.warn('Attribute-name can not contains any white space.')
+	            console.warn('Attribute name can not contains any white space. {' + name + '}')
 	        }
 	        return n
 	    }
@@ -2456,7 +2457,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        this.evtType = 'input'
 	                        break
 	                    default:
-	                        console.warn(conf.namespace + 'model only using with input/textarea/select/contenteditable')
+	                        console.warn('"' + conf.namespace + 'model" only support input,textarea,select,contenteditable')
 	                        return
 	                }
 
@@ -2508,7 +2509,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var fn = handler
 	                if (util.type(fn) !== 'function') 
 	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + expression + '}')
-	                
+
 	                this.fn = fn.bind(this.$vm)
 	                this.type = evtType
 	                this.$el.addEventListener(evtType, this.fn, false)
@@ -2604,16 +2605,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'repeat': {
-	            bind: function(/*items, expr*/) {
+	            bind: function(items, expr) {
 	                this.child = this.$el.firstElementChild
+	                this.expr = expr
 
 	                if (!this.child) {
-	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node')
+	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node. {' + expr + '}')
 	                }
 	            },
 	            update: function(items) {
 	                if (!items || !items.forEach) {
-	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data')
+	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
 	                var that = this
 	                function createSubVM(item, index) {
@@ -2699,7 +2701,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  Calc expression value
 	 */
-	function _execute($vm, $scope/*, expression, _label*/) {
+	function _execute($vm, $scope/*, expression, [label], [target]*/) {
 	    var $parent = $scope && $scope.$parent ? util.extend({}, $scope.$parent.methods, $scope.$parent.data) : {}
 	    
 	    $scope = $scope || {}
@@ -2708,14 +2710,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    try {
 	        return util.immutable(eval('with($scope){(%s)}'.replace('%s', arguments[2])))
 	    } catch (e) {
+	        var expr = '. {' + arguments[2] + '}'
+	        var label = arguments[3]
+	        var target = arguments[4]
 	        switch (e.name) {
 	            case 'ReferenceError':
-	                console.warn(e.message)
+	                console.warn(e.message + expr)
 	                break
 	            default:
 	                console.error(
-	                    (arguments[3] ? '"' + arguments[3] + '": ' : '') + 
-	                    '{%s}: "%s"'.replace('%s', arguments[2]).replace('%s', e.message)
+	                     (label ? '\'' + label + '\': ' : ''),
+	                    e.message +
+	                    expr,
+	                    target || ''
 	                )
 	        }
 	        return ''
