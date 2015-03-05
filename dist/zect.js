@@ -106,7 +106,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        ;['data', 'methods', 'directives', 'components'].forEach(function (prop) {
 	            insOpt[prop] = {}
 	            util.extend(insOpt[prop], funcOrObject(options, prop), funcOrObject(opt, prop))
-
 	        })
 	        util.insertProto(this, Zect.prototype)
 	        return ViewModel.call(this, insOpt)
@@ -175,10 +174,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     *  assign methods
 	     */
-	    var methods = vm.$methods = options.methods
-	    util.objEach(methods, function(k, v) {
-	        vm[k] = v
+	    var methods = {}
+	    util.objEach(options.methods, function(k, v) {
+	        if (util.type(v) !== 'function') return console.warn(k + ' is not a function.')
+	        vm[k] = methods[k] = v.bind(vm)
 	    })
+	    vm.$methods = methods
 
 	    var $data
 	    var dataOpt = {}
