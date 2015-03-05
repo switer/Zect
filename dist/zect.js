@@ -2131,7 +2131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.vm = vm
 	    d.id = _did++
 
-	    var bind = def.bind
+	    var _bind = def.bind
 	    var unbind = def.unbind
 	    var upda = def.update
 	    var prev
@@ -2161,7 +2161,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    bindParams.push(prev)
 	    bindParams.push(expr)
 	    // ([property-name], expression-value, expression) 
-	    bind && bind.apply(d, bindParams)
+	    _bind && _bind.apply(d, bindParams)
 	    upda && upda.call(d, prev)
 
 	    // watch variable changes of expression
@@ -2182,7 +2182,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	compiler.Element = compiler.inherit(function (vm, scope, tar, def, name, expr) {
 
 	    var d = this
-	    var bind = def.bind
+	    var _bind = def.bind
 	    var unbind = def.unbind
 	    var upda = def.update
 	    var isExpr = !!_isExpr(expr)
@@ -2253,7 +2253,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    prev = isExpr ? _exec(expr) : expr
 
-	    bind && bind.call(d, prev)
+	    _bind && _bind.call(d, prev)
 	    upda && upda.call(d, prev)
 
 	    if (def.watch !== false && isExpr) {
