@@ -416,7 +416,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         *  Watch
 	         */
-	        var sep = ','
+	        var sep = ';'
 	        function parseExpr (expr) {
 	            var name
 	            var expr = expr.replace(/^[^:]+:/, function (m) {
@@ -531,7 +531,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var expr = ast.dires[dname]
 
 	                if (ast.dires.hasOwnProperty(dname)) {
-	                    var sep = ','
+	                    var sep = ';'
 	                    // multiple defines expression parse
 	                    if (def.multi && expr.match(sep)) {
 	                        Compiler.stripExpr(expr)

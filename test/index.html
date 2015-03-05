@@ -44,7 +44,7 @@
         <div contenteditable="true" z-model="inputs.text">...</div>
         <!-- directives-filter -->
         <p 
-            z-class="{show: isShow, hide: !isShow}" 
+            z-class="{show: isShow; hide: !isShow}" 
             z-attr="{disabled: isShow ? isShow : ''}" 
             z-on="{click: onChangeClass}"
         >{part(title)}</p>
