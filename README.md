@@ -65,7 +65,7 @@ var app = new Zect({
 
 - Other
     * [escape for {expression}]() // TBD
-    * [unescape for {$ expression}]() // TBD
+    * [unescape for {- expression}]() // TBD
 
 ## Guide
 - **Custom directive**
@@ -125,7 +125,7 @@ new Zect({
 ```html
 <ul id="con">
     <z-repeat items="{lessThanFour(items)}">
-        <li>{$value}</li>
+        <li>{- value}</li>
     </z-repeat>
 </ul>
 ```
@@ -172,7 +172,7 @@ Render result:
 
 <!-- repeat -->
 <z-repeat items="{items}">
-    <div>{$value}</div>
+    <div>{- value}</div>
 </z-repeat>
 
 ```
