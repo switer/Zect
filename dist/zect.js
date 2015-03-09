@@ -1841,7 +1841,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    '\'': '&#x27;',
 	    '/': '&#x2F;'
 	}
-	var escapeRex = new RegExp(escapeCharMap.keys().join('|'), 'g')
+	var escapeRex = new RegExp(Object.keys(escapeCharMap).join('|'), 'g')
 
 	module.exports = {
 	    type: function(obj) {
