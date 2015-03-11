@@ -1992,7 +1992,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 	    escape: function (str) {
 	        return str.replace(escapeRex, function (m) {
-	            return escapeCharMap(m)
+	            return escapeCharMap[m]
 	        })
 	    }
 	}
