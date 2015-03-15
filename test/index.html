@@ -45,7 +45,7 @@
             z-on="{click: onChangeClass}"
         >{part(title)}</p>
 
-        <z-repeat items="{todos.call($vm)}">
+        <z-repeat items="{todoItems}">
             <p></p>
         </z-repeat>
     </div>
@@ -84,6 +84,7 @@
             },
             data: function () {
                 return {
+                    todoItems:[],
                     items: [[1]],
                     title: 'zect data-binding',
                     disabled: false,

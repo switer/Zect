@@ -2178,7 +2178,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    bindParams.push(prev)
 	    bindParams.push(expr)
 	    // ([property-name], expression-value, expression) 
-	    bind && bind.apply(d, bindParams)
+	    bind && bind.apply(d, bindParams, expr)
 	    upda && upda.call(d, prev)
 
 	    // watch variable changes of expression
@@ -2270,7 +2270,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    prev = isExpr ? _exec(expr) : expr
 
-	    bind && bind.call(d, prev)
+	    bind && bind.call(d, prev, expr)
 	    upda && upda.call(d, prev)
 
 	    if (def.watch !== false && isExpr) {
@@ -2623,7 +2623,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            bind: function(items, expr) {
 	                this.child = this.$el.firstElementChild
 	                this.expr = expr
-
 	                if (!this.child) {
 	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node. {' + expr + '}')
 	                }
