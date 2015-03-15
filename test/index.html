@@ -19,14 +19,20 @@
             </z-repeat>
             <h1>switer</h1>
         </z-if>
+        <z-repeat items="{todoItems}">
+            <p></p>
+        </z-repeat>
+
         <!-- component-state -->
         <my-component
             z-tap="{items}"
             state="{items: items}"
             method="{onClick: onAlert}"
         ></my-component>
+
         <!-- local-component-ref -->
         <my-component2 ref="comp2"></my-component2>
+
         <!-- two way bindings -->
         <input type="text" z-model="inputs.text">
         <textarea z-model="inputs.text"></textarea>
@@ -36,8 +42,8 @@
             <option value="world">world</option>
             <option value="renew">renew</option>
         </select>
-        <p z-html="{inputs.text}"></p>
         <div contenteditable="true" z-model="inputs.text">...</div>
+        
         <!-- directives-filter -->
         <p 
             z-class="{show: isShow; hide: !isShow}" 
@@ -45,15 +51,13 @@
             z-on="{click: onChangeClass}"
         >{part(title)}</p>
 
-        <z-repeat items="{todoItems}">
-            <p></p>
-        </z-repeat>
+        <p>{- inputs.text}</p>
     </div>
     <script src="../dist/zect.js"></script>
     <script>
         console.time('p')
         Zect.component('my-component', {
-            template: '<div z-on="{click: onClick}">{subtitle}-{items}</div>',
+            template: '<div z-on="{click: onClick}"></div>',
             data: {
                 items: [],
                 subtitle: 'sub title'
@@ -108,6 +112,7 @@
                 console.timeEnd('p')
                 setTimeout( function() {
                     this.$data.text = 'renew'
+                    this.$data.inputs.text = '<div>hello world</div>'
                     // this.$data.isShow = false
                     this.$set('items', [[1, 2]])
                 }.bind(this), 3000);

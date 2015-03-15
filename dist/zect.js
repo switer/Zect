@@ -69,9 +69,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var is = __webpack_require__(3)
 	var Mux = __webpack_require__(4)
 	var util = __webpack_require__(5)
-	var conf = __webpack_require__(6)
+	var conf = __webpack_require__(8)
 
-	var Compiler = __webpack_require__(7)
+	var Compiler = __webpack_require__(6)
 	var Directive = Compiler.Directive
 	var AttributeDirective = Compiler.Attribute
 	var TextDirective = Compiler.Text
@@ -80,7 +80,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  private vars
 	 */
-	var presetDirts = __webpack_require__(8)(Zect)  // preset directives getter
+	var presetDirts = __webpack_require__(7)(Zect)  // preset directives getter
 	var elements = __webpack_require__(9)(Zect)      // preset directives getter
 	var allDirectives = [presetDirts, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
@@ -697,7 +697,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var conf = __webpack_require__(6)
+	var conf = __webpack_require__(8)
 
 	module.exports = {
 	    Element: function(el) {
@@ -1991,6 +1991,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    },
 	    escape: function (str) {
+	        if (!this.type(str) == 'string') return str
 	        return str.replace(escapeRex, function (m) {
 	            return escapeCharMap[m]
 	        })
@@ -2000,23 +2001,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _ns = 'z-'
-
-	module.exports = {
-	    set namespace (n) {
-	        _ns = n + '-'
-	    },
-	    get namespace () {
-	        return _ns
-	    }
-	 }
-
-/***/ },
-/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2066,7 +2050,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function _strip(t) {
-	    return t.trim().match(/^\{([\s\S]*)\}$/m)[1]
+	    return t.trim()
+	            .match(/^\{([\s\S]*)\}$/m)[1]
+	            .replace(/^- /, '')
+	}
+
+	function _isUnescape(t) {
+	    return t.match(/^\{\- /)
 	}
 
 	/**
@@ -2292,9 +2282,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    function _exec (expr) {
 	        return _execute(vm, scope, expr, null)
 	    }
-	    var v = tar.nodeValue
-	        .replace(/\\{/g, '\uFFF0')
-	        .replace(/\\}/g, '\uFFF1')
+	    var originExpr = tar.nodeValue
+	    var v = originExpr.replace(/\\{/g, '\uFFF0')
+	                      .replace(/\\}/g, '\uFFF1')
 
 	    var exprReg = /\{[\s\S]*?\}/g
 	    var parts = v.split(exprReg)
@@ -2304,6 +2294,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (!exprs || !exprs.length) return
 
 	    var cache = new Array(exprs.length)
+	    var isUnescape = exprs.some(function (expr) {
+	        return _isUnescape(expr)
+	    })
 	    var unwatches = []
 
 	    exprs.forEach(function(exp, index) {
@@ -2320,11 +2313,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	                render()
 	            }
 	        }
-	        unwatches.push(_watch(vm, vars, _update))
 	        // initial value
 	        cache[index] = _exec(exp)
+
+	        unwatches.push(_watch(vm, vars, _update))
 	    })
 
+	    if (isUnescape) {
+	        var $tmp = document.createElement('div')
+	        var $con = document.createDocumentFragment()
+	        var $before = document.createComment(originExpr)
+	        var $after = document.createComment('end')
+
+	        tar.parentNode.insertBefore($before, tar)
+	        tar.parentNode.insertBefore($after, tar.nextSibling)
+	    }
 	    function render() {
 	        var frags = []
 	        parts.forEach(function(item, index) {
@@ -2333,9 +2336,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	                frags.push(cache[index])
 	            }
 	        })
-	        tar.nodeValue = frags.join('')
-	                             .replace(/\uFFF0/g, '\\{')
-	                             .replace(/\uFFF1/g, '\\}')
+
+	        var nodeV = frags.join('')
+	                         .replace(/\uFFF0/g, '\\{')
+	                         .replace(/\uFFF1/g, '\\}')
+
+	        if (isUnescape) {
+	            var cursor = $before.nextSibling
+	            while(cursor && cursor !== $after) {
+	                var next = cursor.nextSibling
+	                cursor.parentNode.removeChild(cursor)
+	                cursor = next
+	            }
+	            $tmp.innerHTML = nodeV
+	            ;[].slice.call($tmp.childNodes).forEach(function (n) {
+	                $con.appendChild(n)
+	            }) 
+	            $after.parentNode.insertBefore($con, $after)
+	        } else {
+	            tar.nodeValue = nodeV
+	        }
 	    }
 	    /**
 	     *  initial render
@@ -2417,7 +2437,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2427,7 +2447,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var conf = __webpack_require__(6)
+	var conf = __webpack_require__(8)
 	var util = __webpack_require__(5)
 	var _relative = util.relative
 
@@ -2565,6 +2585,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _ns = 'z-'
+
+	module.exports = {
+	    set namespace (n) {
+	        _ns = n + '-'
+	    },
+	    get namespace () {
+	        return _ns
+	    }
+	 }
+
+/***/ },
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -2575,7 +2612,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var conf = __webpack_require__(6)
+	var conf = __webpack_require__(8)
 	var util = __webpack_require__(5)
 
 	module.exports = function(Zect) {
