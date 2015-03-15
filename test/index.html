@@ -36,7 +36,7 @@
             <option value="world">world</option>
             <option value="renew">renew</option>
         </select>
-        <p>{inputs.text}</p>
+        <p z-html="{inputs.text}"></p>
         <div contenteditable="true" z-model="inputs.text">...</div>
         <!-- directives-filter -->
         <p 
@@ -92,7 +92,7 @@
                     person: null,
                     a: undefined,
                     inputs: {
-                        text: 'Please Input'
+                        text: 'Please <h1>Input</h1>'
                     }
                 }
             },

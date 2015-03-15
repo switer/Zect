@@ -2300,7 +2300,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var parts = v.split(exprReg)
 
 	    var exprs = v.match(exprReg)
-	        // expression not match
+	    // expression not match
 	    if (!exprs || !exprs.length) return
 
 	    var cache = new Array(exprs.length)
@@ -2334,8 +2334,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        })
 	        tar.nodeValue = frags.join('')
-	            .replace(/\uFFF0/g, '\\{')
-	            .replace(/\uFFF1/g, '\\}')
+	                             .replace(/\uFFF0/g, '\\{')
+	                             .replace(/\uFFF1/g, '\\}')
 	    }
 	    /**
 	     *  initial render
@@ -2382,7 +2382,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        unwatches.push(_watch(vm, _extractVars(name), function() {
 	            var next = _exec(nexpr)
 	            if (util.diff(next, preName)) {
-	                $(tar).removeAttr(preName).attr(_validName(next), preValue)
+	                $(tar).removeAttr(preName)
+	                      .attr(util.escape(_validName(next)), 
+	                            util.escape(preValue))
 	                preValue = next
 	            }
 	        }))
@@ -2394,7 +2396,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        unwatches.push(_watch(vm, _extractVars(value), function() {
 	            var next = _exec(vexpr)
 	            if (util.diff(next, preValue)) {
-	                $(tar).attr(preName, next)
+	                $(tar).attr(
+	                        util.escape(preName), 
+	                        util.escape(next))
+
 	                preValue = next
 	            }
 	        }))
@@ -2450,6 +2455,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var $el = $(this.$el)
 	                if (next) $el.addClass(this.className)
 	                else $el.removeClass(this.className)
+	            }
+	        },
+	        'html': {
+	            update: function (nextHTML) {
+	                this.$el.innerHTML = nextHTML
 	            }
 	        },
 	        'model': {
