@@ -203,6 +203,7 @@ Use component:
 <body>
     <div id="app">
         <c-header title="header component"></c-header>
+        <div title="header component2"></div>
     </div>
     <script>
         new Zect({
@@ -212,13 +213,16 @@ Use component:
 </body>
 ```
 
-**render result**:
+render result:
 
 ```html
 <div id="app">
     <c-header title="header component" class="header">
         <div class="title">index</div>
     </c-header>
+    <div title="header component2" class="header">
+        <div class="title">index</div>
+    </div>
 </div>
 ```
 
