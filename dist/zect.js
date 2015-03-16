@@ -159,8 +159,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        throw new Error('Unmatch el option')
 	    }
 	    // replate template holder DOM
-	    if (el.children.length == 1 && el.firstChild.tagName.toLowerCase() == (conf.namespace + 'template')) {
-	        var $holder = el.firstChild
+	    if (el.children.length == 1 && el.firstElementChild.tagName.toLowerCase() == (conf.namespace + 'template')) {
+	        var $holder = el.firstElementChild
 	        var $childrens = [].slice.call($holder.childNodes)
 	        var attributes = [].slice.call($holder.attributes)
 
@@ -200,6 +200,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        vm[k] = methods[k] = v.bind(vm)
 	    })
 	    vm.$methods = methods
+
+	    // unobserved properties
+	    vm.$props = util.copyObject(options.props)
 
 	    var $data
 	    var dataOpt = {}
@@ -428,10 +431,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var ref = $(node).attr('ref')
 
 	        var binding = $(node).attr('data')
+	        $(node).removeAttr('data')
 	        var _isExpr = util.isExpr(binding)
 	        var bindingData = _isExpr ? Compiler.execute(parentVM, scope, binding) : {}
 
 	        var methods = $(node).attr('methods')
+	        $(node).removeAttr('methods')
 	        var bindingMethods = util.isExpr(methods) ? Compiler.execute(parentVM, scope, methods) : {}
 
 	        /**
@@ -473,6 +478,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	                setBindingObj(binding)
 	            }
 	        }
+
+	        // var props = {}
+	        // // migrate attributes
+	        // var attributes = [].slice.call(node.attributes)
+	        // attributes.forEach(function (att) {
+	        //     var atn = att.name
+	        //     var atv = att.value
+	        //     // camel case
+	        //     atn = atn.replace(/-([a-z])/g, function (m, $1) {
+	        //         return $1.toUpperCase()
+	        //     })
+	        //     if (atn == 'class') props['className'] = atv 
+	        //     else props[atn] = atv
+	        // })
 
 	        compVM = new Comp({
 	            el: node,
@@ -2237,7 +2256,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.$id = _eid ++
 	    d.$vm = vm
 	    d.$el = tar
-	    d.$scope = scope
+	    d.$scope = scope // save the scope reference
 
 	    var tagHTML = util.tagHTML(tar)
 	    d.$before = document.createComment(tagHTML[0])
@@ -2790,6 +2809,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  Calc expression value
 	 */
 	function _execute($vm, $scope/*, expression, [label], [target]*/) {
+	    /**
+	     *  $scope is passed when call instance method $compile, 
+	     *  Each "scope" object maybe include "$parent, data, method" properties
+	     */
 	    var $parent = $scope && $scope.$parent ? util.extend({}, $scope.$parent.methods, $scope.$parent.data) : {}
 	    
 	    $scope = $scope || {}
