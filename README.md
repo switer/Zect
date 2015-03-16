@@ -62,7 +62,7 @@ var app = new Zect({
     * [attr]()
     * [class]()
     * [style]()
-    * [component]() // TBD
+    * [component]()
 
 ## Guide
 - **Custom directive**
