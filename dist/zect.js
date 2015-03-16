@@ -201,9 +201,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    })
 	    vm.$methods = methods
 
-	    // unobserved properties
-	    vm.$props = util.copyObject(options.props)
-
 	    var $data
 	    var dataOpt = {}
 
@@ -296,7 +293,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        _elements = null
 
 	        // marked
-	        vm.$isDestroy = true
+	        vm.$destroyed = true
 	    }
 
 	    vm.$compiler = vm.$compile(el)

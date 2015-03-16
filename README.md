@@ -46,13 +46,31 @@ var app = new Zect({
     * [directives]()
     * [components]()
 
+- Lifecyle Methods
+    * [created]()
+    * [ready]()
+    * [destroy]()
+
 - Instance Methods
     * [$set]()
     * [$get]()
+    * [$watch]()
+    * [$unwatch]()
+    * [$compile]()
+    * [$component]()
+    * [$destroy]()
+
+- Instance Properties
+    * [$el]()
+    * [$refs]()
+    * [$methods]()
+    * [$children]()
+    * [$destroyed]()
 
 - Template Syntax
     * [if]()
     * [repeat]()
+    * [template]()
     * [{expression}]()
     * [{- expression}]()
 
