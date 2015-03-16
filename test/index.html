@@ -42,8 +42,13 @@
             <option value="world">world</option>
             <option value="renew">renew</option>
         </select>
-        <div contenteditable="true" z-model="inputs.text">...</div>
-        
+        <input type="checkbox" z-model="inputs.check"> <span>is check: {inputs.check ? 'yes':'no'}</span> <br>
+        <input type="date" z-model="inputs.date">{inputs.date} <br>
+        <input type="range" z-model="inputs.range">{inputs.range} <br>
+        <input type="color" z-model="inputs.color">{inputs.color} <br>
+        <input type="tel" z-model="inputs.tel">{inputs.tel} <br>
+        <input type="url" z-model="inputs.url">{inputs.url} <br>
+        <input type="search" z-model="inputs.search">{inputs.search} <br>
         <!-- directives-filter -->
         <p 
             z-class="{show: isShow; hide: !isShow}" 
@@ -98,7 +103,14 @@
                     person: null,
                     a: undefined,
                     inputs: {
-                        text: 'Please Input'
+                        text: 'Please Input',
+                        check: false,
+                        date: '2014-10-11',
+                        range: 1,
+                        tel: '',
+                        color: 'blue',
+                        search: 'kw',
+                        url: 'http://'
                     },
                     contents: {
                         text: '<h1>Rich html content</h1>',
