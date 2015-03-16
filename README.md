@@ -175,18 +175,51 @@ Render result:
 ```
 
 - **Custom Component**
+
 Define a custom component
 
+```html
+<script type="text/zect" id="tpl-header">
+    <component class="header">
+        <div class="title">{title}</div>
+    </component>
+</script>
+```
+
 ```js
-Zect.component('header', {
-    template: '<template class="header"><div class="title">{title}</div></template>',
+Zect.component('c-header', {
+    template: document.querySelector('#tpl-header').innerHTML,
     data: {
-        title: ''
+        title: 'index'
     },
     ready: function () {
 
     }
 })
+```
+Use component:
+
+```html
+<body>
+    <div id="app">
+        <c-header title="header component"></c-header>
+    </div>
+    <script>
+        new Zect({
+            el: '#app'
+        })
+    </script>
+</body>
+```
+
+**render result**:
+
+```html
+<div id="app">
+    <c-header title="header component" class="header">
+        <div class="title">index</div>
+    </c-header>
+</div>
 ```
 
 ## License
