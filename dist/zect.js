@@ -80,7 +80,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  private vars
 	 */
-	var presetDirts = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"./directives\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()))(Zect)  // preset directives getter
+	var presetDirts = __webpack_require__(8)(Zect)  // preset directives getter
 	var elements = __webpack_require__(9)(Zect)      // preset directives getter
 	var allDirectives = [presetDirts, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
@@ -2359,8 +2359,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (isUnescape) {
 	        var $tmp = document.createElement('div')
 	        var $con = document.createDocumentFragment()
-	        var $before = document.createComment(originExpr)
-	        var $after = document.createComment('end')
+	        var $before = document.createComment('{' + _strip(originExpr))
+	        var $after = document.createComment('}')
 
 	        tar.parentNode.insertBefore($before, tar)
 	        tar.parentNode.insertBefore($after, tar.nextSibling)
@@ -2469,7 +2469,166 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */,
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 *  Preset Global Directives
+	 */
+
+	'use strict';
+
+	var $ = __webpack_require__(2)
+	var conf = __webpack_require__(6)
+	var util = __webpack_require__(5)
+	var _relative = util.relative
+
+	module.exports = function(Zect) {
+	    return {
+	        'attr': {
+	            multi: true,
+	            bind: function(attname) {
+	                this.attname = attname
+	            },
+	            update: function(next) {
+	                if (!next && next !== '') {
+	                    $(this.$el).removeAttr(this.attname)
+	                } else {
+	                    $(this.$el).attr(this.attname, next)
+	                }
+	            }
+	        },
+	        'class': {
+	            multi: true,
+	            bind: function(className) {
+	                this.className = className
+	            },
+	            update: function(next) {
+	                var $el = $(this.$el)
+	                if (next) $el.addClass(this.className)
+	                else $el.removeClass(this.className)
+	            }
+	        },
+	        'html': {
+	            update: function (nextHTML) {
+	                this.$el.innerHTML = nextHTML
+	            }
+	        },
+	        'model': {
+	            bind: function (prop) {
+	                var tagName = this.$el.tagName
+	                var type = tagName.toLowerCase()
+
+	                // pick input element type spec
+	                type = type == 'input' ? $(this.$el).attr('type') || 'text' : type
+
+	                switch (type) {
+	                    case 'tel':
+	                    case 'url':
+	                    case 'text':
+	                    case 'search':
+	                    case 'password':
+	                    case 'textarea':
+	                        this.evtType = 'input'
+	                        break
+	                    
+	                    case 'date':
+	                    case 'week':
+	                    case 'time':
+	                    case 'month':
+	                    case 'datetime':
+	                    case 'datetime-local':
+	                    case 'color':
+	                    case 'range':
+	                    case 'number':
+	                    case 'select':
+	                    case 'checkbox':
+	                        this.evtType = 'change'
+	                        break
+	                    default:
+	                        console.warn('"' + conf.namespace + 'model" only support input,textarea,select')
+	                        return
+	                }
+
+	                var vm = this.$vm
+	                var that = this
+
+	                function _updateDOM() {
+	                    if (type == 'checkbox') {
+	                        that.$el.checked = vm.$get(prop)
+	                    } else {
+	                        that.$el.value = vm.$get(prop)
+	                    }
+	                }
+
+	                function _updateState() {
+	                    if (type == 'checkbox') {
+	                        vm.$set(prop, that.$el.checked)
+	                    } else {
+	                        vm.$set(prop, that.$el.value)
+	                    }
+	                }
+	                /**
+	                 *  DOM input 2 state
+	                 */
+	                this._requestChange = _updateState
+	                /**
+	                 *  State 2 DOM input
+	                 */
+	                this._update = function (kp) {
+	                    if (_relative(kp, prop)) {
+	                        _updateDOM()
+	                    }
+	                }
+
+	                $(this.$el).on(this.evtType, this._requestChange)
+
+	                _updateDOM()
+	                this.$vm.$data.$watch(this._update)
+	            },
+	            unbind: function () {
+	                $(this.$el).off(this.evtType, this._requestChange)
+	                this.$vm.$data.$unwatch(this._update)
+	            }
+	        },
+	        'on': {
+	            multi: true,
+	            watch: false,
+	            bind: function(evtType, handler, expression ) {
+	                var fn = handler
+	                if (util.type(fn) !== 'function') 
+	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + expression + '}')
+
+	                this.fn = fn.bind(this.$vm)
+	                this.type = evtType
+	                this.$el.addEventListener(evtType, this.fn, false)
+	            },
+	            unbind: function() {
+	                if (this.fn) {
+	                    this.$el.removeEventLisnter(this.type, this.fn)
+	                    this.fn = null
+	                }
+	            }
+	        },
+	        'show': {
+	            update: function(next) {
+	                this.$el.style.display = next ? '' : 'none'
+	            }
+	        },
+	        'style': {
+	            multi: true,
+	            bind: function (sheet) {
+	                this.sheet = sheet
+	            },
+	            update: function (next) {
+	                this.$el.style && (this.$el.style[this.sheet] = next)
+	            }
+	        }
+	    }
+	}
+
+
+/***/ },
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 

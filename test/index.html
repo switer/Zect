@@ -10,7 +10,7 @@
         <z-if is="{!disabled}">
             <z-repeat items="{items}" xname="parent">
                 <z-repeat items="{$value}" xname="child-repeat">
-                    <my-component data-value="{$value}"
+                    <my-component data-value="{$value}" data-row="{$parent.$index}" dta-col="{$index}"
                         method="{
                             onClick: onAlert
                         }"
@@ -56,7 +56,7 @@
             z-on="{click: onChangeClass}"
         >{part(title)}</p>
 
-        <p data-content="{- contents.attr}">{contents.text}</p>
+        <p data-content="{contents.attr}">{- contents.text}</p>
 
 
     </div>
