@@ -10,8 +10,11 @@
         <z-if is="{!disabled}">
             <z-repeat items="{items}" xname="parent">
                 <z-repeat items="{$value}" xname="child-repeat">
-                    <my-component data-value="{$value}" data-row="{$parent.$index}" dta-col="{$index}"
-                        method="{
+                    <my-component 
+                        data-value="{$value}" 
+                        data-row="{$parent.$index}" 
+                        data-col="{$index}"
+                        methods="{
                             onClick: onAlert
                         }"
                     ></my-component>
@@ -26,8 +29,8 @@
         <!-- component-state -->
         <my-component
             z-tap="{items}"
-            state="{items: items}"
-            method="{onClick: onAlert}"
+            data="{items: items}"
+            methods="{onClick: onAlert}"
         ></my-component>
 
         <!-- local-component-ref -->

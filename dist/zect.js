@@ -85,7 +85,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var allDirectives = [presetDirts, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
 	var gcomps = {}                                 // global define components
-	var componentProps = ['state', 'method', conf.namespace + 'component']
+	var componentProps = ['data', 'methods', conf.namespace + 'component']
 
 	function funcOrObject(obj, prop) {
 	    var tar = obj[prop]
@@ -427,11 +427,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var ref = $(node).attr('ref')
 
-	        var binding = $(node).attr('state')
+	        var binding = $(node).attr('data')
 	        var _isExpr = util.isExpr(binding)
 	        var bindingData = _isExpr ? Compiler.execute(parentVM, scope, binding) : {}
 
-	        var methods = $(node).attr('method')
+	        var methods = $(node).attr('methods')
 	        var bindingMethods = util.isExpr(methods) ? Compiler.execute(parentVM, scope, methods) : {}
 
 	        /**
