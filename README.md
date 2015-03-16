@@ -180,9 +180,9 @@ Define a custom component
 
 ```html
 <script type="text/zect" id="tpl-header">
-    <component class="header">
+    <z-template class="header">
         <div class="title">{title}</div>
-    </component>
+    </z-template>
 </script>
 ```
 

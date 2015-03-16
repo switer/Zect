@@ -59,7 +59,7 @@
     <script>
         console.time('p')
         Zect.component('my-component', {
-            template: '<component z-on="{click: onClick}" data-region="comp"><span>{subtitle}</span></component>',
+            template: '<z-template z-on="{click: onClick}" data-region="comp"><span>{subtitle}</span></z-template>',
             data: {
                 items: [],
                 subtitle: 'sub title'

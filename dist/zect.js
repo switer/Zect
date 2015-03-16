@@ -159,7 +159,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        throw new Error('Unmatch el option')
 	    }
 	    // replate template holder DOM
-	    if (el.children.length == 1 && el.firstChild.tagName === 'COMPONENT') {
+	    if (el.children.length == 1 && el.firstChild.tagName.toLowerCase() == (conf.namespace + 'template')) {
 	        var $holder = el.firstChild
 	        var $childrens = [].slice.call($holder.childNodes)
 	        var attributes = [].slice.call($holder.attributes)
