@@ -51,13 +51,15 @@
             z-on="{click: onChangeClass}"
         >{part(title)}</p>
 
-        <p>{- inputs.text}</p>
+        <p data-content="{- contents.attr}">{contents.text}</p>
+
+
     </div>
     <script src="../dist/zect.js"></script>
     <script>
         console.time('p')
         Zect.component('my-component', {
-            template: '<div z-on="{click: onClick}"></div>',
+            template: '<component z-on="{click: onClick}" data-region="comp"><span>{subtitle}</span></component>',
             data: {
                 items: [],
                 subtitle: 'sub title'
@@ -96,7 +98,11 @@
                     person: null,
                     a: undefined,
                     inputs: {
-                        text: 'Please <h1>Input</h1>'
+                        text: 'Please Input'
+                    },
+                    contents: {
+                        text: '<h1>Rich html content</h1>',
+                        attr: 'atrribute"</p><p>'
                     }
                 }
             },
@@ -112,7 +118,7 @@
                 console.timeEnd('p')
                 setTimeout( function() {
                     this.$data.text = 'renew'
-                    this.$data.inputs.text = '<div>hello world</div>'
+                    // this.$data.inputs.text = '<div>hello world</div>'
                     // this.$data.isShow = false
                     this.$set('items', [[1, 2]])
                 }.bind(this), 3000);

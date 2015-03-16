@@ -54,6 +54,7 @@ var app = new Zect({
     * [if]()
     * [repeat]()
     * [{expression}]()
+    * [{- expression}]()
 
 - Direcitves
     * [on]()
@@ -62,10 +63,6 @@ var app = new Zect({
     * [class]()
     * [style]()
     * [component]() // TBD
-
-- Other
-    * [escape for {expression}]() // TBD
-    * [unescape for {- expression}]() // TBD
 
 ## Guide
 - **Custom directive**
@@ -175,6 +172,21 @@ Render result:
     <div>{- value}</div>
 </z-repeat>
 
+```
+
+- **Custom Component**
+Define a custom component
+
+```js
+Zect.component('header', {
+    template: '<template class="header"><div class="title">{title}</div></template>',
+    data: {
+        title: ''
+    },
+    ready: function () {
+
+    }
+})
 ```
 
 ## License

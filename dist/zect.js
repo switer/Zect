@@ -69,9 +69,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var is = __webpack_require__(3)
 	var Mux = __webpack_require__(4)
 	var util = __webpack_require__(5)
-	var conf = __webpack_require__(8)
+	var conf = __webpack_require__(6)
 
-	var Compiler = __webpack_require__(6)
+	var Compiler = __webpack_require__(7)
 	var Directive = Compiler.Directive
 	var AttributeDirective = Compiler.Attribute
 	var TextDirective = Compiler.Text
@@ -80,7 +80,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  private vars
 	 */
-	var presetDirts = __webpack_require__(7)(Zect)  // preset directives getter
+	var presetDirts = __webpack_require__(8)(Zect)  // preset directives getter
 	var elements = __webpack_require__(9)(Zect)      // preset directives getter
 	var allDirectives = [presetDirts, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
@@ -157,6 +157,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	        el = document.querySelector(el)
 	    } else if (!is.Element(el)) {
 	        throw new Error('Unmatch el option')
+	    }
+	    // replate template holder DOM
+	    if (el.children.length == 1 && el.firstChild.tagName === 'COMPONENT') {
+	        var $holder = el.firstChild
+	        var $childrens = [].slice.call($holder.childNodes)
+	        var attributes = [].slice.call($holder.attributes)
+
+	        el.removeChild($holder)
+	        /**
+	         *  Migrate childNodes
+	         */
+	        $childrens.forEach(function (n) {
+	            el.appendChild(n)
+	        })
+	        /**
+	         *  Merge attributes
+	         */
+	        attributes.forEach(function (att) {
+	            if (!el.hasAttribute(att.name)) el.setAttribute(att.name, att.value)
+	        })
 	    }
 
 	    vm.$el = el
@@ -697,7 +717,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var conf = __webpack_require__(8)
+	var conf = __webpack_require__(6)
 
 	module.exports = {
 	    Element: function(el) {
@@ -2005,6 +2025,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	var _ns = 'z-'
+
+	module.exports = {
+	    set namespace (n) {
+	        _ns = n + '-'
+	    },
+	    get namespace () {
+	        return _ns
+	    }
+	 }
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	var $ = __webpack_require__(2)
 	var util = __webpack_require__(5)
 	var _execute = __webpack_require__(10)
@@ -2056,7 +2093,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function _isUnescape(t) {
-	    return t.match(/^\{\- /)
+	    return !!t.match(/^\{\- /)
 	}
 
 	/**
@@ -2371,40 +2408,37 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	compiler.Attribute = function(vm, scope, tar, name, value) {
 	    
-	    var _isNameExpr = _isExpr(name)
-	    var _isValueExpr = _isExpr(value)
+	    var isNameExpr = _isExpr(name)
+	    var isValueExpr = _isExpr(value)
 
-	    var nexpr = _isNameExpr ? _strip(name) : null
-	    var vexpr = _isValueExpr ? _strip(value) : null
+	    var nexpr = isNameExpr ? _strip(name) : null
+	    var vexpr = isValueExpr ? _strip(value) : null
 
 	    var unwatches = []
 
 	    function _exec(expr) {
 	        return _execute(vm, scope, expr, name + '=' + value)
 	    }
-	    function _validName (n) {
-	        if (n.match(' ')) {
-	            console.warn('Attribute name can not contains any white space. {' + name + '}')
-	        }
-	        return n
-	    }
+	    // validate atrribute name, from: http://www.w3.org/TR/REC-xml/#NT-NameChar
+	    // /^(:|[a-zA-Z0-9]|_|-|[\uC0-\uD6]|[\uD8-\uF6]|[\uF8-\u2FF]|[\u370-\u37D]|[\u37F-\u1FFF]|[\u200C-\u200D]|[\u2070-\u218F]|[\u2C00-\u2FEF]|[\u3001-\uD7FF]|[\uF900-\uFDCF]|[\uFDF0-\uFFFD]|[\u10000-\uEFFFF])+$/
 
 	    // cache last name/value
-	    var preName = _isNameExpr ? _exec(nexpr) : name
-	    var preValue = _isValueExpr ? _exec(vexpr) : value
+	    var preName = isNameExpr ? _exec(nexpr) : name
+	    var preValue = isValueExpr ? _exec(vexpr) : value
 
-	    tar.setAttribute(_validName(preName), preValue)
+	    tar.setAttribute(preName, preValue)
 
 	    /**
 	     *  watch attribute name expression variable changes
 	     */
-	    if (_isNameExpr) {
+	    if (isNameExpr) {
 	        unwatches.push(_watch(vm, _extractVars(name), function() {
 	            var next = _exec(nexpr)
+
 	            if (util.diff(next, preName)) {
+
 	                $(tar).removeAttr(preName)
-	                      .attr(util.escape(_validName(next)), 
-	                            util.escape(preValue))
+	                      .attr(next, preValue)
 	                preValue = next
 	            }
 	        }))
@@ -2412,14 +2446,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     *  watch attribute value expression variable changes
 	     */
-	    if (_isValueExpr) {
+	    if (isValueExpr) {
 	        unwatches.push(_watch(vm, _extractVars(value), function() {
 	            var next = _exec(vexpr)
 	            if (util.diff(next, preValue)) {
-	                $(tar).attr(
-	                        util.escape(preName), 
-	                        util.escape(next))
 
+	                $(tar).attr(preName, next)
 	                preValue = next
 	            }
 	        }))
@@ -2437,7 +2469,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2447,7 +2479,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var conf = __webpack_require__(8)
+	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
 	var _relative = util.relative
 
@@ -2585,23 +2617,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _ns = 'z-'
-
-	module.exports = {
-	    set namespace (n) {
-	        _ns = n + '-'
-	    },
-	    get namespace () {
-	        return _ns
-	    }
-	 }
-
-/***/ },
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -2612,7 +2627,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var conf = __webpack_require__(8)
+	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
 
 	module.exports = function(Zect) {
