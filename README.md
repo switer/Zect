@@ -203,7 +203,7 @@ Use component:
 <body>
     <div id="app">
         <c-header title="header component"></c-header>
-        <div title="header component2"></div>
+        <div title="header component2" z-component="c-header"></div>
     </div>
     <script>
         new Zect({
