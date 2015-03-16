@@ -266,11 +266,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return compiler
 	    }
 
-	    var beforeDestroy = options.beforeDestroy
+	    var beforeDestroy = options.destroy
 	    vm.$destroy = function () {
 	        beforeDestroy && beforeDestroy.call(vm)
 
-	        [_directives, _components, _directives].forEach(function (items) {
+	        ;[_directives, _components, _directives].forEach(function (items) {
 	            items.forEach(function (inst) {
 	                inst.$destroy()
 	            })

@@ -30,6 +30,7 @@
         </z-repeat>
 
         <!-- component-state -->
+
         <my-component
             z-tap="{items}"
             data="{items: childItems}"
@@ -37,7 +38,9 @@
         ></my-component>
 
         <!-- local-component-ref -->
-        <my-component2 ref="comp2"></my-component2>
+        <z-repeat items="{changedItems}">
+            <my-component2 ref="comp2"></my-component2>
+        </z-repeat>
 
         <!-- two way bindings -->
         <input type="text" z-model="inputs.text">
@@ -76,6 +79,9 @@
                 subtitle: 'sub title'
             },
             ready: function () {},
+            destroy: function () {
+                console.log('destroy---------')
+            },
             methods: {
 
             }
@@ -85,7 +91,10 @@
             el: '#app',
             components: {
                 'my-component2': Zect.extend({
-                    template: '<img z-attr="{src:\'http://www.baidu.com/img/bdlogo.png\'}" alt="" />'
+                    template: '<img z-attr="{src:\'http://www.baidu.com/img/bdlogo.png\'}" alt="" />',
+                    destroy: function () {
+                        console.log('==========')
+                    }
                 })
             },
             directives: {
@@ -100,6 +109,7 @@
                     todoItems:[],
                     items: [[1]],
                     childItems: [1,2,3],
+                    changedItems: [1,2],
                     title: 'zect data-binding',
                     disabled: false,
                     isShow: true,
@@ -129,14 +139,17 @@
                     }
                 }
             },
+            created: function () {
+            },
             ready: function () {
                 console.timeEnd('p')
                 setTimeout( function() {
                     this.$data.text = 'renew'
                     // this.$data.inputs.text = '<div>hello world</div>'
                     // this.$data.isShow = false
-                    this.$data.childItems = [1,2]
-                    this.$set('items', [[1, 2]])
+                    // this.$data.childItems = [1,2]
+                    this.$data.changedItems = []
+                    // this.$set('items', [[1, 2]])
                 }.bind(this), 3000);
             },
             destroy: function () {
