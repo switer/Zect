@@ -14,6 +14,9 @@
                         data-value="{$value}"
                         data-row="{$parent.$index}" 
                         data-col="{$index}"
+                        data="{
+                            items: childItems
+                        }"
                         methods="{
                             onClick: onAlert
                         }"
@@ -29,7 +32,7 @@
         <!-- component-state -->
         <my-component
             z-tap="{items}"
-            data="{items: items}"
+            data="{items: childItems}"
             methods="{onClick: onAlert}"
         ></my-component>
 
@@ -67,16 +70,12 @@
     <script>
         console.time('p')
         Zect.component('my-component', {
-            template: '<z-template z-on="{click: onClick}" data-region="comp"><span>{subtitle}</span></z-template>',
+            template: '<z-template z-on="{click: onClick}" data-region="comp"><span>{subtitle}</span> <ul><z-repeat items="{items}"><li>{$value}</li></z-repeat></ul> </z-template>',
             data: {
                 items: [],
                 subtitle: 'sub title'
             },
-            ready: function () {
-                setTimeout(function () {
-                    this.$data.subtitle = 'modify'
-                }.bind(this), 1000)
-            },
+            ready: function () {},
             methods: {
 
             }
@@ -100,6 +99,7 @@
                 return {
                     todoItems:[],
                     items: [[1]],
+                    childItems: [1,2,3],
                     title: 'zect data-binding',
                     disabled: false,
                     isShow: true,
@@ -135,6 +135,7 @@
                     this.$data.text = 'renew'
                     // this.$data.inputs.text = '<div>hello world</div>'
                     // this.$data.isShow = false
+                    this.$data.childItems = [1,2]
                     this.$set('items', [[1, 2]])
                 }.bind(this), 3000);
             },
