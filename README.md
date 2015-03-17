@@ -89,9 +89,13 @@ var app = new Zect({
 ## Guide
 - **Custom directive**
 
-Options's Methods: `bind`, `update`, `unbind`. `update`, `unbind` is optional. 
-Directive instance property:
-* **$vm** Mounted VM of the directive
+Options's Methods: 
+* **bind**    Call only once when directive is binding.
+* **update**  Call every time when express's value has been changed.
+* **unbind**  Call only once when directive is unbinded.
+
+Directive instance properties:
+* **$vm**   Mounted VM of the directive
 * **$el**   Mounted target Node of the directive
 * **$id**   Current directive instance id
 
@@ -118,7 +122,6 @@ Zect.directive('tap', {
 <div id="con">
     <input type="text" 
         id="con"
-        z-on="{change: onChange}"  
         z-model="search" 
     />
     <input type="submit" z-on="onSubmit" value="submit">
@@ -133,7 +136,7 @@ new Zect({
     },
     methods: {
         onSubmit: function () {
-            this.$data.search // input value
+            this.$data.search // input-value
         }
     }
 })
