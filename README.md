@@ -44,6 +44,7 @@ var app = new Zect({
 - Instance Options
     * [el]()
     * [data]()
+    * [mixins]() // TBD
     * [methods]()
     * [template]()
     * [computed]()
