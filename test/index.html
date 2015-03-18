@@ -14,10 +14,10 @@
                         data-value="{$value}"
                         data-row="{$parent.$index}" 
                         data-col="{$index}"
-                        data="{
+                        z-data="{
                             items: childItems
                         }"
-                        methods="{
+                        z-methods="{
                             onClick: onAlert
                         }"
                     ></my-component>
@@ -33,8 +33,8 @@
 
         <my-component
             z-tap="{items}"
-            data="{items: childItems}"
-            methods="{onClick: onAlert}"
+            z-data="{items: childItems}"
+            z-methods="{onClick: onAlert}"
         ></my-component>
 
         <!-- local-component-ref -->
