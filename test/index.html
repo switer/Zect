@@ -26,7 +26,7 @@
             <h1>switer</h1>
         </z-if>
         <z-repeat items="{todoItems}">
-            <p></p>
+            <input type="text" z-model="{'todoItems[' + $index + '].value'}">
         </z-repeat>
 
         <!-- component-state -->
@@ -81,7 +81,6 @@
             },
             ready: function () {},
             destroy: function () {
-                console.log('destroy---------')
             },
             methods: {
 
@@ -94,7 +93,6 @@
                 'my-component2': Zect.extend({
                     template: '<img z-attr="{src:\'http://www.baidu.com/img/bdlogo.png\'}" alt="" />',
                     destroy: function () {
-                        console.log('==========')
                     }
                 })
             },
@@ -107,7 +105,9 @@
             },
             data: function () {
                 return {
-                    todoItems:[],
+                    todoItems:[{
+                        value: 'input two way binding'
+                    }],
                     items: [[1]],
                     childItems: [1,2,3],
                     changedItems: [1,2],
