@@ -470,9 +470,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        function _executeBindingMethods () {
 	            var methodObjExpr = methods.replace(sepRegexp, ',')
-	            bindingMethods = util.isExpr(methods) 
-	                            ? Compiler.execute(parentVM, scope, methodObjExpr) 
-	                            : {}
+	            return util.isExpr(methods) 
+	                    ? Compiler.execute(parentVM, scope, methodObjExpr) 
+	                    : {}
+	        }
+	        function _executeBindingData () {
+	            var dataObjExpr = dataExpr.replace(sepRegexp, ',')
+	            return util.isExpr(dataExpr) 
+	                    ? Compiler.execute(parentVM, scope, dataObjExpr) 
+	                    : {}
 	        }
 	        function parseExpr (expr) {
 	            var name
@@ -494,8 +500,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            })
 	        }
 
-
-	        _executeBindingMethods() // --> bindingMethods
+	        var bindingData = _executeBindingData()
+	        var bindingMethods = _executeBindingMethods() // --> bindingMethods
 	        compVM = new Comp({
 	            el: node,
 	            data: bindingData,
@@ -535,9 +541,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // TBM -- to be modify, instance method show not be attached here
 	        compVM.$update = function () {
-	            _isDataExpr && compVM.$set(
-	                Compiler.execute(parentVM, scope, '{' + dataExpr.replace(sepRegexp, ',') + '}' )
-	            )
+	            _isDataExpr && compVM.$set(_executeBindingData())
 	        }
 
 	        return compVM
@@ -1960,7 +1964,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // defult max 4 level        
 	        _t = _t == undefined ? 4 : _t
 
-	        if (_t <= 0) return next === pre
+	        if (_t <= 0) return next !== pre
 
 	        if (this.type(next) == 'array' && this.type(pre) == 'array') {
 	            if (next.length !== pre.length) return true
@@ -1978,7 +1982,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            })
 	        }
 
-	        return next === pre
+	        return next !== pre
 	    },
 	    valueDiff: function(next, pre) {
 	        return next !== pre || next instanceof Object
@@ -2116,13 +2120,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function _watch(vm, vars, update) {
 	    function _handler (kp) {
-	        var hasChange
-	        vars.some(function(key, index) {
-	            if (_relative(kp, key)) {
-	                return hasChange = true
-	            }
-	        })
-	        hasChange && update(kp)
+	        if (
+	            vars.some(function(key, index) {
+	                if (_relative(kp, key)) {
+	                    return true
+	                }
+	            })
+	        ) update(kp)
 	    }
 	    if (vars && vars.length) {
 	        vm.$watch(_handler)
@@ -2243,12 +2247,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     *  update handler
 	     */
-	    function _update() {
+	    function _update(kp) {
 	        var nexv = _exec(expr)
 	        if (util.diff(nexv, prev)) {
 	            var p = prev
 	            prev = nexv
-	            upda && upda.call(d, nexv, p)
+	            upda && upda.call(d, nexv, p, kp)
 	        }
 	    }
 
@@ -2258,14 +2262,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    prev = isExpr ? _exec(expr):expr
 	    bindParams.push(prev)
 	    bindParams.push(expr)
-	    // ([property-name], expression-value, expression) 
-	    bind && bind.apply(d, bindParams, expr)
-	    upda && upda.call(d, prev)
-
 	    // watch variable changes of expression
 	    if (def.watch !== false && isExpr) {
 	       var unwatch = _watch(vm, _extractVars(expr), _update)
 	    }
+	    // ([property-name], expression-value, expression) 
+	    bind && bind.apply(d, bindParams, expr)
+	    upda && upda.call(d, prev)
+
 
 	    d.$destroy = function () {
 	        unbind && unbind.call(d)
@@ -2280,7 +2284,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _eid = 0
 	compiler.Element = compiler.inherit(function (vm, scope, tar, def, name, expr) {
-
 	    var d = this
 	    var bind = def.bind
 	    var unbind = def.unbind
@@ -2331,12 +2334,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.$ceil = function () {
 	        return this.$before
 	    }
-	    // d.destroy = function () {
-	    //     this.$container = null
-	    //     this.$before = null
-	    //     this.$after = null
-	    // }
-
 
 	    /**
 	     *  execute wrap with directive name
@@ -2348,23 +2345,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     *  update handler
 	     */
-	    function _update() {
+	    function _update(kp) {
 	        var nexv = _exec(expr)
 	        if (util.diff(nexv, prev)) {
 	            var p = prev
 	            prev = nexv
-	            upda && upda.call(d, nexv, p)
+	            upda && upda.call(d, nexv, p, kp)
 	        }
 	    }
 
 	    prev = isExpr ? _exec(expr) : expr
+	    if (def.watch !== false && isExpr) {
+	        var unwatch = _watch(vm, _extractVars(expr), _update)
+	    }
 
 	    bind && bind.call(d, prev, expr)
 	    upda && upda.call(d, prev)
 
-	    if (def.watch !== false && isExpr) {
-	        var unwatch = _watch(vm, _extractVars(expr), _update)
-	    }
 
 	    d.$destroy = function () {
 	        unbind && unbind.call(d)
@@ -2379,7 +2376,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	compiler.Text = compiler.inherit(function(vm, scope, tar) {
-
 	    function _exec (expr) {
 	        return _execute(vm, scope, expr, null)
 	    }
@@ -2408,6 +2404,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        function _update() {
 	            var pv = cache[index]
 	            var nv = _exec(exp)
+
 	            if (util.diff(nv, pv)) {
 	                // re-render
 	                cache[index] = nv
@@ -2783,13 +2780,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node. {' + expr + '}')
 	                }
 	            },
-	            updateItem: function () {
+	            updateItem: function (nv, index) {
+	                var $vm = this.$vms[index]
+	                $vm.$scope.data.$value = nv
+	                $vm.$value = nv
 
+	                $vm.$scope.bindings.forEach(function (bd) {
+	                    bd.$update()
+	                })
 	            },
-	            update: function(items, preItems) {
+	            update: function(items, preItems, kp) {
+	                if (kp && /\d+/.test(kp.split('.')[1])) {
+	                    var index = kp.split('.')[1]
+	                    // delta update
+	                    this.updateItem(items[index], index)
+	                    this.last = items
+	                    return
+	                }
+
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
+
 	                var that = this
 	                function createSubVM(item, index) {
 	                    var subEl = that.child.cloneNode(true)
@@ -2798,14 +2810,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    data.$index = index
 	                    data.$value = item
 
-	                    var cvm = that.$vm.$compile(subEl, {
+	                    var $scope = {
 	                        data: data,
+	                        bindings: [], // collect all bindings
 	                        $parent: that.$scope || {}
-	                    })
+	                    }
 	                    return {
 	                        $index: index,
 	                        $value: item,
-	                        $compiler: cvm
+	                        $compiler: that.$vm.$compile(subEl, $scope),
+	                        $scope: $scope
 	                    }
 	                }
 
@@ -2815,6 +2829,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var vms = new Array(items.length)
 	                var olds = this.last ? util.copyArray(this.last) : olds
 	                var oldVms = this.$vms ? util.copyArray(this.$vms) : oldVms
+	                var updateVms = []
 	                items.forEach(function(item, index) {
 	                    var v
 	                    if (!olds) {
@@ -2836,14 +2851,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            // clean
 	                            olds.splice(i, 1)
 	                            oldVms.splice(i, 1)
-	                            // reset $index
+
 	                            v.$index = i
+	                            v.$scope.data.$index = i
+	                            updateVms.push(v)
+	                            
 	                        } else {
 	                            v = createSubVM(item, index)
 	                        }
 	                    }
 	                    vms[index] = v
 	                })
+
 	                this.$vms = vms
 	                this.last = util.copyArray(items)
 
@@ -2856,7 +2875,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    v.$compiler.$insertBefore($floor)
 	                }
 
+	                updateVms.forEach(function (v) {
+	                    // reset $index
+	                    v.$scope.bindings.forEach(function (bd) {
+	                        bd.$update()
+	                    })
+	                })
+
+	                updateVms = null
+
 	                oldVms && oldVms.forEach(function(v) {
+	                    $vm.$scope.bindings.forEach(function (bd) {
+	                        bd.$destroy()
+	                    })
 	                    v.$compiler.$remove().$destroy()
 	                })
 	            }
