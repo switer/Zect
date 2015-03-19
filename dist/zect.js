@@ -96,16 +96,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	function Zect(options) {
 	    return ViewModel.call(this, options || {})
 	}
+
+	function _extend (args) {
+	    util.extend.apply(util, args)
+	}
+	function merge () {
+	    var opts = [].slice.call(arguments)
+	    var dest = {}
+
+	    _extend([dest].concat(opts))
+	    ;['data', 'methods', 'directives', 'components'].forEach(function (prop) {
+	        dest[prop] = {}
+	        _extend([dest[prop]].concat(opts.map(function (opt) {
+	            return funcOrObject(opt, prop)
+	        })))
+	    })
+	    return dest
+	}
 	Zect.extend = function(options) {
 	    return function(opt) {
-	        var insOpt = {}
+	        var insOpt = merge(options, opt)
+	        insOpt.mixins = (options.mixins ||[]).concat(opt.mixins || [])
 
-	        util.extend(insOpt, options, opt)
-
-	        ;['data', 'methods', 'directives', 'components'].forEach(function (prop) {
-	            insOpt[prop] = {}
-	            util.extend(insOpt[prop], funcOrObject(options, prop), funcOrObject(opt, prop))
-	        })
 	        util.insertProto(this, Zect.prototype)
 	        return ViewModel.call(this, insOpt)
 	    }
