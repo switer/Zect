@@ -2407,7 +2407,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            if (util.diff(nv, pv)) {
 	                // re-render
-	                console.log(tar.parentNode, scope.data.$index, scope.data.$value,  nv)
 	                cache[index] = nv
 	                render()
 	            }
@@ -2810,7 +2809,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var data = util.type(item) == 'object' ? util.copyObject(item) : {}
 
 	                    data.$index = index
-	                    data.$value = items
+	                    data.$value = item
 
 	                    var $scope = {
 	                        data: data,
