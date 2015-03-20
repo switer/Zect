@@ -2407,6 +2407,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            if (util.diff(nv, pv)) {
 	                // re-render
+	                console.log(tar.parentNode, scope.data.$index, scope.data.$value,  nv)
 	                cache[index] = nv
 	                render()
 	            }
@@ -2505,6 +2506,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    function _updateName() {
 	        var next = _exec(nexpr)
+
 	        if (util.diff(next, preName)) {
 	            $(tar).removeAttr(preName)
 	                  .attr(next, preValue)
@@ -2538,8 +2540,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    this.$update = function () {
-	        _updateName()
-	        _updateValue()
+	        isNameExpr && _updateName()
+	        isValueExpr && _updateValue()
 	    }
 	}
 
@@ -2808,7 +2810,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var data = util.type(item) == 'object' ? util.copyObject(item) : {}
 
 	                    data.$index = index
-	                    data.$value = item
+	                    data.$value = items
 
 	                    var $scope = {
 	                        data: data,
@@ -2852,8 +2854,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            olds.splice(i, 1)
 	                            oldVms.splice(i, 1)
 
-	                            v.$index = i
-	                            v.$scope.data.$index = i
+	                            v.$index = index
+	                            v.$scope.data.$index = index
 	                            updateVms.push(v)
 	                            
 	                        } else {
