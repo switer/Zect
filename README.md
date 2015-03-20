@@ -88,7 +88,7 @@ var app = new Zect({
     * [component]()
 
 ## Guide
-- **Custom directive**
+### Custom directive
 
 Options's Methods: 
 * **bind**    Call only once when directive is binding.
@@ -100,7 +100,7 @@ Directive instance properties:
 * **$el**   Mounted target Node of the directive
 * **$id**   Current directive instance id
 
-Example below:
+**Example below:**
 
 ```html
 <div z-tap="{onClick}"></div>
@@ -117,7 +117,7 @@ Zect.directive('tap', {
 })
 ```
 
-- **Two way binding**
+### Two way binding
 
 ```html
 <div id="con">
@@ -143,7 +143,7 @@ new Zect({
 })
 ```
 
--  **Use filter**
+### Use filter
 
 ```html
 <ul id="con">
@@ -169,7 +169,7 @@ new Zect({
 })
 ```
 
-Render result:
+**Render result:**
 
 ```html
 <ul id="con">
@@ -179,7 +179,7 @@ Render result:
 </ul>
 ```
 
-- **Template syntax**
+### Template syntax
 
 ```html
 <!-- escaped HTML value -->
@@ -200,9 +200,9 @@ Render result:
 
 ```
 
-- **Custom Component**
+### Custom Component
 
-Define a custom component
+Define a custom component.
 
 ```html
 <script type="text/zect" id="tpl-header">
@@ -223,7 +223,7 @@ Zect.component('c-header', {
     }
 })
 ```
-Use component:
+**Use component:**
 
 ```html
 <body>
@@ -239,7 +239,7 @@ Use component:
 </body>
 ```
 
-render result:
+**render result:**
 
 ```html
 <div id="app">
