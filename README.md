@@ -148,7 +148,7 @@ new Zect({
 ```html
 <ul id="con">
     <z-repeat items="{lessThanFour(items)}">
-        <li>{- value}</li>
+        <li>{$value}</li>
     </z-repeat>
 </ul>
 ```
@@ -181,23 +181,27 @@ new Zect({
 
 ### Template syntax
 
+Variables
 ```html
 <!-- escaped HTML value -->
 <p>{title}</p>
 
 <!-- unescaped HTML value -->
-<p>{$ title}</p>
-
+<p>{- title}</p>
+```
+Condition Statement
+```html
 <!-- if -->
 <z-if is="{title}">
     <div>{title}</div>
 </z-if>
-
+```
+Iterator
+```html
 <!-- repeat -->
 <z-repeat items="{items}">
-    <div>{- value}</div>
+    <div data-row="{$index}">{- $value}</div>
 </z-repeat>
-
 ```
 
 ### Custom Component
