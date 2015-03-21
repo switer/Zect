@@ -2220,15 +2220,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return this
 	}
 	cproto.$appendTo = function (pos) {
-	    $(pos).appendChild(this.$bundle())
+	    _appendChild(pos, this.$bundle())
 	    return this
 	}
 	cproto.$insertBefore = function (pos) {
-	    pos.parentNode.insertBefore(this.$bundle(), pos)
+	    _insertBefore(pos.parentNode, this.$bundle(), pos)
 	    return this
 	}
 	cproto.$insertAfter = function (pos) {
-	    pos.parentNode.insertBefore(this.$bundle(), pos.nextSibling)
+	    _insertBefore(pos.parentNode, this.$bundle(), pos.nextSibling)
 	    return this
 	}
 	cproto.$destroy = function () {
@@ -2335,12 +2335,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.$scope = scope // save the scope reference
 
 	    var tagHTML = util.tagHTML(tar)
-	    d.$before = document.createComment(tagHTML[0])
-	    d.$after = document.createComment(tagHTML[1])
+	    d.$before = _createComment(tagHTML[0])
+	    d.$after = _createComment(tagHTML[1])
 	    d.$container = document.createDocumentFragment()
 
-	    d.$container.appendChild(d.$before)
-	    d.$container.appendChild(d.$after)
+	    _appendChild(d.$container, d.$before)
+	    _appendChild(d.$container, d.$after)
 
 	    // set properties
 	    util.objEach(def, function (k, v) {
@@ -2357,10 +2357,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (!$con.contains($ceil)) {
 	            util.domRange($ceil.parentNode, $ceil, $floor)
 	                .forEach(function(n) {
-	                    that.$container.appendChild(n)
+	                    _appendChild(that.$container, n)
 	                })
-	            $con.insertBefore($ceil, $con.firstChild)
-	            $con.appendChild($floor)
+	            _insertBefore($con, $ceil, $con.firstChild)
+	            _appendChild($con, $floor)
 	        }
 	        return $con
 	    }
@@ -2456,11 +2456,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (isUnescape) {
 	        var $tmp = document.createElement('div')
 	        var $con = document.createDocumentFragment()
-	        var $before = document.createComment('{' + _strip(originExpr))
-	        var $after = document.createComment('}')
+	        var $before = _createComment('{' + _strip(originExpr))
+	        var $after = _createComment('}')
 
-	        tar.parentNode.insertBefore($before, tar)
-	        tar.parentNode.insertBefore($after, tar.nextSibling)
+	        _insertBefore(tar.parentNode, $before, tar)
+	        _insertBefore(tar.parentNode, $after, tar.nextSibling)
 	    }
 	    function render() {
 	        var frags = []
@@ -2484,9 +2484,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	            $tmp.innerHTML = nodeV
 	            ;[].slice.call($tmp.childNodes).forEach(function (n) {
-	                $con.appendChild(n)
+	                _appendChild($con, n)
 	            }) 
-	            $after.parentNode.insertBefore($con, $after)
+	            _insertBefore($after.parentNode, $con, $after)
 	        } else {
 	            tar.nodeValue = nodeV
 	        }
@@ -2578,6 +2578,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        isNameExpr && _updateName()
 	        isValueExpr && _updateValue()
 	    }
+	}
+
+	function _appendChild (con, child) {
+	    return con.appendChild(child)
+	}
+	function _createElement (ns) {
+	    return document.createComment(ns)
+	}
+	function _insertBefore (con, child, pos) {
+	    return con.insertBefore(child, pos)
 	}
 
 
