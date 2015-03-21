@@ -356,6 +356,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                break
 	            case 3:
 	                inst = new TextDirective(vm, scope, node)
+	                setBindings2Scope(scope, inst)
 	                into = false
 	                break
 	            case 11:
@@ -502,6 +503,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var bindingData = _executeBindingData()
 	        var bindingMethods = _executeBindingMethods() // --> bindingMethods
+	        
 	        compVM = new Comp({
 	            el: node,
 	            data: bindingData,
@@ -2785,10 +2787,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var $vm = this.$vms[index]
 	                $vm.$scope.data.$value = nv
 	                $vm.$value = nv
-
-	                $vm.$scope.bindings.forEach(function (bd) {
-	                    bd.$update()
-	                })
+	                $vm.$scope.$update()
+	                
 	            },
 	            update: function(items, preItems, kp) {
 	                if (kp && /\d+/.test(kp.split('.')[1])) {
@@ -2811,10 +2811,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    data.$index = index
 	                    data.$value = item
 
+	                    var hasParentScope = !!that.$scope
+
 	                    var $scope = {
 	                        data: data,
 	                        bindings: [], // collect all bindings
+	                        children: [],
 	                        $parent: that.$scope || {}
+	                    }
+	                    $scope.$update = function () {
+	                        var that = this
+	                        this.bindings.forEach(function (bd) {
+	                            bd.$update()
+	                        })
+	                        this.children.forEach(function (child) {
+	                            child.$update()
+	                        })
+	                    }
+
+	                    if(that.$scope) {
+	                        that.$scope.children.push($scope)
 	                    }
 	                    return {
 	                        $index: index,
@@ -2878,9 +2894,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                updateVms.forEach(function (v) {
 	                    // reset $index
-	                    v.$scope.bindings.forEach(function (bd) {
-	                        bd.$update()
-	                    })
+	                    v.$scope.$update()
 	                })
 
 	                updateVms = null
