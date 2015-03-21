@@ -2589,6 +2589,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _insertBefore (con, child, pos) {
 	    return con.insertBefore(child, pos)
 	}
+	function _parentNode (tar) {
+	    return tar.parentNode
+	}
 
 
 	module.exports = compiler
