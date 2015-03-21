@@ -159,8 +159,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // replate template holder DOM
 	    if (el.children.length == 1 && el.firstElementChild.tagName.toLowerCase() == (NS + 'template')) {
 	        var $holder = el.firstElementChild
-	        var $childrens = [].slice.call($holder.childNodes)
-	        var attributes = [].slice.call($holder.attributes)
+	        var $childrens = _slice($holder.childNodes)
+	        var attributes = _slice($holder.attributes)
 
 	        el.removeChild($holder)
 	        /**
@@ -538,7 +538,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    function compileDirective (node, scope) {
 	        var value = node.nodeValue
-	        var attrs = [].slice.call(node.attributes)
+	        var attrs = _slice(node.attributes)
 	        var ast = {
 	                attrs: {},
 	                dires: {}
@@ -611,6 +611,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  Interal functions
 	 */
+	function _slice (obj) {
+	    return [].slice.call(obj)
+	}
 	function _extend (args) {
 	    return util.extend.apply(util, args)
 	}
@@ -2190,44 +2193,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	compiler.stripExpr = _strip
 	compiler.extractVars = _extractVars
 
+	var cproto = compiler.prototype
 	compiler.inherit = function (Ctor) {
-	    Ctor.prototype.__proto__ = compiler.prototype
+	    Ctor.prototype.__proto__ = cproto
 	    return function Compiler() {
 	        this.__proto__ = Ctor.prototype
 	        Ctor.apply(this, arguments)
 	    }
 	}
-	compiler.prototype.$bundle = function () {
+	cproto.$bundle = function () {
 	    return this.$el
 	}
-	compiler.prototype.$floor = function () {
+	cproto.$floor = function () {
 	    return this.$el
 	}
-	compiler.prototype.$ceil = function () {
+	cproto.$ceil = function () {
 	    return this.$el
 	}
-	compiler.prototype.$mount = function (pos) {
+	cproto.$mount = function (pos) {
 	    $(pos).replace(this.$bundle())
 	    return this
 	}
-	compiler.prototype.$remove = function () {
+	cproto.$remove = function () {
 	    var $el = this.$bundle()
 	    $el.parentNode && $($el).remove()
 	    return this
 	}
-	compiler.prototype.$appendTo = function (pos) {
+	cproto.$appendTo = function (pos) {
 	    $(pos).appendChild(this.$bundle())
 	    return this
 	}
-	compiler.prototype.$insertBefore = function (pos) {
+	cproto.$insertBefore = function (pos) {
 	    pos.parentNode.insertBefore(this.$bundle(), pos)
 	    return this
 	}
-	compiler.prototype.$insertAfter = function (pos) {
+	cproto.$insertAfter = function (pos) {
 	    pos.parentNode.insertBefore(this.$bundle(), pos.nextSibling)
 	    return this
 	}
-	compiler.prototype.$destroy = function () {
+	cproto.$destroy = function () {
 	    this.$el = null
 	    return this
 	}
