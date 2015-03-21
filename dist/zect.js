@@ -2216,7 +2216,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	cproto.$remove = function () {
 	    var $el = this.$bundle()
-	    $el.parentNode && $($el).remove()
+	    _parentNode($el) && $($el).remove()
 	    return this
 	}
 	cproto.$appendTo = function (pos) {
@@ -2224,11 +2224,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return this
 	}
 	cproto.$insertBefore = function (pos) {
-	    _insertBefore(pos.parentNode, this.$bundle(), pos)
+	    _insertBefore(_parentNode(pos), this.$bundle(), pos)
 	    return this
 	}
 	cproto.$insertAfter = function (pos) {
-	    _insertBefore(pos.parentNode, this.$bundle(), pos.nextSibling)
+	    _insertBefore(_parentNode(pos), this.$bundle(), _nextSibling(pos))
 	    return this
 	}
 	cproto.$destroy = function () {
@@ -2355,7 +2355,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var that = this
 
 	        if (!$con.contains($ceil)) {
-	            util.domRange($ceil.parentNode, $ceil, $floor)
+	            util.domRange(_parentNode($ceil), $ceil, $floor)
 	                .forEach(function(n) {
 	                    _appendChild(that.$container, n)
 	                })
@@ -2459,8 +2459,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var $before = _createComment('{' + _strip(originExpr))
 	        var $after = _createComment('}')
 
-	        _insertBefore(tar.parentNode, $before, tar)
-	        _insertBefore(tar.parentNode, $after, tar.nextSibling)
+	        var pn = _parentNode(tar)
+	        _insertBefore(pn, $before, tar)
+	        _insertBefore(pn, $after, _nextSibling(tar))
 	    }
 	    function render() {
 	        var frags = []
@@ -2476,17 +2477,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	                         .replace(/\uFFF1/g, '\\}')
 
 	        if (isUnescape) {
-	            var cursor = $before.nextSibling
+	            var cursor = _nextSibling($before)
 	            while(cursor && cursor !== $after) {
-	                var next = cursor.nextSibling
-	                cursor.parentNode.removeChild(cursor)
+	                var next = _nextSibling(cursor)
+	                _parentNode(cursor).removeChild(cursor)
 	                cursor = next
 	            }
 	            $tmp.innerHTML = nodeV
 	            ;[].slice.call($tmp.childNodes).forEach(function (n) {
 	                _appendChild($con, n)
 	            }) 
-	            _insertBefore($after.parentNode, $con, $after)
+	            _insertBefore(_parentNode($after), $con, $after)
 	        } else {
 	            tar.nodeValue = nodeV
 	        }
@@ -2583,7 +2584,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _appendChild (con, child) {
 	    return con.appendChild(child)
 	}
-	function _createElement (ns) {
+	function _createComment (ns) {
 	    return document.createComment(ns)
 	}
 	function _insertBefore (con, child, pos) {
@@ -2591,6 +2592,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	function _parentNode (tar) {
 	    return tar.parentNode
+	}
+	function _nextSibling (tar) {
+	    return tar.nextSibling
 	}
 
 
