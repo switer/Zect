@@ -2507,6 +2507,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            exp = _strip(exp)
 	            var pv = cache[index]
 	            var nv = _exec(exp)
+
 	            if (!hasDiff && util.diff(nv, pv)) {
 	                hasDiff = true
 	            }
@@ -2780,6 +2781,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
 
+	function _getData (data) {
+	    return util.type(data) == 'object' ? util.copyObject(data) : {}
+	}
+
 	module.exports = function(Zect) {
 	    return {
 	        'if': {
@@ -2841,10 +2846,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            },
 	            updateItem: function (nv, index) {
 	                var $vm = this.$vms[index]
-	                $vm.$scope.data.$value = nv
+	                var $data = $vm.$scope.data = _getData(nv)
+	                $data.$index = index
+	                $data.$value = nv
+
 	                $vm.$value = nv
+	                $vm.$index = index
+
 	                $vm.$scope.$update()
-	                
 	            },
 	            update: function(items, preItems, kp) {
 	                if (kp && /\d+/.test(kp.split('.')[1])) {
@@ -2860,9 +2869,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                var that = this
+
 	                function createSubVM(item, index) {
 	                    var subEl = that.child.cloneNode(true)
-	                    var data = util.type(item) == 'object' ? util.copyObject(item) : {}
+	                    var data = _getData(item)
 
 	                    data.$index = index
 	                    data.$value = item
@@ -2925,8 +2935,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            olds.splice(i, 1)
 	                            oldVms.splice(i, 1)
 
+	                            // reset $index and $value
 	                            v.$index = index
-	                            v.$scope.data.$index = index
+	                            v.$value = item
+
+	                            var $data = v.$scope.data = _getData(item)
+	                            $data.$index = index
+	                            $data.$value = item
 	                            updateVms.push(v)
 	                            
 	                        } else {
