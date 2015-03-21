@@ -138,7 +138,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var _directives = [] // private refs for all directives instance of the vm    
 	    var _components = [] // private refs for all components    
-	    var _elements = [] // private refs for all elments    
 	    var NS = conf.namespace
 	    var componentProps = [NS + 'component', NS + 'data', NS + 'methods']
 
@@ -266,7 +265,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    vm.$destroy = function () {
 	        beforeDestroy && beforeDestroy.call(vm)
 
-	        ;[_directives, _components, _directives].forEach(function (items) {
+	        ;[_components, _directives].forEach(function (items) {
 	            items.forEach(function (inst) {
 	                inst.$destroy()
 	            })
@@ -289,7 +288,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        components = null
 	        _directives = null
 	        _components = null
-	        _elements = null
 
 	        // marked
 	        vm.$destroyed = true
@@ -341,6 +339,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                break
 	            case 3:
 	                inst = new TextDirective(vm, scope, node)
+	                _directives.push(inst)
 	                setBindings2Scope(scope, inst)
 	                into = false
 	                break
@@ -392,7 +391,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    inst.$mount(node)
 	                }
 	                // save elements refs
-	                _elements.push(inst)
+	                _directives.push(inst)
 	                // save bindins to scope
 	                setBindings2Scope(scope, inst)
 	                return inst
@@ -411,7 +410,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (!isRoot) {
 	                    inst.$mount(node)
 	                }
-	                _elements.push(inst)
+	                _directives.push(inst)
 	                setBindings2Scope(scope, inst)
 	                return inst
 	        }
@@ -675,22 +674,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	function Selector(sel) {
 	    if (util.type(sel) == 'string') {
 	        var nodes = util.copyArray(document.querySelectorAll(sel))
-	        return Wrap(nodes)
+	        return Shell(nodes)
 	    }
 	    else if (util.type(sel) == 'array') {
-	        return Wrap(sel)
-	    } 
-	    else if (sel instanceof Wrap) return sel
+	        return Shell(sel)
+	    }
+	    else if (sel instanceof Shell) return sel
 	    else if (is.DOM(sel)) {
-	        return Wrap([sel])
+	        return Shell([sel])
 	    }
 	    else {
 	        throw new Error('Unexpect selector !')
 	    }
 	}
 
-	function Wrap(nodes) {
-	    if (nodes instanceof Wrap) return nodes
+	function Shell(nodes) {
+	    if (nodes instanceof Shell) return nodes
 	    nodes.__proto__ = proto
 	    return nodes
 	}
@@ -701,7 +700,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.forEach(function(n) {
 	            subs = subs.concat(util.copyArray(n.querySelectorAll(sel)))
 	        })
-	        return Wrap(subs)
+	        return Shell(subs)
 	    },
 	    attr: function(attname, attvalue) {
 	        var len = arguments.length
@@ -766,7 +765,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 	    parent: function() {
 	        if (!this.length) return null
-	        return Wrap([this[0].parentNode])
+	        return Shell([this[0].parentNode])
 	    },
 	    remove: function() {
 	        this.forEach(function(el) {
@@ -789,7 +788,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this
 	    }
 	}
-	proto.__proto__ = Wrap.prototype
+	proto.__proto__ = Shell.prototype
 	proto.__proto__.__proto__ = Array.prototype
 
 
@@ -2260,12 +2259,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.$el = tar
 	    d.$vm = vm
 	    d.$id = _did++
+	    d.$scope = scope
 
 	    var bind = def.bind
-
 	    var unbind = def.unbind
 	    var upda = def.update
 	    var prev
+	    var unwatch
 
 
 	    // set properties
@@ -2300,21 +2300,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	    bindParams.push(expr)
 	    // watch variable changes of expression
 	    if (def.watch !== false && isExpr) {
-	       var unwatch = _watch(vm, _extractVars(expr), _update)
+	       unwatch = _watch(vm, _extractVars(expr), _update)
 	    }
-	    // ([property-name], expression-value, expression) 
-	    bind && bind.apply(d, bindParams, expr)
-	    upda && upda.call(d, prev)
-
 
 	    d.$destroy = function () {
 	        unbind && unbind.call(d)
 	        unwatch && unwatch()
 	        d.$el = null
 	        d.$vm = null
+	        d.$scope = null
 	    }
-
 	    d.$update = _update
+
+	    // ([property-name], expression-value, expression) 
+	    bind && bind.apply(d, bindParams, expr)
+	    upda && upda.call(d, prev)
+
 	})
 
 
@@ -2326,6 +2327,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var upda = def.update
 	    var isExpr = !!_isExpr(expr)
 	    var prev
+	    var unwatch
 
 	    isExpr && (expr = _strip(expr))
 
@@ -2346,7 +2348,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    util.objEach(def, function (k, v) {
 	        d[k] = v
 	    })
-
 
 	    d.$bundle = function () {
 	        var $ceil = this.$ceil()
@@ -2371,13 +2372,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this.$before
 	    }
 
-	    /**
-	     *  execute wrap with directive name
-	     */
-	    function _exec(expr) {
-	        return _execute(vm, scope, expr, name)
+	    d.$destroy = function () {
+	        unbind && unbind.call(d)
+	        unwatch && unwatch()
+	        d.$el = null
+	        d.$vm = null
+	        d.$scope = null
 	    }
-
 	    /**
 	     *  update handler
 	     */
@@ -2390,24 +2391,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 
+	    d.$update = _update
+
+	    /**
+	     *  execute wrap with directive name
+	     */
+	    function _exec(expr) {
+	        return _execute(vm, scope, expr, name)
+	    }
+
 	    prev = isExpr ? _exec(expr) : expr
 	    if (def.watch !== false && isExpr) {
-	        var unwatch = _watch(vm, _extractVars(expr), _update)
+	        unwatch = _watch(vm, _extractVars(expr), _update)
 	    }
 
 	    bind && bind.call(d, prev, expr)
 	    upda && upda.call(d, prev)
 
-
-	    d.$destroy = function () {
-	        unbind && unbind.call(d)
-	        unwatch && unwatch()
-	        d.$el = null
-	        d.$vm = null
-	        d.$scope = null
-	    }
-
-	    d.$update = _update
 	})
 
 
@@ -2463,6 +2463,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        _insertBefore(pn, $before, tar)
 	        _insertBefore(pn, $after, _nextSibling(tar))
 	    }
+
 	    function render() {
 	        var frags = []
 	        parts.forEach(function(item, index) {
@@ -2492,10 +2493,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            tar.nodeValue = nodeV
 	        }
 	    }
-	    /**
-	     *  initial render
-	     */
-	    render()
 
 	    this.$destroy = function () {
 	        unwatches.forEach(function (f) {
@@ -2516,6 +2513,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        })
 	        hasDiff && render()
 	    }
+
+	    /**
+	     *  initial render
+	     */
+	    render()
 	})
 
 	compiler.Attribute = function(vm, scope, tar, name, value) {
@@ -2556,6 +2558,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	            preValue = next
 	        }
 	    }
+
+
+	    this.$destroy = function () {
+	        unwatches.forEach(function (f) {
+	            f()
+	        })
+	    }
+
+	    this.$update = function () {
+	        isNameExpr && _updateName()
+	        isValueExpr && _updateValue()
+	    }
 	    /**
 	     *  watch attribute name expression variable changes
 	     */
@@ -2569,16 +2583,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        unwatches.push(_watch(vm, _extractVars(value), _updateValue))
 	    }
 
-	    this.$destroy = function () {
-	        unwatches.forEach(function (f) {
-	            f()
-	        })
-	    }
-
-	    this.$update = function () {
-	        isNameExpr && _updateName()
-	        isValueExpr && _updateValue()
-	    }
 	}
 
 	function _appendChild (con, child) {
