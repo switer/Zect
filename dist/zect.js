@@ -2234,6 +2234,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.$el = null
 	    return this
 	}
+	cproto.$update = function () {}
 	/**
 	 *  Standard directive
 	 */
