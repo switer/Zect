@@ -516,7 +516,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            if (plainDataExpr.match(sep)) {
 	                plainDataExpr.replace(new RegExp(sep + '\\s*$'), '') // trim last seperator
 	                       .split(sep)
-	                       .match(sep)
 	                       .forEach(setBindingObj)
 	            } else {
 	                setBindingObj(plainDataExpr)
