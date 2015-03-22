@@ -2890,7 +2890,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var index = Number(kp.split('.')[1])
 	                var nv = nextItems[index]
 	                // delta update
-	                this.last = nextItems
+	                this.last[index] = nv
 
 	                var $vm = this.$vms[index]
 	                var $data = $vm.$scope.data = _getData(nv)
@@ -2908,7 +2908,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                var that = this
-
 	                function createSubVM(item, index) {
 	                    var subEl = that.child.cloneNode(true)
 	                    var data = _getData(item)
