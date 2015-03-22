@@ -2816,9 +2816,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var $ceil = this.$ceil()
 	                    var $floor = this.$floor()
 
+	                    var that = this
 	                    util.domRange($ceil.parentNode, $ceil, $floor)
 	                        .forEach(function(n) {
-	                            this._tmpCon.appendChild(n)
+	                            that._tmpCon.appendChild(n)
 	                        })
 	                }
 	            },
