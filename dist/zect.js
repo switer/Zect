@@ -2893,11 +2893,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	            },
 	            update: function(items, preItems, kp) {
 	                if (kp && /\d+/.test(kp.split('.')[1])) {
-	                    var index = kp.split('.')[1]
-	                    // delta update
-	                    this.updateItem(items[index], index)
-	                    this.last = items
-	                    return
+	                    var index = Number(kp.split('.')[1])
+	                    // can be delta update
+	                    if (this.$vms && index < this.$vms.length) {
+	                        var nv = items[index]
+	                        // delta update
+	                        this.updateItem(nv, index)
+	                        this.last = nv
+	                        return
+	                    }
 	                }
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
