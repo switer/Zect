@@ -2325,7 +2325,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var bind = def.bind
 	    var unbind = def.unbind
 	    var upda = def.update
-	    var diff = def.diff
+	    var delta = def.delta
+	    var deltaUpdate = def.deltaUpdate
 	    var isExpr = !!_isExpr(expr)
 	    var prev
 	    var unwatch
@@ -2385,7 +2386,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    function _update(kp) {
 	        var nexv = _exec(expr)
-	        if ((diff && diff.call(d, nexv, prev, kp)) || util.diff(nexv, prev)) {
+	        if (delta && delta.call(d, nexv, prev, kp)) {
+	            return deltaUpdate && deltaUpdate.call(d, nexv, p, kp)
+	        }
+	        if (util.diff(nexv, prev)) {
 	            var p = prev
 	            prev = nexv
 	            upda && upda.call(d, nexv, p, kp)
@@ -2744,7 +2748,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            },
 	            unbind: function() {
 	                if (this.fn) {
-	                    this.$el.removeEventLisnter(this.type, this.fn)
+	                    this.$el.removeEventListener(this.type, this.fn)
 	                    this.fn = null
 	                }
 	            }
@@ -2872,15 +2876,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node. {' + expr + '}')
 	                }
 	            },
-	            diff: function (nv, pv, kp) {
+	            delta: function (nv, pv, kp) {
 	                if (kp && /\d+/.test(kp.split('.')[1])) {
-	                    // delta update
-	                    return true
+	                    var index = Number(kp.split('.')[1])
+	                    // can be delta update
+	                    if (this.$vms && index < this.$vms.length) return true
+	                    else return false
 	                } else {
 	                    return false
 	                }
 	            },
-	            updateItem: function (nv, index) {
+	            deltaUpdate: function (nextItems, preItems, kp) {
+	                var index = Number(kp.split('.')[1])
+	                var nv = nextItems[index]
+	                // delta update
+	                this.last = nextItems
+
 	                var $vm = this.$vms[index]
 	                var $data = $vm.$scope.data = _getData(nv)
 	                $data.$index = index
@@ -2892,17 +2903,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                $vm.$scope.$update()
 	            },
 	            update: function(items, preItems, kp) {
-	                if (kp && /\d+/.test(kp.split('.')[1])) {
-	                    var index = Number(kp.split('.')[1])
-	                    // can be delta update
-	                    if (this.$vms && index < this.$vms.length) {
-	                        var nv = items[index]
-	                        // delta update
-	                        this.updateItem(nv, index)
-	                        this.last = nv
-	                        return
-	                    }
-	                }
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
