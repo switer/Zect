@@ -2154,13 +2154,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function _watch(vm, vars, update) {
 	    function _handler (kp) {
-	        if (
-	            vars.some(function(key, index) {
+	        var rel = vars.some(function(key, index) {
 	                if (_relative(kp, key)) {
 	                    return true
 	                }
 	            })
-	        ) update(kp)
+	        if (rel) update(kp)
 	    }
 	    if (vars && vars.length) {
 	        vm.$watch(_handler)
@@ -2326,6 +2325,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var bind = def.bind
 	    var unbind = def.unbind
 	    var upda = def.update
+	    var diff = def.diff
 	    var isExpr = !!_isExpr(expr)
 	    var prev
 	    var unwatch
@@ -2385,7 +2385,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    function _update(kp) {
 	        var nexv = _exec(expr)
-	        if (util.diff(nexv, prev)) {
+	        if ((diff && diff.call(d, nexv, prev, kp)) || util.diff(nexv, prev)) {
 	            var p = prev
 	            prev = nexv
 	            upda && upda.call(d, nexv, p, kp)
@@ -2823,15 +2823,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            },
 	            update: function(next) {
-	                var that = this
-
 	                if (!next) {
 	                    this._unmount()
 	                } else if (this.compiled) {
 	                    this._mount()
 	                } else {
 	                    this.compiled = true
-	                    this.$vm.$compile(this._tmpCon)
+
+	                    var $parent = this.$scope || {}
+	                    var $scope = {
+	                        data: $parent.data, // inherit parent scope's properties
+	                        bindings: [],
+	                        children: [],
+	                        $parent: $parent
+	                    }
+	                    var that = this
+	                    $scope.$update = function () {
+	                        $scope.data = $parent.data
+	                        this.bindings.forEach(function (bd) {
+	                            bd.$update()
+	                        })
+	                        this.children.forEach(function (child) {
+	                            child.$update()
+	                        })
+	                    }
+	                    var $update = this.$update
+
+	                    // hook to $update interface
+	                    this.$update = function () {
+	                        $scope.$update()
+	                        $update.apply(this, arguments)
+	                    }
+	                    if(this.$scope) {
+	                        this.$scope.children.push($scope)
+	                    }
+	                    this.$vm.$compile(this._tmpCon, $scope)
+
 	                    this._mount()
 	                }
 	            }
@@ -2842,6 +2869,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.expr = expr
 	                if (!this.child) {
 	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node. {' + expr + '}')
+	                }
+	            },
+	            diff: function (nv, pv, kp) {
+	                if (kp && /\d+/.test(kp.split('.')[1])) {
+	                    // delta update
+	                    return true
+	                } else {
+	                    return false
 	                }
 	            },
 	            updateItem: function (nv, index) {
@@ -2863,7 +2898,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    this.last = items
 	                    return
 	                }
-
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
@@ -2886,7 +2920,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        $parent: that.$scope || {}
 	                    }
 	                    $scope.$update = function () {
-	                        var that = this
 	                        this.bindings.forEach(function (bd) {
 	                            bd.$update()
 	                        })
@@ -2913,6 +2946,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var olds = this.last ? util.copyArray(this.last) : olds
 	                var oldVms = this.$vms ? util.copyArray(this.$vms) : oldVms
 	                var updateVms = []
+
 	                items.forEach(function(item, index) {
 	                    var v
 	                    if (!olds) {
@@ -2927,7 +2961,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                                return true
 	                            }
 	                        })
-
 	                        if (~i) {
 	                            // reused
 	                            v = oldVms[i]
@@ -2962,7 +2995,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var v = vms[i++]
 	                    v.$compiler.$insertBefore($floor)
 	                }
-
 	                updateVms.forEach(function (v) {
 	                    // reset $index
 	                    v.$scope.$update()
