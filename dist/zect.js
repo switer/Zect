@@ -3008,7 +3008,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                updateVms = null
 
 	                oldVms && oldVms.forEach(function(v) {
-	                    $vm.$scope.bindings.forEach(function (bd) {
+	                    v.$scope.bindings.forEach(function (bd) {
 	                        bd.$destroy()
 	                    })
 	                    v.$compiler.$remove().$destroy()
