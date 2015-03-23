@@ -119,11 +119,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    conf.namespace = ns
 	}
 
-	Zect.utils = {
-	    'relative': util.relative
-	}
-
-
 	/*******************************
 	      ViewModel Constructor
 	*******************************/
@@ -1954,6 +1949,14 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+
+	var Mux = __webpack_require__(4)
+	var _normalize = Mux.keyPath.normalize
+
+	function _keys(o) {
+	    return Object.keys(o)
+	}
+
 	var escapeCharMap = {
 	    '&': '&amp;',
 	    '<': '&lt;',
@@ -1962,7 +1965,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    '\'': '&#x27;',
 	    '/': '&#x2F;'
 	}
-	var escapeRex = new RegExp(Object.keys(escapeCharMap).join('|'), 'g')
+	var escapeRex = new RegExp(_keys(escapeCharMap).join('|'), 'g')
 
 	module.exports = {
 	    type: function(obj) {
@@ -2024,8 +2027,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                return that.diff(item, pre[index], _t - 1)
 	            })
 	        } else if (this.type(next) == 'object' && this.type(pre) == 'object') {
-	            var nkeys = Object.keys(next)
-	            var pkeys = Object.keys(pre)
+	            var nkeys = _keys(next)
+	            var pkeys = _keys(pre)
 	            if (nkeys.length != pkeys.length) return true
 
 	            var that = this
@@ -2102,6 +2105,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return [open ? open[0]:'', close ? close[0]:'']
 	    },
 	    relative: function (src, dest) {
+	        src = _normalize(src)
+	        dest = _normalize(dest)
+
 	        if (src == dest) return true
 	        else {
 	            var start = src.indexOf(dest) === 0
@@ -2677,6 +2683,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        'model': {
 	            bind: function (prop) {
+	                console.log(prop)
 	                var tagName = this.$el.tagName
 	                var type = tagName.toLowerCase()
 
@@ -2737,6 +2744,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                 *  State 2 DOM input
 	                 */
 	                this._update = function (kp) {
+	                    console.log('kp is: ', kp, prop, _relative(kp, prop))
 	                    if (_relative(kp, prop)) {
 	                        _updateDOM()
 	                    }
