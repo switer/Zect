@@ -823,7 +823,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	* Mux.js v2.4.2
+	* Mux.js v2.4.3
 	* (c) 2014 guankaishe
 	* Released under the MIT License.
 	*/
@@ -1071,7 +1071,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 		            var cache = _cptCaches[ck]
 		            var pre = cache.pre = cache.cur
-		            var next = cache.cur = (_computedProps[ck].get || NOOP).call(model, model)
+		            var next = cache.cur = (_computedProps[ck].get || NOOP).call(_computedCtx, model)
 		            if ($util.diff(next, pre)) _emitChange(ck, next, pre)
 		        })
 		    }, __muxid__/*scope*/)
@@ -1463,7 +1463,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		        if ($indexOf(_observableKeys, kp)) 
 		            return _props[kp]
 		        else if ($indexOf(_computedKeys, kp)) {
-		            return (_computedProps[kp].get || NOOP).call(model, model)
+		            return (_computedProps[kp].get || NOOP).call(_computedCtx, model)
 		        } else {
 		            // keyPath
 		            var normalKP = $normalize(kp)
