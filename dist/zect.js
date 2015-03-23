@@ -234,12 +234,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        options.created && options.created()
 
 	        util.merge(dataOpt, funcOrObject(options, 'data'))
+	        
 	        // Instance observable state model
-
 	        var mopts = {
 	            deep: true,
 	            props: dataOpt,
-	            computed: options.computed
+	            computed: options.computed,
+	            computedContext: vm
 	        }
 	        $data = new Mux(mopts)
 	    }
@@ -822,7 +823,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	* Mux.js v2.4.1
+	* Mux.js v2.4.2
 	* (c) 2014 guankaishe
 	* Released under the MIT License.
 	*/
@@ -1041,15 +1042,26 @@ return /******/ (function(modules) { // webpackBootstrap
 		    })
 		    _initialComputedProps = null
 
+
 		    /**
 		     *  batch emit computed property change
 		     */
 		    _emitter.on(CHANGE_EVENT, function (kp) {
 		        var willComputedProps = []
+		        var mappings = []
+
+		        if (!Object.keys(_cptDepsMapping).length) return
+
+		        while(kp) {
+		            _cptDepsMapping[kp] && (mappings = mappings.concat(_cptDepsMapping[kp]))
+		            kp = $keypath.digest(kp)
+		        }
+
+		        if (!mappings.length) return
 		        /**
 		         *  get all computed props that depend on kp
 		         */
-		        ;(_cptDepsMapping[kp] || []).reduce(function (pv, cv) {
+		        mappings.reduce(function (pv, cv) {
 		            if (!$indexOf(pv, cv)) pv.push(cv)
 		            return pv
 		        }, willComputedProps)
@@ -1060,7 +1072,6 @@ return /******/ (function(modules) { // webpackBootstrap
 		            var cache = _cptCaches[ck]
 		            var pre = cache.pre = cache.cur
 		            var next = cache.cur = (_computedProps[ck].get || NOOP).call(model, model)
-
 		            if ($util.diff(next, pre)) _emitChange(ck, next, pre)
 		        })
 		    }, __muxid__/*scope*/)
@@ -1078,7 +1089,6 @@ return /******/ (function(modules) { // webpackBootstrap
 		        var args = arguments
 		        var evtArgs = $util.copyArray(args)
 		        var kp = $normalize($join(_rootPath(), propname))
-
 		        args[0] = CHANGE_EVENT + ':' + kp
 		        _emitter.emit(CHANGE_EVENT, kp)
 		        emitter.emit.apply(emitter, args)
@@ -1093,10 +1103,10 @@ return /******/ (function(modules) { // webpackBootstrap
 		     *  @param dep <String> dependency name
 		     */
 		    function _prop2CptDepsMapping (propname, dep) {
-		        if ($indexOf(_computedKeys, dep)) 
-		           return $warn('Dependency should not computed property')
-
+		        // if ($indexOf(_computedKeys, dep))
+		        //    return $warn('Dependency should not computed property')
 		        $util.patch(_cptDepsMapping, dep, [])
+
 		        var dest = _cptDepsMapping[dep]
 		        if ($indexOf(dest, propname)) return
 		        dest.push(propname)
@@ -1788,9 +1798,12 @@ return /******/ (function(modules) { // webpackBootstrap
 		    else if (_hasBegin) return pre + '.' + tail
 		    else return tail
 		}
-
+		/**
+		 *  remove the last section of the keypath
+		 *  digest("a.b.c") --> "a.b"
+		 */
 		function _digest(nkp) {
-		    var reg = /\.[^\.]+|\[([^\[\]])+\]$/
+		    var reg = /(\.[^\.]+|\[([^\[\]])+\])$/
 		    if (!reg.exec(nkp)) return ''
 		    return nkp.replace(reg, '')
 		}
