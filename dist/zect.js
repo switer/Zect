@@ -722,7 +722,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 	    removeClass: function(clazz) {
 	        this.forEach(function(el) {
-	            el.removeClass(clazz)
+	            el.classList.remove(clazz)
 	        })
 	        return this
 	    },
@@ -2677,7 +2677,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        'model': {
 	            bind: function (prop) {
-	                console.log(prop)
 	                var tagName = this.$el.tagName
 	                var type = tagName.toLowerCase()
 
@@ -2738,7 +2737,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                 *  State 2 DOM input
 	                 */
 	                this._update = function (kp) {
-	                    console.log('kp is: ', kp, prop, _relative(kp, prop))
 	                    if (_relative(kp, prop)) {
 	                        _updateDOM()
 	                    }
