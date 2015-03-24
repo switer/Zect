@@ -716,19 +716,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 	    addClass: function(clazz) {
 	        this.forEach(function(el) {
-	            var classes = util.copyArray(el.classList)
-	            if (!~classes.indexOf(clazz)) classes.push(clazz)
-	            el.className = classes.join(' ')
+	            el.classList.add(clazz)
 	        })
 	        return this
 	    },
 	    removeClass: function(clazz) {
 	        this.forEach(function(el) {
-	            var classes = util.copyArray(el.classList)
-	            el.className = classes.reduce(function(r, n) {
-	                if (n != clazz) r.push(n)
-	                return r
-	            }, []).join(' ')
+	            el.removeClass(clazz)
 	        })
 	        return this
 	    },
