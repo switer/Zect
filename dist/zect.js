@@ -212,12 +212,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    vm.$get = function () {
 	        return $data.$get.apply($data, arguments)
 	    }
-	    vm.$watch = function (fn) {
-	        if (util.type(fn) !== 'function') return console.warn('Listener handler is not a function.')
-	        return $data.$watch(fn)
+	    vm.$watch = function (/*[ keypath ], */fn) {
+	        // if (util.type(fn) !== 'function') return console.warn('Listener handler is not a function.')
+	        return $data.$watch.apply($data, arguments)
 	    }
-	    vm.$unwatch = function (fn) {
-	        return $data.$unwatch(fn)
+	    vm.$unwatch = function (/*[ keypath ], */fn) {
+	        return $data.$unwatch.apply($data, arguments)
 	    }
 
 	    if (options.$data) {
@@ -1774,7 +1774,9 @@ return /******/ (function(modules) { // webpackBootstrap
 		function _get(obj, keypath) {
 		    var parts = _keyPathNormalize(keypath).split('.')
 		    var dest = obj
-		    parts.forEach(function(key) {
+		    parts.some(function(key) {
+		    	if (dest == undefined || dest == null)
+		    		return true
 		        // Still set to non-object, just throw that error
 		        dest = dest[key]
 		    })
@@ -1972,6 +1974,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var Mux = __webpack_require__(4)
 	var _normalize = Mux.keyPath.normalize
+	var _digest = Mux.keyPath.digest
 
 	function _keys(o) {
 	    return Object.keys(o)
@@ -2140,7 +2143,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return str.replace(escapeRex, function (m) {
 	            return escapeCharMap[m]
 	        })
-	    }
+	    },
+	    normalize: _normalize,
+	    digest: _digest
 	}
 
 
@@ -2726,44 +2731,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                var vm = this.$vm
-	                var CHECKBOX = 'checkbox'
+	                var vType = type == 'checkbox' ? 'checked':'value'
 	                var that = this
 
 	                function _updateDOM() {
-	                    if (type == CHECKBOX) {
-	                        that.$el.checked = vm.$get(prop)
-	                    } else {
-	                        that.$el.value = vm.$get(prop)
-	                    }
-	                }
-
-	                function _updateState() {
-	                    if (type == CHECKBOX) {
-	                        vm.$set(prop, that.$el.checked)
-	                    } else {
-	                        vm.$set(prop, that.$el.value)
-	                    }
+	                    that.$el[vType] = vm.$get(prop)
 	                }
 	                /**
 	                 *  DOM input 2 state
 	                 */
-	                this._requestChange = _updateState
+	                this._requestChange = function () {
+	                    vm.$set(prop, that.$el[vType])
+	                }
 	                /**
 	                 *  State 2 DOM input
 	                 */
 	                this._update = function (kp) {
-	                    if (_relative(kp, prop)) {
-	                        _updateDOM()
-	                    }
+	                    _updateDOM()
 	                }
 	                $el.on(this.evtType, this._requestChange)
-
 	                _updateDOM()
-	                this.$vm.$watch(this._update)
+
+	                var watches = this._watches = []
+	                var wKeypath = util.normalize(prop)
+	                while (wKeypath) {
+	                    watches.push(this.$vm.$watch(wKeypath, this._update))
+	                    wKeypath = util.digest(wKeypath)
+	                }
 	            },
 	            unbind: function () {
 	                this._$el.off(this.evtType, this._requestChange)
-	                this.$vm.$unwatch(this._update)
+	                this._watches.forEach(function (f) {
+	                    f()
+	                })
 	            }
 	        },
 	        'on': {
