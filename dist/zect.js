@@ -824,7 +824,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	* Mux.js v2.4.4
+	* Mux.js v2.4.5
 	* (c) 2014 guankaishe
 	* Released under the MIT License.
 	*/
@@ -1646,8 +1646,8 @@ return /******/ (function(modules) { // webpackBootstrap
 		    this._obs = {}
 		    this._context = context
 		}
-
-		Message.prototype.on = function(sub, cb, scope) {
+		var proto = Message.prototype
+		proto.on = function(sub, cb, scope) {
 		    scope = scope || _scopeDefault
 		    _patch(this._obs, sub, [])
 
@@ -1662,7 +1662,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		 *  @param [cb] <Function> callback, Optional, if callback is not exist,
 		 *      will remove all callback of that sub
 		 */
-		Message.prototype.off = function( /*subject, cb, scope*/ ) {
+		proto.off = function( /*subject, cb, scope*/ ) {
 		    var types
 		    var args = arguments
 		    var len = args.length
@@ -1720,7 +1720,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 		    return this
 		}
-		Message.prototype.emit = function(sub) {
+		proto.emit = function(sub) {
 		    var obs = this._obs[sub]
 		    if (!obs) return
 		    var args = [].slice.call(arguments)
@@ -1769,15 +1769,22 @@ return /******/ (function(modules) { // webpackBootstrap
 		    return obj
 		}
 		/**
+		 *  Get undefine
+		 */
+		function undf () {
+		    return void(0)
+		}
+		function isNon (o) {
+		    return o === undf || o === null
+		}
+		/**
 		 *  get value of object by keypath
 		 */
 		function _get(obj, keypath) {
 		    var parts = _keyPathNormalize(keypath).split('.')
 		    var dest = obj
-		    parts.some(function(key) {
-		    	if (dest == undefined || dest == null)
-		    		return true
-		        // Still set to non-object, just throw that error
+		    parts.forEach(function(key) {
+		        if (isNon(dest)) return !(dest = undf())
 		        dest = dest[key]
 		    })
 		    return dest
@@ -2189,7 +2196,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var reg = /("|').+?[^\\]\1|\.\w*|\$\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)\(|([a-z_]\w*)/gi
 	    var vars = expr.match(reg)
 	    vars = !vars ? [] : vars.filter(function(i) {
-	        if (!i.match(/^[."']/) && !i.match(/\($/)) {
+	        if (!i.match(/^[\."'\]\[]/) && !i.match(/\($/)) {
 	            return i
 	        }
 	    })
@@ -2201,16 +2208,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  watch changes of variable-name of keypath
 	 *  @return <Function> unwatch
 	 */
+
+	var keywords = ['$index', '$value', '$parent', '$vm', '$scope']
+
 	function _watch(vm, vars, update) {
+	    var watchKeys = []
+	    var noEmpty
 	    function _handler (kp) {
-	        var rel = vars.some(function(key, index) {
+	        var rel = watchKeys.some(function(key, index) {
 	                if (_relative(kp, key)) {
 	                    return true
 	                }
 	            })
 	        if (rel) update(kp)
 	    }
+
 	    if (vars && vars.length) {
+	        vars.forEach(function (k) {
+	            if (~keywords.indexOf(k)) return
+	            while (k) {
+	                if (!~watchKeys.indexOf(k)) watchKeys.push(k)
+	                k = util.digest(k)
+	            }
+	        })
+	        if (!watchKeys.length) return noop
 	        vm.$watch(_handler)
 	        return function () {
 	            vm.$unwatch(_handler)
