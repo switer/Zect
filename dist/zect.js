@@ -824,7 +824,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	* Mux.js v2.4.3
+	* Mux.js v2.4.4
 	* (c) 2014 guankaishe
 	* Released under the MIT License.
 	*/
@@ -983,20 +983,19 @@ return /******/ (function(modules) { // webpackBootstrap
 		    var model = this
 		    var emitter = options.emitter || new $Message(model) // EventEmitter of this model, context bind to model
 		    var _emitter = options._emitter || new $Message(model)
-		    var _isDeep = options.deep || !$hasOwn(options,'deep') // default to true
 		    var _computedCtx = $hasOwn(options, 'computedContext') ? options.computedContext : model
 		    var __kp__ = options.__kp__
 		    var __muxid__ = allotId()
 		    var _isExternalEmitter =  !!options.emitter
 		    var _isExternalPrivateEmitter =  !!options._emitter
 		    var proto = {
-		        '__muxid__': __muxid__
+		        '__muxid__': __muxid__,
+		        '__kp__': __kp__
 		    }
 		    var _destroy // interanl destroyed flag
 
 
 		    $util.insertProto(model, proto)
-
 		    /**
 		     *  return current keypath prefix of this model
 		     */
@@ -1132,7 +1131,6 @@ return /******/ (function(modules) { // webpackBootstrap
 		            ins = new Mux({
 		                props: props,
 		                emitter: emitter, 
-		                deep: true,
 		                _emitter: _emitter,
 		                __kp__: kp
 		            })
@@ -1150,12 +1148,12 @@ return /******/ (function(modules) { // webpackBootstrap
 		     *  A hook method for setting value to "_props"
 		     *  @param name <String> property name
 		     *  @param value
-		     *  @param basePath <String> property's value mouted path
+		     *  @param mountedPath <String> property's value mouted path
 		     */
-		    function _walk (name, value, basePath) {
+		    function _walk (name, value, mountedPath) {
 		        var tov = $type(value) // type of value
 		        // initial path prefix is root path
-		        var kp = basePath ? basePath : $join(_rootPath(), name)
+		        var kp = mountedPath ? mountedPath : $join(_rootPath(), name)
 		        /**
 		         *  Array methods hook
 		         */
@@ -1165,13 +1163,11 @@ return /******/ (function(modules) { // webpackBootstrap
 		                var result = nativeMethod.apply(self, args)
 		                // set value directly after walk
 		                _props[name] = _walk(name, self, kp)
-
 		                _emitChange(name, self, pv)
 		                return result
 		            })
 		        }
 
-		        if (!_isDeep) return value
 		        // deep observe into each property value
 		        switch(tov) {
 		            case OBJECT: 
@@ -1217,36 +1213,33 @@ return /******/ (function(modules) { // webpackBootstrap
 		            return false
 		        }
 
-		        var pv = _props[prop] // old value
-		        var isArrayChange
-		        var piv
-		        $keypath.set(_props, kp, value, function (tar, key, v) {
-		            v = $util.copyValue(value)
+		        var pv = $keypath.get(_props, kp)
+		        var isObj = instanceOf(value, Object)
+		        var nKeypath = parts.join('.')
+		        var name = parts.pop()
+		        var parentPath = parts.join('.')
+		        var parent = $keypath.get(_props, parentPath)
+		        var isParentObserved = instanceOf(parent, Mux)
 
-		            if (instanceOf(tar, Mux)) {
-		                if ($hasOwn(tar, key)) {
-		                    tar.$set(key, v)
-		                } else {
-		                    tar.$add(key, v)
-		                }
-		                return
-		            } else if (_isDeep && $type(tar) == ARRAY && key.match(/^\d+$/)) {
-		                isArrayChange = true
-		                piv = tar[key]
+		        if (isParentObserved) {
+		            if ($hasOwn(parent, name)) {
+		                parent.$set(name, value)
+		            } else {
+		                parent.$add(name, value)
 		            }
-		            tar[key] = v
-		        })
-		        if (isArrayChange) {
-		            _emitChange(kp, value, piv)
+		        } else {
+		            $keypath.set(
+		                _props, 
+		                kp, 
+		                isObj
+		                    ? _walk(name, value, $join(_rootPath(), nKeypath))
+		                    : value
+		            )
+		            if ($util.diff(value, pv)) {
+		                _emitChange(kp, value, pv)
+		            }
 		        }
-		        /**
-		         *  return previous and next value for another compare logic
-		         */
-		        return {
-		            mounted: prop,
-		            next: _props[prop],
-		            pre: pv
-		        }
+
 		    }
 
 		    /**
@@ -1256,17 +1249,17 @@ return /******/ (function(modules) { // webpackBootstrap
 		    function _$set(kp, value) {
 		        if (_destroy) return _destroyNotice()
 
-		        var diff = _$sync(kp, value)
-		        if (!diff) return
+		        _$sync(kp, value)
+		        // if (!diff) return
 		        /**
 		         *  Base type change of object type will be trigger change event
 		         *  next and pre value are not keypath value but property value
 		         */
-		        if ( ((_isDeep && kp == diff.mounted) || !_isDeep) && $util.diff(diff.next, diff.pre) ) {
-		            var propname = diff.mounted
-		            // emit change immediately
-		            _emitChange(propname, diff.next, diff.pre)
-		        }
+		        // if ( kp == diff.mounted && $util.diff(diff.next, diff.pre) ) {
+		        //     var propname = diff.mounted
+		        //     // emit change immediately
+		        //     _emitChange(propname, diff.next, diff.pre)
+		        // }
 		    }
 
 		    /**
@@ -1557,7 +1550,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		        // for share some emitter with other instance
 		        if (arguments.length == 0) return emitter
 		        emitter = em
-		        _isDeep && _walkResetEmiter(this.$props(), em, _pem)
+		        _walkResetEmiter(this.$props(), em, _pem)
 		        return this
 		    }
 		    /**
@@ -1898,8 +1891,29 @@ return /******/ (function(modules) { // webpackBootstrap
 		    patch: function (obj, prop, defValue) {
 		        !obj[prop] && (obj[prop] = defValue)
 		    },
-		    diff: function (next, pre) {
-		        return next !== pre || next instanceof Object
+		    diff: function (next, pre, _t) {
+		        var that = this
+		        // defult max 4 level        
+		        _t = _t == undefined ? 4 : _t
+
+		        if (_t <= 0) return next !== pre
+
+		        if (this.type(next) == 'array' && this.type(pre) == 'array') {
+		            if (next.length !== pre.length) return true
+		            return next.some(function(item, index) {
+		                return that.diff(item, pre[index], _t - 1)
+		            })
+		        } else if (this.type(next) == 'object' && this.type(pre) == 'object') {
+		            var nkeys = Object.keys(next)
+		            var pkeys = Object.keys(pre)
+		            if (nkeys.length != pkeys.length) return true
+
+		            var that = this
+		            return nkeys.some(function(k) {
+		                return (!~pkeys.indexOf(k)) || that.diff(next[k], pre[k], _t - 1)
+		            })
+		        }
+		        return next !== pre
 		    },
 		    copyArray: function (arr) {
 		        var len = arr.length
@@ -2742,7 +2756,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        _updateDOM()
 	                    }
 	                }
-
 	                $el.on(this.evtType, this._requestChange)
 
 	                _updateDOM()
@@ -2924,7 +2937,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
-
 	                var that = this
 	                function createSubVM(item, index) {
 	                    var subEl = that.child.cloneNode(true)
