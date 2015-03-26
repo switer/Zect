@@ -70,8 +70,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Mux = __webpack_require__(4)
 	var util = __webpack_require__(5)
 	var conf = __webpack_require__(6)
-
 	var Compiler = __webpack_require__(7)
+	var Expression = __webpack_require__(8)
+
 	var Directive = Compiler.Directive
 	var AttributeDirective = Compiler.Attribute
 	var TextDirective = Compiler.Text
@@ -80,8 +81,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  private vars
 	 */
-	var presetDirts = __webpack_require__(8)(Zect)  // preset directives getter
-	var elements = __webpack_require__(9)(Zect)      // preset directives getter
+	var presetDirts = __webpack_require__(9)(Zect)  // preset directives getter
+	var elements = __webpack_require__(10)(Zect)      // preset directives getter
 	var allDirectives = [presetDirts, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
 	var gcomps = {}                                 // global define components
@@ -427,10 +428,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (node === parentVM.$el) return
 
 	        var ref = $(node).attr('ref')
+	        var dAttName = NS + 'data'
+	        var mAttName = NS + 'methods'
 
-	        var dataExpr = $node.attr(NS + 'data')
-	        var methods = $node.attr(NS + 'methods')
-	        $node.removeAttr(NS + 'data').removeAttr(NS + 'methods')
+	        var dataExpr = $node.attr(dAttName)
+	        var methods = $node.attr(mAttName)
+
+	        $node.removeAttr(dAttName).removeAttr(mAttName)
 
 	        var _isDataExpr = util.isExpr(dataExpr)
 	        var bindingData
@@ -438,24 +442,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         *  Watch
 	         */
-	        var sep = ';'
-	        var sepRegexp = new RegExp(sep, 'g')
+	        var execLiteral = Expression.execLiteral
 	        var ast = {}
 	        var revealAst = {}
 	        var compVM
 
-	        function _executeBindingMethods () {
-	            var methodObjExpr = methods.replace(sepRegexp, ',')
-	            return util.isExpr(methods) 
-	                    ? Compiler.execute(parentVM, scope, methodObjExpr) 
-	                    : {}
-	        }
-	        function _executeBindingData () {
-	            var dataObjExpr = dataExpr.replace(sepRegexp, ',')
-	            return util.isExpr(dataExpr) 
-	                    ? Compiler.execute(parentVM, scope, dataObjExpr) 
-	                    : {}
-	        }
 	        function _parseExpr (expr) {
 	            var name
 	            var expr = expr.replace(/^[^:]+:/, function (m) {
@@ -476,8 +467,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            })
 	        }
 
-	        var bindingData = _executeBindingData()
-	        var bindingMethods = _executeBindingMethods() // --> bindingMethods
+	        var bindingData = execLiteral(dataExpr, parentVM, scope)
+	        var bindingMethods = execLiteral(methods, parentVM, scope) // --> bindingMethods
 	        
 	        compVM = new Comp({
 	            el: node,
@@ -487,6 +478,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        })
 
 	        var plainDataExpr = _isDataExpr ? Compiler.stripExpr(dataExpr) : ''
+	        var sep = Expression.sep
+	        
 	        if (plainDataExpr) {
 	            if (plainDataExpr.match(sep)) {
 	                plainDataExpr.replace(new RegExp(sep + '\\s*$'), '') // trim last seperator
@@ -515,9 +508,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        _components.push(compVM)
 	        _setBindings2Scope(scope, compVM)
 
-	        // TBM -- to be modify, instance method show not be attached here
+	        // TBM -- to be modify, instance method should not be attached here
 	        compVM.$update = function () {
-	            _isDataExpr && compVM.$set(_executeBindingData())
+	            _isDataExpr && compVM.$set(execLiteral(dataExpr, parentVM, scope))
 	        }
 
 	        return compVM
@@ -2181,7 +2174,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var $ = __webpack_require__(2)
 	var util = __webpack_require__(5)
-	var _execute = __webpack_require__(10)
+	var _execute = __webpack_require__(11)
 	var _relative = util.relative
 	/**
 	 *  Whether a text is with express syntax
@@ -2672,6 +2665,36 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
+	var execute = __webpack_require__(11)
+
+	var _sep = ';'
+	var _sepRegexp = new RegExp(_sep, 'g')
+	var _literalSep = ','
+
+	/**
+	 *  Whether a text is with express syntax
+	 */
+	function _isExpr(c) {
+	    return c ? c.trim().match(/^\{[\s\S]*?\}$/m) : false
+	}
+	module.exports = {
+	    sep: _sep,
+	    literalSep: _literalSep,
+	    sepRegexp: _sepRegexp,
+	    isExpr: _isExpr,
+	    execLiteral: function (expr, vm, scope) {
+	        if (!_isExpr(expr)) return {}
+
+	        return execute(vm, scope, expr.replace(_sepRegexp, _literalSep))
+	    }
+	}
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/**
 	 *  Preset Global Directives
 	 */
@@ -2825,7 +2848,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3069,7 +3092,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var util = __webpack_require__(5)
