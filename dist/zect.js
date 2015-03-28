@@ -78,6 +78,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var TextDirective = Compiler.Text
 	var ElementDirective = Compiler.Element
 
+	var _isExpr = Expression.isExpr
+
 	/**
 	 *  private vars
 	 */
@@ -220,7 +222,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    vm.$unwatch = function (/*[ keypath ], */fn) {
 	        return $data.$unwatch.apply($data, arguments)
 	    }
-
 	    if (options.$data) {
 	        $data = options.$data
 	        // if state model instance passsing, call after set
@@ -233,7 +234,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        
 	        // Instance observable state model
 	        var mopts = {
-	            deep: true,
 	            props: dataOpt,
 	            computed: options.computed,
 	            computedContext: vm
@@ -414,15 +414,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    function compileComponent (node, parentVM, scope) {
 	        var $node = $(node)
-	        var CompName = $node.attr(NS + 'component') || node.tagName
+	        var cAttName = NS + 'component'
+	        var CompName = $node.attr(cAttName) || node.tagName
 	        var Comp = getComponent(CompName)
 
 	        /**
-	         *  Tag is not a custom element
+	         *  Tag is not a custom component element
 	         */
 	        if (!Comp) return
-
-	        $node.removeAttr(NS +'component')
+	        $node.removeAttr(cAttName)
 
 	        // don't need deep into self
 	        if (node === parentVM.$el) return
@@ -436,7 +436,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        $node.removeAttr(dAttName).removeAttr(mAttName)
 
-	        var _isDataExpr = util.isExpr(dataExpr)
+	        var _isDataExpr = _isExpr(dataExpr)
 	        var bindingData
 	        var bindingMethods
 	        /**
@@ -477,9 +477,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            $parent: parentVM
 	        })
 
-	        var plainDataExpr = _isDataExpr ? Compiler.stripExpr(dataExpr) : ''
+	        var plainDataExpr = _isDataExpr ? Expression.strip(dataExpr) : ''
 	        var sep = Expression.sep
-	        
+
 	        if (plainDataExpr) {
 	            if (plainDataExpr.match(sep)) {
 	                plainDataExpr.replace(new RegExp(sep + '\\s*$'), '') // trim last seperator
@@ -536,13 +536,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // parse att
 	            if (~componentProps.indexOf(aname)) {
 	                return
-	            }else if (util.isExpr(aname)) {
+	            }else if (_isExpr(aname)) {
 	                // variable attribute name
 	                ast.attrs[aname] = v
 	            } else if (aname.indexOf(NS) === 0) {
 	                // directive
 	                ast.dires[aname] = v
-	            } else if (util.isExpr(v.trim())) {
+	            } else if (_isExpr(v.trim())) {
 	                // named attribute with expression
 	                ast.attrs[aname] = v
 	            } else {
@@ -573,7 +573,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var d
 	                    // multiple defines expression parse
 	                    if (def.multi && expr.match(sep)) {
-	                        Compiler.stripExpr(expr)
+	                        Expression.strip(expr)
 	                                .split(sep)
 	                                .forEach(function(item) {
 	                                    d = new Directive(vm, scope, node, def, dname, '{' + item + '}')
@@ -592,11 +592,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    function compileText (node, vm, scope) {
 	        var originExpr = node.nodeValue
-	        var v = originExpr.replace(/\\{/g, '\uFFF0')
-	                          .replace(/\\}/g, '\uFFF1')
-	        var exprReg = /\{[\s\S]*?\}/g
+	        var v = Expression.veil(originExpr)
+	        var exprReg = Expression.exprRegexp
+
 	        var parts = v.split(exprReg)
 	        var exprs = v.match(exprReg)
+
 	        var inst
 	        // expression match or not
 	        if (exprs && exprs.length) {
@@ -2080,12 +2081,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        obj.__proto__ = proto
 	        obj.__proto__.__proto__ = end
 	    },
-	    /**
-	     *  Whether a text is with express syntax
-	     */
-	    isExpr: function (c) {
-	        return c ? c.trim().match(/^\{[\s\S]*?\}$/m) : false
-	    },
 	    domRange: function (tar, before, after) {
 	        var children = []
 	        var nodes = tar.childNodes
@@ -2174,12 +2169,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var $ = __webpack_require__(2)
 	var util = __webpack_require__(5)
+	var Expression = __webpack_require__(8)
 	var _execute = __webpack_require__(11)
 	var _relative = util.relative
 	/**
 	 *  Whether a text is with express syntax
 	 */
-	var _isExpr = util.isExpr
+	var _isExpr = Expression.isExpr
 	/**
 	 *  Get varibales of expression
 	 */
@@ -2233,11 +2229,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return noop
 	}
 
-	function _strip(t) {
-	    return t.trim()
-	            .match(/^\{([\s\S]*)\}$/m)[1]
-	            .replace(/^- /, '')
-	}
+
+	var _strip = Expression.strip
 
 	function _isUnescape(t) {
 	    return !!t.match(/^\{\- /)
@@ -2528,9 +2521,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        })
 
-	        var nodeV = frags.join('')
-	                         .replace(/\uFFF0/g, '\\{')
-	                         .replace(/\uFFF1/g, '\\}')
+	        var value = Expression.unveil(frags.join(''))
 
 	        if (isUnescape) {
 	            var cursor = _nextSibling($before)
@@ -2539,13 +2530,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	                _parentNode(cursor).removeChild(cursor)
 	                cursor = next
 	            }
-	            $tmp.innerHTML = nodeV
+	            $tmp.innerHTML = value
 	            ;[].slice.call($tmp.childNodes).forEach(function (n) {
 	                _appendChild($con, n)
 	            }) 
 	            _insertBefore(_parentNode($after), $con, $after)
 	        } else {
-	            tar.nodeValue = nodeV
+	            tar.nodeValue = value
 	        }
 	    }
 
@@ -2672,7 +2663,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _sep = ';'
 	var _sepRegexp = new RegExp(_sep, 'g')
 	var _literalSep = ','
-
+	var _exprRegexp = /\{[\s\S]*?\}/g
 	/**
 	 *  Whether a text is with express syntax
 	 */
@@ -2682,12 +2673,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 	    sep: _sep,
 	    literalSep: _literalSep,
+
 	    sepRegexp: _sepRegexp,
+	    exprRegexp: _exprRegexp,
+
 	    isExpr: _isExpr,
 	    execLiteral: function (expr, vm, scope) {
 	        if (!_isExpr(expr)) return {}
-
 	        return execute(vm, scope, expr.replace(_sepRegexp, _literalSep))
+	    },
+	    veil: function (expr) {
+	        return expr.replace(/\\{/g, '\uFFF0')
+	                   .replace(/\\}/g, '\uFFF1')
+	    },
+	    unveil: function (expr) {
+	        return expr.replace(/\uFFF0/g, '\\{')
+	                   .replace(/\uFFF1/g, '\\}')
+	    },
+	    strip: function (expr) {
+	        return expr.trim()
+	                .match(/^\{([\s\S]*)\}$/m)[1]
+	                .replace(/^- /, '')
 	    }
 	}
 
