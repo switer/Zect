@@ -817,7 +817,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	* Mux.js v2.4.8
+	* Mux.js v2.4.9
 	* (c) 2014 guankaishe
 	* Released under the MIT License.
 	*/
@@ -1772,7 +1772,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		    return void(0)
 		}
 		function isNon (o) {
-		    return o === undf || o === null
+		    return o === undf() || o === null
 		}
 		/**
 		 *  get value of object by keypath
