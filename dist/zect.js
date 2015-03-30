@@ -760,28 +760,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 	    parent: function() {
 	        if (!this.length) return null
-	        return Shell([this[0].parentNode])
+	        return Shell([_parentNode(this[0])])
 	    },
 	    remove: function() {
 	        this.forEach(function(el) {
-	            var parent = el.parentNode
+	            var parent = _parentNode(el)
 	            parent && parent.removeChild(el)
 	        })
 	        return this
 	    },
 	    insertBefore: function (pos) {
-	        var f = document.createDocumentFragment()
-	        this.forEach(function (el) {
-	            f.appendChild(el)
-	        })
-	        pos.parentNode.insertBefore(f, pos)
+	        var tar
+	        if (!this.length) return this
+	        else if (this.length == 1) {
+	            tar = this[0]
+	        } else {
+	            tar = document.createDocumentFragment()
+	            this.forEach(function (el) {
+	                tar.appendChild(el)
+	            })
+	        }
+	        _parentNode(pos).insertBefore(tar, pos)
+	        return this
 	    },
 	    insertAfter: function (pos) {
-	        var f = document.createDocumentFragment()
-	        this.forEach(function (el) {
-	            f.appendChild(el)
-	        })
-	        pos.parentNode.insertBefore(f, pos.nextSibling)
+	        var tar
+	        if (!this.length) return this
+	        else if (this.length == 1) {
+	            tar = this[0]
+	        } else {
+	            tar = document.createDocumentFragment()
+	            this.forEach(function (el) {
+	                tar.appendChild(el)
+	            })
+	        }
+	        _parentNode(pos).insertBefore(tar, pos.nextSibling)
+	        return this
 	    },
 	    // return element by index
 	    get: function(i) {
@@ -793,14 +807,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 	    replace: function(n) {
 	        var tar = this.get(0)
-	        tar.parentNode.replaceChild(n, tar)
+	        _parentNode(tar).replaceChild(n, tar)
 	        return this
 	    }
 	}
 	proto.__proto__ = Shell.prototype
 	proto.__proto__.__proto__ = Array.prototype
 
-
+	function _parentNode (e) {
+	    return e.parentNode
+	}
 	module.exports = Selector
 
 
