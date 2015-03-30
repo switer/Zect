@@ -769,7 +769,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        })
 	        return this
 	    },
-	    insertBefore: function () {
+	    insertBefore: function (pos) {
 	        var f = document.createDocumentFragment()
 	        this.forEach(function (el) {
 	            f.appendChild(el)
@@ -2820,6 +2820,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var tagName = this.$el.tagName
 	                var type = tagName.toLowerCase()
 	                var $el = this._$el = $(this.$el)
+
 	                // pick input element type spec
 	                type = type == 'input' ? $el.attr('type') || 'text' : type
 
@@ -2855,30 +2856,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var vType = type == 'checkbox' ? 'checked':'value'
 	                var that = this
 
-	                function _updateDOM() {
-	                    that.$el[vType] = vm.$get(prop)
-	                }
 	                /**
 	                 *  DOM input 2 state
 	                 */
 	                this._requestChange = function () {
-	                    vm.$set(prop, that.$el[vType])
+	                    vm.$set(that._prop, that.$el[vType])
 	                }
 	                /**
 	                 *  State 2 DOM input
 	                 */
-	                this._update = function (kp) {
-	                    _updateDOM()
+	                this._update = function () {
+	                    that.$el[vType] = vm.$get(that._prop)
 	                }
 	                $el.on(this.evtType, this._requestChange)
-	                _updateDOM()
-
 	                var watches = this._watches = []
 	                var wKeypath = util.normalize(prop)
 	                while (wKeypath) {
 	                    watches.push(this.$vm.$watch(wKeypath, this._update))
 	                    wKeypath = util.digest(wKeypath)
 	                }
+	            },
+	            update: function (prop) {
+	                this._prop = prop
+	                this._update()
 	            },
 	            unbind: function () {
 	                this._$el.off(this.evtType, this._requestChange)
@@ -2891,13 +2891,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	            multi: true,
 	            watch: false,
 	            bind: function(evtType, handler, expression ) {
+	                this._expr = expression
+	                this.type = evtType
+	            },
+	            update: function (handler) {
+	                this.unbind()
+
 	                var fn = handler
 	                if (util.type(fn) !== 'function') 
-	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + expression + '}')
+	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + this._expr + '}')
 
 	                this.fn = fn.bind(this.$vm)
-	                this.type = evtType
-	                $(this.$el).on(evtType, this.fn, false)
+	                $(this.$el).on(this.type, this.fn, false)
+
 	            },
 	            unbind: function() {
 	                if (this.fn) {
@@ -3123,15 +3129,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        // it's not modify
 	                        if (args.length == 2 && !len) return
 	                        else if (args.length > 2) {
-	                            // insert
+	                            /**
+	                             *  Insert
+	                             */
 	                            // create vms for each inserted item
 	                            var insertVms = args.slice(2).map(function (item, index) {
 	                                return createSubVM(item, ind + index)
 	                            })
-	                            // get last update index
-	                            var start = ind + insertVms.length
 	                            // insert items into current $vms
 	                            this.$vms.splice.apply(this.$vms, [ind, len].concat(insertVms))
+
 	                            // element bound for inserted item vm element
 	                            $(insertVms.map(function (vm) {
 	                                return vm.$compiler.$bundle()
@@ -3140,14 +3147,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	                                ? $ceil
 	                                : this.$vms[ind - 1].$compiler.$bundle()
 	                            )
+	                            // get last update index
+	                            var start = ind + insertVms.length
 	                            this.$vms.forEach(function (vm, i) {
 	                                if (i >= start) {
 	                                    updateVMIndex(vm, i)
 	                                }
 	                            })
-	                            
+
 	                        } else {
-	                            // remove
+	                            /**
+	                             *  remove
+	                             */
 	                            this.$vms.splice
 	                                     .apply(this.$vms, args)
 	                                     .forEach(function (vm, i) {
@@ -3195,13 +3206,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        break
 	                    case '$concat':
 	                        var srcLen = this.$vms.length
-	                        var fragment = document.createDocumentFragment()
-	                        items.slice(srcLen).forEach(function (item, i) {
+	                        var that = this
+
+	                        $(items.slice(srcLen).map(function (item, i) {
 	                            var vm = createSubVM(item, i + srcLen)
-	                            this.$vms.push(vm)
-	                            fragment.appendChild(vm.$compiler.$bundle())
-	                        }.bind(this))
-	                        $floor.parentNode.insertBefore(fragment, $floor)
+	                            that.$vms.push(vm)
+	                            return vm.$compiler.$bundle()
+	                        })).insertBefore($floor)
+	                        
 	                        done = 1
 	                        break
 	                }
