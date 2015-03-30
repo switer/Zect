@@ -4,3 +4,4 @@
 *.tmp
 Thumbs.db
 *dist
+/test/node_modules
