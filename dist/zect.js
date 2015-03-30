@@ -769,6 +769,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	        })
 	        return this
 	    },
+	    insertBefore: function () {
+	        var f = document.createDocumentFragment()
+	        this.forEach(function (el) {
+	            f.appendChild(el)
+	        })
+	        pos.parentNode.insertBefore(f, pos)
+	    },
+	    insertAfter: function (pos) {
+	        var f = document.createDocumentFragment()
+	        this.forEach(function (el) {
+	            f.appendChild(el)
+	        })
+	        pos.parentNode.insertBefore(f, pos.nextSibling)
+	    },
 	    // return element by index
 	    get: function(i) {
 	        return this[i]
@@ -3106,21 +3120,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        var len = Number(args[1] || 0)
 	                        var max = this.$vms.length
 	                        ind = ind > max ? max : ind
-	                        // has not modify
+	                        // it's not modify
 	                        if (args.length == 2 && !len) return
 	                        else if (args.length > 2) {
 	                            // insert
+	                            // create vms for each inserted item
 	                            var insertVms = args.slice(2).map(function (item, index) {
-	                                return createSubVM(item, start + index)
+	                                return createSubVM(item, ind + index)
 	                            })
+	                            // get last update index
 	                            var start = ind + insertVms.length
-
+	                            // insert items into current $vms
 	                            this.$vms.splice.apply(this.$vms, [ind, len].concat(insertVms))
+	                            // element bound for inserted item vm element
+	                            $(insertVms.map(function (vm) {
+	                                return vm.$compiler.$bundle()
+	                            })).insertAfter(
+	                                ind == 0 
+	                                ? $ceil
+	                                : this.$vms[ind - 1].$compiler.$bundle()
+	                            )
 	                            this.$vms.forEach(function (vm, i) {
 	                                if (i >= start) {
 	                                    updateVMIndex(vm, i)
 	                                }
 	                            })
+	                            
 	                        } else {
 	                            // remove
 	                            this.$vms.splice
