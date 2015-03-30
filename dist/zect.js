@@ -1,5 +1,5 @@
 /**
-* Zect v0.0.1
+* Zect v1.0.0
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
