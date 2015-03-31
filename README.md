@@ -1,4 +1,4 @@
-![logo](http://switer.qiniudn.com/zect.png) 
+![logo](http://switer.qiniudn.com/zect.png?imageView2/0/w/160/) 
 Zect , component & mvvm
 ====
 
@@ -9,9 +9,11 @@ A lightweight Web components and MVVM framework.
 
 * Todo MVC: http://xiaokaike.github.io/zect-todo
 
-## Usage
+## Downloads
 - [zect.js](https://raw.githubusercontent.com/switer/zect/master/dist/zect.js)
 - [zect.min.js](https://raw.githubusercontent.com/switer/zect/master/dist/zect.min.js)
+
+## Usage
 
 ```html
 <script src="dist/zect.js"></script>
