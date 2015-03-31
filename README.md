@@ -1,7 +1,8 @@
-Zect
+![logo](http://switer.qiniudn.com/zect.png) 
+Zect , component & mvvm
 ====
 
-Lightweight Web components and MVVM framework.
+A lightweight Web components and MVVM framework.
 **Zect**'s state observer is power by [muxjs](https://github.com/switer/muxjs)
 
 ## Example
