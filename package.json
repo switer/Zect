@@ -1,6 +1,6 @@
 {
 	"name": "zect",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Give a ViewModel layer to make MVC like MVVM helping delvelop complex and complicated business. ",
 	"main": "index.js",
 	"scripts": {

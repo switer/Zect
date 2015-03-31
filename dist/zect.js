@@ -2959,6 +2959,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var $ = __webpack_require__(2)
 	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
+	var Scope = __webpack_require__(12)
 
 	function _getData (data) {
 	    return util.type(data) == 'object' ? util.copyObject(data) : {}
@@ -3011,21 +3012,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    this.compiled = true
 
 	                    var $parent = this.$scope || {}
-	                    var $scope = {
-	                        data: $parent.data, // inherit parent scope's properties
-	                        bindings: [],
-	                        children: [],
-	                        $parent: $parent
-	                    }
-	                    var that = this
+	                    // inherit parent scope's properties
+	                    var $scope = new Scope($parent.data, $parent)
+	                    var protoUpdate = $scope.$update
 	                    $scope.$update = function () {
+	                        // the "if" element is sharing with $scope.data, 
+	                        // so it need to be updated
 	                        $scope.data = $parent.data
-	                        this.bindings.forEach(function (bd) {
-	                            bd.$update()
-	                        })
-	                        this.children.forEach(function (child) {
-	                            child.$update()
-	                        })
+	                        protoUpdate.apply($scope, arguments)
 	                    }
 	                    var $update = this.$update
 
@@ -3089,23 +3083,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    data.$index = index
 	                    data.$value = item
 
-	                    var hasParentScope = !!that.$scope
-
-	                    var $scope = {
-	                        data: data,
-	                        bindings: [], // collect all bindings
-	                        children: [],
-	                        $parent: that.$scope || {}
-	                    }
-	                    $scope.$update = function () {
-	                        this.bindings.forEach(function (bd) {
-	                            bd.$update()
-	                        })
-	                        this.children.forEach(function (child) {
-	                            child.$update()
-	                        })
-	                    }
-
+	                    var $scope = new Scope(data, that.$scope)
 	                    if(that.$scope) {
 	                        that.$scope.children.push($scope)
 	                    }
@@ -3303,6 +3281,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 *  Scope abstraction is a colletor when compiler child template with scope 
+	 */
+
+	'use strict';
+
+	function Scope (data, parent) {
+	    this.data = data
+	    this.bindings = []
+	    this.children = []
+	    this.$parent = parent || {}
+	}
+
+	Scope.prototype.$update = function () {
+	    this.bindings.forEach(function (bd) {
+	        bd.$update()
+	    })
+	    this.children.forEach(function (child) {
+	        child.$update()
+	    })
+	}
+
+	module.exports = Scope
 
 /***/ }
 /******/ ])
