@@ -1,5 +1,5 @@
 /**
-* Zect v1.0.1
+* Zect v1.0.2
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -72,7 +72,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var conf = __webpack_require__(6)
 	var execute = __webpack_require__(7)
 	var Compiler = __webpack_require__(8)
-	var Expression = __webpack_require__(9)
+	var Expression = __webpack_require__(11)
 
 	var Directive = Compiler.Directive
 	var AttributeDirective = Compiler.Attribute
@@ -84,8 +84,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  private vars
 	 */
-	var presetDirts = __webpack_require__(10)(Zect)  // preset directives getter
-	var elements = __webpack_require__(11)(Zect)      // preset directives getter
+	var presetDirts = __webpack_require__(9)(Zect)  // preset directives getter
+	var elements = __webpack_require__(10)(Zect)      // preset directives getter
 	var allDirectives = [presetDirts, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
 	var gcomps = {}                                 // global define components
@@ -2205,7 +2205,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var $ = __webpack_require__(2)
 	var util = __webpack_require__(5)
-	var Expression = __webpack_require__(9)
+	var Expression = __webpack_require__(11)
 	var _execute = __webpack_require__(7)
 	var _relative = util.relative
 	/**
@@ -2674,65 +2674,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
-	var execute = __webpack_require__(7)
-
-	var _sep = ';'
-	var _sepRegexp = new RegExp(_sep, 'g')
-	var _literalSep = ','
-	var _exprRegexp = /\{[\s\S]*?\}/g
-	var _varsRegexp = /("|').+?[^\\]\1|\.\w*|\$\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)\(|([a-z_]\w*)/gi
-	/**
-	 *  Whether a text is with express syntax
-	 */
-	function _isExpr(c) {
-	    return c ? !!c.trim().match(/^\{[\s\S]*?\}$/m) : false
-	}
-	module.exports = {
-	    sep: _sep,
-	    literalSep: _literalSep,
-
-	    sepRegexp: _sepRegexp,
-	    exprRegexp: _exprRegexp,
-
-	    isExpr: _isExpr,
-	    isUnescape: function(expr) {
-	        return !!expr.match(/^\{\- /)
-	    },
-	    execLiteral: function (expr, vm, scope) {
-	        if (!_isExpr(expr)) return {}
-	        return execute(vm, scope, expr.replace(_sepRegexp, _literalSep))
-	    },
-	    veil: function (expr) {
-	        return expr.replace(/\\{/g, '\uFFF0')
-	                   .replace(/\\}/g, '\uFFF1')
-	    },
-	    unveil: function (expr) {
-	        return expr.replace(/\uFFF0/g, '\\{')
-	                   .replace(/\uFFF1/g, '\\}')
-	    },
-	    strip: function (expr) {
-	        return expr.trim()
-	                .match(/^\{([\s\S]*)\}$/m)[1]
-	                .replace(/^- /, '')
-	    },
-	    extract: function(expr) {
-	        if (!expr) return null
-	        var vars = expr.match(_varsRegexp)
-	        vars = !vars ? [] : vars.filter(function(i) {
-	            if (!i.match(/^[\."'\]\[]/) && !i.match(/\($/)) {
-	                return i
-	            }
-	        })
-	        return vars
-	    }
-	}
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/**
 	 *  Preset Global Directives
 	 */
@@ -2892,7 +2833,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3224,6 +3165,65 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var execute = __webpack_require__(7)
+
+	var _sep = ';'
+	var _sepRegexp = new RegExp(_sep, 'g')
+	var _literalSep = ','
+	var _exprRegexp = /\{[\s\S]*?\}/g
+	var _varsRegexp = /("|').+?[^\\]\1|\.\w*|\$\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)\(|([a-z_]\w*)/gi
+	/**
+	 *  Whether a text is with express syntax
+	 */
+	function _isExpr(c) {
+	    return c ? !!c.trim().match(/^\{[\s\S]*?\}$/m) : false
+	}
+	module.exports = {
+	    sep: _sep,
+	    literalSep: _literalSep,
+
+	    sepRegexp: _sepRegexp,
+	    exprRegexp: _exprRegexp,
+
+	    isExpr: _isExpr,
+	    isUnescape: function(expr) {
+	        return !!expr.match(/^\{\- /)
+	    },
+	    execLiteral: function (expr, vm, scope) {
+	        if (!_isExpr(expr)) return {}
+	        return execute(vm, scope, expr.replace(_sepRegexp, _literalSep))
+	    },
+	    veil: function (expr) {
+	        return expr.replace(/\\{/g, '\uFFF0')
+	                   .replace(/\\}/g, '\uFFF1')
+	    },
+	    unveil: function (expr) {
+	        return expr.replace(/\uFFF0/g, '\\{')
+	                   .replace(/\uFFF1/g, '\\}')
+	    },
+	    strip: function (expr) {
+	        return expr.trim()
+	                .match(/^\{([\s\S]*)\}$/m)[1]
+	                .replace(/^- /, '')
+	    },
+	    extract: function(expr) {
+	        if (!expr) return null
+	        var vars = expr.match(_varsRegexp)
+	        vars = !vars ? [] : vars.filter(function(i) {
+	            if (!i.match(/^[\."'\]\[]/) && !i.match(/\($/)) {
+	                return i
+	            }
+	        })
+	        return vars
+	    }
+	}
 
 /***/ },
 /* 12 */
