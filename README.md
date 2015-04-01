@@ -7,7 +7,7 @@ A lightweight Web components and MVVM framework.
 
 ## Example
 
-* Todo MVC: http://xiaokaike.github.io/zect-todo
+* Todo MVC: http://zectjs.github.io/zect-todo
 
 ## Downloads
 - [zect.js](https://raw.githubusercontent.com/switer/zect/master/dist/zect.js)
