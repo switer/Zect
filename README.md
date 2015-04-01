@@ -279,7 +279,7 @@ var demo = new Zect({
     computed: {
         link: {
             // property dependencies of getter
-            deps: ['host', 'site', 'repos'],
+            deps: ['host', 'user', 'repos'],
             // property getter
             get: function () {
                 var $data = this.$data
