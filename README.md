@@ -128,7 +128,7 @@ Zect.directive('tap', {
         id="con"
         z-model="search" 
     />
-    <input type="submit" z-on="onSubmit" value="submit">
+    <input type="submit" z-on="{onSubmit}" value="submit">
 </div>
 ```
 
@@ -185,6 +185,7 @@ new Zect({
 ### Template syntax
 
 Variables
+
 ```html
 <!-- escaped HTML value -->
 <p>{title}</p>
@@ -192,14 +193,18 @@ Variables
 <!-- unescaped HTML value -->
 <p>{- title}</p>
 ```
+
 Condition Statement
+
 ```html
 <!-- if -->
 <z-if is="{title}">
     <div>{title}</div>
 </z-if>
 ```
+
 Iterator
+
 ```html
 <!-- repeat -->
 <z-repeat items="{items}">
@@ -230,13 +235,15 @@ Zect.component('c-header', {
     }
 })
 ```
-**Use component:**
+**Custom Elements:**
+
+Zect support reusable component that are conceptually similar to Web Components.
 
 ```html
 <body>
     <div id="app">
-        <c-header title="header component"></c-header>
-        <div title="header component2" z-component="c-header"></div>
+        <c-header title="header of page"></c-header>
+        <div title="another header" z-component="c-header" class="another"></div>
     </div>
     <script>
         new Zect({
@@ -250,13 +257,47 @@ Zect.component('c-header', {
 
 ```html
 <div id="app">
-    <c-header title="header component" class="header">
+    <c-header title="header of page" class="header">
         <div class="title">index</div>
     </c-header>
-    <div title="header component2" class="header">
+    <div title="another header" class="header another">
         <div class="title">index</div>
     </div>
 </div>
+```
+
+## Computed Properties
+For those complicated logic, you should use computed properties to replace inline expressions.
+
+```js
+var demo = new Zect({
+    data: {
+        host: 'https://github.com',
+        user: 'switer',
+        repos: 'zect'
+    },
+    computed: {
+        link: {
+            // property dependencies of getter
+            deps: ['host', 'site', 'repos'],
+            // property getter
+            get: function () {
+                var $data = this.$data
+                return [$data.host, $data.user, $data.repos].join('/') // https://github.com/switer/zect
+            },
+            // setter is optional
+            set: function (link) {
+                // input: https://github.com/zectjs/zect.github.io
+                var $data = this.$data
+                var parts = link.replace(/\/$/, '').split('\/')
+                $data.repos = parts.pop()
+                $data.user = parts.pop()
+                $data.host = parts.join('/')
+            }
+        }
+    }
+})
+
 ```
 
 ## License
