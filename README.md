@@ -212,9 +212,11 @@ Iterator
 </z-repeat>
 ```
 
-### Custom Component
+### Reusable Component
 
-Define a custom component.
+Zect support reusable component that are conceptually similar to Web Components.
+
+**define:**
 
 ```html
 <script type="text/zect" id="tpl-header">
@@ -235,9 +237,7 @@ Zect.component('c-header', {
     }
 })
 ```
-**Custom Elements:**
-
-Zect support reusable component that are conceptually similar to Web Components.
+**use:**
 
 ```html
 <body>
