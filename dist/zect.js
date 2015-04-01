@@ -65,6 +65,8 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
 	var $ = __webpack_require__(2)
 	var is = __webpack_require__(3)
 	var Mux = __webpack_require__(4)
@@ -72,7 +74,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var conf = __webpack_require__(6)
 	var execute = __webpack_require__(7)
 	var Compiler = __webpack_require__(8)
-	var Expression = __webpack_require__(11)
+	var Expression = __webpack_require__(9)
 
 	var Directive = Compiler.Directive
 	var AttributeDirective = Compiler.Attribute
@@ -84,8 +86,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  private vars
 	 */
-	var presetDirts = __webpack_require__(9)(Zect)  // preset directives getter
-	var elements = __webpack_require__(10)(Zect)      // preset directives getter
+	var presetDirts = __webpack_require__(10)(Zect)  // preset directives getter
+	var elements = __webpack_require__(11)(Zect)      // preset directives getter
 	var allDirectives = [presetDirts, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
 	var gcomps = {}                                 // global define components
@@ -825,20 +827,19 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var conf = __webpack_require__(6)
-
+	var NS = __webpack_require__(6).namespace
 	module.exports = {
 	    Element: function(el) {
 	        return el instanceof HTMLElement || el instanceof DocumentFragment
 	    },
 	    DOM: function (el) {
-	        return el instanceof HTMLElement || el instanceof DocumentFragment || el instanceof Comment
+	        return this.Element(el) || el instanceof Comment
 	    },
 	    IfElement: function(tn) {
-	        return tn == (conf.namespace + 'if').toUpperCase()
+	        return tn == (NS + 'if').toUpperCase()
 	    },
 	    RepeatElement: function(tn) {
-	        return tn == (conf.namespace + 'repeat').toUpperCase()
+	        return tn == (NS + 'repeat').toUpperCase()
 	    }
 	}
 
@@ -2177,19 +2178,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    try {
 	        return util.immutable(eval('with($scope){(%s)}'.replace('%s', arguments[2])))
 	    } catch (e) {
-	        var expr = '. {' + arguments[2] + '}'
-	        var label = arguments[3]
-	        var target = arguments[4]
+	        arguments[2] = '. {' + arguments[2] + '}' // expr
+	        // var label = arguments[3]
+	        // var target = arguments[4]
 	        switch (e.name) {
 	            case 'ReferenceError':
-	                console.warn(e.message + expr)
+	                console.warn(e.message + arguments[2])
 	                break
 	            default:
 	                console.error(
-	                     (label ? '\'' + label + '\': ' : ''),
+	                     (arguments[3] ? '\'' + arguments[3] + '\': ' : ''),
 	                    e.message +
-	                    expr,
-	                    target || ''
+	                    arguments[2],
+	                    arguments[4] || ''
 	                )
 	        }
 	        return ''
@@ -2205,7 +2206,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var $ = __webpack_require__(2)
 	var util = __webpack_require__(5)
-	var Expression = __webpack_require__(11)
+	var Expression = __webpack_require__(9)
 	var _execute = __webpack_require__(7)
 	var _relative = util.relative
 	/**
@@ -2226,14 +2227,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function _watch(vm, vars, update) {
 	    var watchKeys = []
-	    var noEmpty
 	    function _handler (kp) {
-	        var rel = watchKeys.some(function(key, index) {
+	        if (watchKeys.some(function(key, index) {
 	                if (_relative(kp, key)) {
 	                    return true
 	                }
-	            })
-	        if (rel) update.apply(null, arguments)
+	        })) update.apply(null, arguments)
 	    }
 
 	    if (vars && vars.length) {
@@ -2259,6 +2258,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  Compoiler constructor for wrapping node with consistent API
 	 *  @node <Node>
+	 *  // TODO it should not be named "compiler"
 	 */
 	function compiler (node) {
 	    this.$el = node
@@ -2321,7 +2321,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    if (def.multi) {
 	        // extract key and expr from "key: expression" format
-	        var key 
+	        var key
 	        expr = expr.replace(/^[^:]+:/, function (m) {
 	            key = m.replace(/:$/, '').trim()
 	            return ''
@@ -2674,6 +2674,65 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
+	var execute = __webpack_require__(7)
+
+	var _sep = ';'
+	var _sepRegexp = new RegExp(_sep, 'g')
+	var _literalSep = ','
+	var _exprRegexp = /\{[\s\S]*?\}/g
+	var _varsRegexp = /("|').+?[^\\]\1|\.\w*|\$\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)\(|([a-z_]\w*)/gi
+	/**
+	 *  Whether a text is with express syntax
+	 */
+	function _isExpr(c) {
+	    return c ? !!c.trim().match(/^\{[\s\S]*?\}$/m) : false
+	}
+	module.exports = {
+	    sep: _sep,
+	    literalSep: _literalSep,
+
+	    sepRegexp: _sepRegexp,
+	    exprRegexp: _exprRegexp,
+
+	    isExpr: _isExpr,
+	    isUnescape: function(expr) {
+	        return !!expr.match(/^\{\- /)
+	    },
+	    execLiteral: function (expr, vm, scope) {
+	        if (!_isExpr(expr)) return {}
+	        return execute(vm, scope, expr.replace(_sepRegexp, _literalSep))
+	    },
+	    veil: function (expr) {
+	        return expr.replace(/\\{/g, '\uFFF0')
+	                   .replace(/\\}/g, '\uFFF1')
+	    },
+	    unveil: function (expr) {
+	        return expr.replace(/\uFFF0/g, '\\{')
+	                   .replace(/\uFFF1/g, '\\}')
+	    },
+	    strip: function (expr) {
+	        return expr.trim()
+	                .match(/^\{([\s\S]*)\}$/m)[1]
+	                .replace(/^- /, '')
+	    },
+	    extract: function(expr) {
+	        if (!expr) return null
+	        var vars = expr.match(_varsRegexp)
+	        vars = !vars ? [] : vars.filter(function(i) {
+	            if (!i.match(/^[\."'\]\[]/) && !i.match(/\($/)) {
+	                return i
+	            }
+	        })
+	        return vars
+	    }
+	}
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/**
 	 *  Preset Global Directives
 	 */
@@ -2833,7 +2892,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3002,7 +3061,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                // it's not modify
-	                if (method == 'splice' && args.length == 2 && (!len || len < 0)) return
+	                if (method == 'splice' && args.length == 2 && (!args[1] || args[1] < 0)) return
 
 	                var $floor = this.$floor()
 	                var $ceil = this.$ceil()
@@ -3165,65 +3224,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var execute = __webpack_require__(7)
-
-	var _sep = ';'
-	var _sepRegexp = new RegExp(_sep, 'g')
-	var _literalSep = ','
-	var _exprRegexp = /\{[\s\S]*?\}/g
-	var _varsRegexp = /("|').+?[^\\]\1|\.\w*|\$\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)\(|([a-z_]\w*)/gi
-	/**
-	 *  Whether a text is with express syntax
-	 */
-	function _isExpr(c) {
-	    return c ? !!c.trim().match(/^\{[\s\S]*?\}$/m) : false
-	}
-	module.exports = {
-	    sep: _sep,
-	    literalSep: _literalSep,
-
-	    sepRegexp: _sepRegexp,
-	    exprRegexp: _exprRegexp,
-
-	    isExpr: _isExpr,
-	    isUnescape: function(expr) {
-	        return !!expr.match(/^\{\- /)
-	    },
-	    execLiteral: function (expr, vm, scope) {
-	        if (!_isExpr(expr)) return {}
-	        return execute(vm, scope, expr.replace(_sepRegexp, _literalSep))
-	    },
-	    veil: function (expr) {
-	        return expr.replace(/\\{/g, '\uFFF0')
-	                   .replace(/\\}/g, '\uFFF1')
-	    },
-	    unveil: function (expr) {
-	        return expr.replace(/\uFFF0/g, '\\{')
-	                   .replace(/\uFFF1/g, '\\}')
-	    },
-	    strip: function (expr) {
-	        return expr.trim()
-	                .match(/^\{([\s\S]*)\}$/m)[1]
-	                .replace(/^- /, '')
-	    },
-	    extract: function(expr) {
-	        if (!expr) return null
-	        var vars = expr.match(_varsRegexp)
-	        vars = !vars ? [] : vars.filter(function(i) {
-	            if (!i.match(/^[\."'\]\[]/) && !i.match(/\($/)) {
-	                return i
-	            }
-	        })
-	        return vars
-	    }
-	}
 
 /***/ },
 /* 12 */
