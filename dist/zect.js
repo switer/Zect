@@ -81,21 +81,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	var TextDirective = Compiler.Text
 	var ElementDirective = Compiler.Element
 
-	var _isExpr = Expression.isExpr
 
 	/**
 	 *  private vars
 	 */
-	var presetDirts = __webpack_require__(10)(Zect)  // preset directives getter
+	var buildInDirts = __webpack_require__(10)(Zect)  // preset directives getter
 	var elements = __webpack_require__(11)(Zect)      // preset directives getter
-	var allDirectives = [presetDirts, {}]                // [preset, global]
+	var allDirectives = [buildInDirts, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
 	var gcomps = {}                                 // global define components
 
-	function _funcOrObject(obj, prop) {
-	    var tar = obj[prop]
-	    return util.type(tar) == 'function' ? tar.call(obj):tar
-	}
+	var _isExpr = Expression.isExpr
 	/**
 	 *  Global API
 	 */
@@ -131,7 +127,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function ViewModel(options) {
 	    // inherit Compiler
 	    util.insertProto(this, Compiler.prototype)
-	    // inherit Compile
+
 	    var vm = this
 	    var el = options.el
 	    var components = [gcomps, options.components || {}]
@@ -146,7 +142,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  Mounted element detect
 	     */
 	    if (el && options.template) {
-	        vm.$children = el.childNodes
+	        // vm.$children = el.childNodes
 	        el.innerHTML = options.template
 	    } else if (options.template) {
 	        el = document.createElement('div')
@@ -156,7 +152,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } else if (!is.Element(el)) {
 	        throw new Error('Unmatch el option')
 	    }
-	    // replate template holder DOM
+	    // replace "z-template" of actual instance's DOM  
 	    if (el.children.length == 1 && el.firstElementChild.tagName.toLowerCase() == (NS + 'template')) {
 	        var $holder = el.firstElementChild
 	        var $childrens = _slice($holder.childNodes)
@@ -166,9 +162,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         *  Migrate childNodes
 	         */
-	        $childrens.forEach(function (n) {
-	            el.appendChild(n)
-	        })
+	        $($childrens).appendTo(el)
 	        /**
 	         *  Merge attributes
 	         */
@@ -429,7 +423,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // don't need deep into self
 	        if (node === parentVM.$el) return
-
+	        // suport expression, TBD
 	        var ref = $(node).attr('ref')
 	        var dAttName = NS + 'data'
 	        var mAttName = NS + 'methods'
@@ -611,10 +605,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	/**
-	 *  Interal functions
+	 *  private functions
 	 */
 	function _slice (obj) {
 	    return [].slice.call(obj)
+	}
+	function _funcOrObject(obj, prop) {
+	    var tar = obj[prop]
+	    return util.type(tar) == 'function' ? tar.call(obj):tar
 	}
 	function _extend (args) {
 	    return util.extend.apply(util, args)
@@ -777,9 +775,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        else if (this.length == 1) {
 	            tar = this[0]
 	        } else {
-	            tar = document.createDocumentFragment()
+	            tar = _createDocumentFragment()
 	            this.forEach(function (el) {
-	                tar.appendChild(el)
+	                _appendChild(tar, el)
 	            })
 	        }
 	        _parentNode(pos).insertBefore(tar, pos)
@@ -791,9 +789,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        else if (this.length == 1) {
 	            tar = this[0]
 	        } else {
-	            tar = document.createDocumentFragment()
+	            tar = _createDocumentFragment()
 	            this.forEach(function (el) {
-	                tar.appendChild(el)
+	                _appendChild(tar, el)
 	            })
 	        }
 	        _parentNode(pos).insertBefore(tar, pos.nextSibling)
@@ -804,11 +802,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return this[i]
 	    },
 	    append: function(n) {
-	        if (this.length) this.get(0).appendChild(n)
+	        if (this.length) _appendChild(this[0], n)
 	        return this
 	    },
+	    appendTo: function (p) {
+	        if (this.length == 1) _appendChild(p, this[0])
+	        else if (this.length > 1) {
+	            var f = _createDocumentFragment()
+	            this.forEach(function (n) {
+	                _appendChild(f, n)
+	            })
+	            _appendChild(p, f)
+	        }
+	    },
 	    replace: function(n) {
-	        var tar = this.get(0)
+	        var tar = this[0]
 	        _parentNode(tar).replaceChild(n, tar)
 	        return this
 	    }
@@ -818,6 +826,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _parentNode (e) {
 	    return e.parentNode
+	}
+
+	function _createDocumentFragment () {
+	    return document.createDocumentFragment()
+	}
+
+	function _appendChild (p, c) {
+	    return p.appendChild(c)
 	}
 	module.exports = Selector
 
@@ -2734,7 +2750,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	 *  Preset Global Directives
+	 *  Build-in Global Directives
 	 */
 
 	'use strict';
@@ -2896,7 +2912,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	 *  Preset Global Custom-Elements
+	 *  Build-in Global Custom-Elements
 	 */
 
 	'use strict';
