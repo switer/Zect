@@ -133,16 +133,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var components = [gcomps, options.components || {}]
 	    var directives = allDirectives.concat([options.directives || {}])
 
-	    var _directives = [] // private refs for all directives instance of the vm    
-	    var _components = [] // private refs for all components    
+	    var _directives = [] // local refs for all directives instance of the vm    
+	    var _components = [] // local refs for all components    
 	    var NS = conf.namespace
 	    var componentProps = [NS + 'component', NS + 'data', NS + 'methods']
+	    var $childrens = options.$childrens
+
+	    // set $parent ref
+	    vm.$parent = options.$parent || null
 
 	    /**
 	     *  Mounted element detect
 	     */
 	    if (el && options.template) {
-	        // vm.$children = el.childNodes
 	        el.innerHTML = options.template
 	    } else if (options.template) {
 	        el = document.createElement('div')
@@ -168,6 +171,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	         */
 	        attributes.forEach(function (att) {
 	            if (!el.hasAttribute(att.name)) el.setAttribute(att.name, att.value)
+	        })
+	    }
+	    // content insertion
+	    var points = _slice(document.querySelectorAll('content'))
+	    if (points && $childrens && $childrens.length) {
+	        var $con = document.createDocumentFragment()
+	        _slice($childrens).forEach(function (n) {
+	            $con.appendChild(n)
+	        })
+	        points.some(function (p) {
+	            if (!$childrens || !$childrens.length) return true
+
+	            var $p = $(p)
+	            var select = $p.attr('select')
+	            var tar
+	            var ind
+
+	            if (select 
+	                && (tar = $con.querySelector(select)) 
+	                && ~(ind = $childrens.indexOf(tar)) ) {
+
+	                $p.replace(tar)
+	                $childrens.splice(ind, 1)
+	            } else if (!select) {
+	                $p.replace($con)
+	                $childrens = null
+	            }
 	        })
 	    }
 
@@ -471,7 +501,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            el: node,
 	            data: bindingData,
 	            methods: bindingMethods,
-	            $parent: parentVM
+	            $parent: parentVM,
+	            $childrens: _slice(node.childNodes)
 	        })
 
 	        var plainDataExpr = _isDataExpr ? Expression.strip(dataExpr) : ''
@@ -608,6 +639,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  private functions
 	 */
 	function _slice (obj) {
+	    if (!obj) return obj
 	    return [].slice.call(obj)
 	}
 	function _funcOrObject(obj, prop) {
@@ -2204,8 +2236,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            default:
 	                console.error(
 	                     (arguments[3] ? '\'' + arguments[3] + '\': ' : ''),
-	                    e.message +
-	                    arguments[2],
+	                    e.message + arguments[2],
 	                    arguments[4] || ''
 	                )
 	        }
