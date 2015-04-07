@@ -99,9 +99,11 @@ Options's Methods:
 * **unbind**  Call only once when directive is unbinded.
 
 Directive instance properties:
-* **$vm**   Mounted VM of the directive
-* **$el**   Mounted target Node of the directive
-* **$id**   Current directive instance id
+* **$vm**     Mounted VM of the directive
+* **$el**     Mounted target Node of the directive
+* **$id**     Current directive instance id
+* **$scope**  Repeat directive will create a scope for each item when compiling, 
+              so your can access "$index", "$value" through "$scope". 
 
 **Example below:**
 
@@ -265,6 +267,55 @@ Zect.component('c-header', {
     </div>
 </div>
 ```
+
+## Component propertis
+
+* **data**
+"data" property is used to declare binding data from the parent ViewModel. 
+Just like your instance a component and pass data option. When those binding variables of expression change, 
+`Zect` will be re-excute the expression and call component instance's "$set" method automatically for updating child component.
+
+```html
+<div id="app">
+    <my-component
+        data="{
+            title: title
+        }"
+    >
+    </my-component>
+</div>
+```
+
+* **methods**
+Just like your instance a component and pass method option. Methods only set once, so when those binding variables of expression change, it will do nothing. 
+
+```html
+<div id="app">
+    <my-component
+        methods="{
+            onClick: onClickItem
+        }"
+    >
+    </my-component>
+</div>
+```
+
+* **ref**
+This property is used to save ref to parent ViewModel, so that access it's instance with the specified name by "$refs".
+
+```html
+<div id="app">
+    <my-component
+        ref="header"
+    >
+    </my-component>
+</div>
+```
+
+```js
+this.$refs.header // child component instance object
+```
+
 
 ## Computed Properties
 For those complicated logic, you should use computed properties to replace inline expressions.
