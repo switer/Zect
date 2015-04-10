@@ -1,5 +1,5 @@
 /**
-* Zect v1.1.1
+* Zect v1.1.2
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -604,6 +604,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        Expression.strip(expr)
 	                                .split(sep)
 	                                .forEach(function(item) {
+	                                    // discard empty expression 
+	                                    if (!item.trim()) return
+	                                    
 	                                    d = new Directive(vm, scope, node, def, dname, '{' + item + '}')
 	                                    _directives.push(d)
 	                                    _setBindings2Scope(scope, d)

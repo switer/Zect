@@ -126,10 +126,7 @@ Zect.directive('tap', {
 
 ```html
 <div id="con">
-    <input type="text" 
-        id="con"
-        z-model="search" 
-    />
+    <input type="text" z-model="search" />
     <input type="submit" z-on="{onSubmit}" value="submit">
 </div>
 ```
@@ -149,11 +146,12 @@ new Zect({
 ```
 
 ### Use filter
+Filters actually are function call using in template's expression.
 
 ```html
 <ul id="con">
     <z-repeat items="{lessThanFour(items)}">
-        <li>{$value}</li>
+        <li data-index="{$index}">{$value}</li>
     </z-repeat>
 </ul>
 ```
@@ -178,15 +176,15 @@ new Zect({
 
 ```html
 <ul id="con">
-    <li>1</li>
-    <li>2</li>
-    <li>3</li>
+    <li data-index="0">1</li>
+    <li data-index="1">2</li>
+    <li data-index="2">3</li>
 </ul>
 ```
 
 ### Template syntax
 
-* **Variables**
+* **Content render:**
 
 ```html
 <!-- escaped HTML value -->
@@ -196,7 +194,7 @@ new Zect({
 <p>{- title}</p>
 ```
 
-* **Condition Statement**
+* **Condition Statements:**
 
 ```html
 <!-- if -->
@@ -205,7 +203,7 @@ new Zect({
 </z-if>
 ```
 
-* **Iterator**
+* **Array Iterator:**
 
 ```html
 <!-- repeat -->
@@ -279,7 +277,8 @@ Just like your instance a component and pass data option. When those binding var
 <div id="app">
     <my-component
         data="{
-            title: title
+            title: 'child ' + title;
+            content: content
         }"
     >
     </my-component>
@@ -295,8 +294,7 @@ Just like your instance a component and pass method option. Methods only set onc
         methods="{
             onClick: onClickItem
         }"
-    >
-    </my-component>
+    ></my-component>
 </div>
 ```
 
@@ -305,15 +303,12 @@ This property is used to save ref to parent ViewModel, so that access it's insta
 
 ```html
 <div id="app">
-    <my-component
-        ref="header"
-    >
-    </my-component>
+    <my-component ref="header"></my-component>
 </div>
 ```
 
 ```js
-this.$refs.header // child component instance object
+this.$refs.header // access child component instance.
 ```
 
 

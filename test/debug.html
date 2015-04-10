@@ -21,8 +21,8 @@
             <z-if is="{$value.bool}">
                 <c-game
                     z-data="{
-                        title: name,
-                        index: $index
+                        title: name;
+                        index: $index;
                     }"
                 ></c-game>
                 <input type="text" z-model="{'todoItems['+$index+'].name'}">
