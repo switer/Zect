@@ -174,7 +174,7 @@ new Zect({
 })
 ```
 
-**Render result:**
+* **Render result:**
 
 ```html
 <ul id="con">
@@ -186,7 +186,7 @@ new Zect({
 
 ### Template syntax
 
-Variables
+* **Variables**
 
 ```html
 <!-- escaped HTML value -->
@@ -196,7 +196,7 @@ Variables
 <p>{- title}</p>
 ```
 
-Condition Statement
+* **Condition Statement**
 
 ```html
 <!-- if -->
@@ -205,7 +205,7 @@ Condition Statement
 </z-if>
 ```
 
-Iterator
+* **Iterator**
 
 ```html
 <!-- repeat -->
@@ -218,7 +218,7 @@ Iterator
 
 Zect support reusable component that are conceptually similar to Web Components.
 
-**define:**
+* **define:**
 
 ```html
 <script type="text/zect" id="tpl-header">
@@ -239,7 +239,7 @@ Zect.component('c-header', {
     }
 })
 ```
-**use:**
+* **use:**
 
 ```html
 <body>
@@ -255,7 +255,7 @@ Zect.component('c-header', {
 </body>
 ```
 
-**render result:**
+* **render result:**
 
 ```html
 <div id="app">
@@ -268,7 +268,7 @@ Zect.component('c-header', {
 </div>
 ```
 
-## Component propertis
+## Component properties
 
 * **data**
 "data" property is used to declare binding data from the parent ViewModel. 
