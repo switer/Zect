@@ -31,6 +31,17 @@
     </div>
     <script src="../dist/zect.js"></script>
     <script>
+        var insp_times = {}
+        console.time = function (name) {
+            insp_times[name] = Date.now();
+        }
+        console.timeEnd = function (name) {
+            if (insp_times[name] == undefined) return;
+            var end = Date.now() - insp_times[name];
+            console.log('%c' + name + ': ' + end + 'ms', 'color: blue')
+        }
+
+
         console.time('p')
         Zect.component('c-game', {
             template: '<p><div>I am a child component, title: {title} index: {index}</div></p>',
@@ -47,6 +58,9 @@
                     return t.length
                 }
             }
+        })
+        var ins = new Zect.extend({
+            template: ''
         })
         var app = new Zect({
             el: '#app',
