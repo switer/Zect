@@ -721,7 +721,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    else if (sel instanceof Shell) return sel
 	    else if (is.DOM(sel)) {
-	        return Shell([sel])
+	        return Shell(new ElementArray(sel))
 	    }
 	    else {
 	        throw new Error('Unexpect selector !')
@@ -730,138 +730,151 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function Shell(nodes) {
 	    if (nodes instanceof Shell) return nodes
-	    nodes.__proto__ = proto
-	    return nodes
+	    var $items = new ElementArray()
+	    nodes.forEach(function (item) {
+	        $items.push(item)
+	    })
+	    return $items
 	}
 
-	var proto = {
-	    find: function(sel) {
-	        var subs = []
-	        this.forEach(function(n) {
-	            subs = subs.concat(util.copyArray(n.querySelectorAll(sel)))
-	        })
-	        return Shell(subs)
-	    },
-	    attr: function(attname, attvalue) {
-	        var len = arguments.length
-	        var el = this[0]
-	        if (len > 1) {
-	            el.setAttribute(attname, attvalue)
-	        } else if (len == 1) {
-	            return (el.getAttribute(attname) || '').toString()
-	        }
-	        return this
-	    },
-	    removeAttr: function(attname) {
+	function ElementArray () {
+	    this.push = function () {
+	        Array.prototype.push.apply(this, arguments)
+	    }
+	    this.forEach = function () {
+	        Array.prototype.forEach.apply(this, arguments)
+	    }
+	    this.push.apply(this, arguments)
+	}
+
+	ElementArray.prototype = Object.create(Shell.prototype)
+
+	var proto = Shell.prototype
+	proto.find = function(sel) {
+	    var subs = []
+	    this.forEach(function(n) {
+	        subs = subs.concat(util.copyArray(n.querySelectorAll(sel)))
+	    })
+	    return Shell(subs)
+	}
+	proto.attr = function(attname, attvalue) {
+	    var len = arguments.length
+	    var el = this[0]
+
+	    if (len > 1) {
+	        el.setAttribute(attname, attvalue)
+	    } else if (len == 1) {
+	        return (el.getAttribute(attname) || '').toString()
+	    }
+	    return this
+	}
+	proto.removeAttr = function(attname) {
+	    this.forEach(function(el) {
+	        el.removeAttribute(attname)
+	    })
+	    return this
+	}
+	proto.addClass = function(clazz) {
+	    this.forEach(function(el) {
+	        el.classList.add(clazz)
+	    })
+	    return this
+	}
+	proto.removeClass = function(clazz) {
+	    this.forEach(function(el) {
+	        el.classList.remove(clazz)
+	    })
+	    return this
+	}
+	proto.each = function(fn) {
+	    this.forEach(fn)
+	    return this
+	}
+	proto.on = function(type, listener, capture) {
+	    this.forEach(function(el) {
+	        el.addEventListener(type, listener, capture)
+	    })
+	    return this
+	}
+	proto.off = function(type, listener) {
+	    this.forEach(function(el) {
+	        el.removeEventListener(type, listener)
+	    })
+	    return this
+	}
+	proto.html = function(html) {
+	    var len = arguments.length
+	    if (len >= 1) {
 	        this.forEach(function(el) {
-	            el.removeAttribute(attname)
+	            el.innerHTML = html
 	        })
-	        return this
-	    },
-	    addClass: function(clazz) {
-	        this.forEach(function(el) {
-	            el.classList.add(clazz)
+	    } else if (this.length) {
+	        return this[0].innerHTML
+	    }
+	    return this
+	}
+	proto.parent = function() {
+	    if (!this.length) return null
+	    return Shell([_parentNode(this[0])])
+	}
+	proto.remove = function() {
+	    this.forEach(function(el) {
+	        var parent = _parentNode(el)
+	        parent && parent.removeChild(el)
+	    })
+	    return this
+	}
+	proto.insertBefore = function (pos) {
+	    var tar
+	    if (!this.length) return this
+	    else if (this.length == 1) {
+	        tar = this[0]
+	    } else {
+	        tar = _createDocumentFragment()
+	        this.forEach(function (el) {
+	            _appendChild(tar, el)
 	        })
-	        return this
-	    },
-	    removeClass: function(clazz) {
-	        this.forEach(function(el) {
-	            el.classList.remove(clazz)
+	    }
+	    _parentNode(pos).insertBefore(tar, pos)
+	    return this
+	}
+	proto.insertAfter = function (pos) {
+	    var tar
+	    if (!this.length) return this
+	    else if (this.length == 1) {
+	        tar = this[0]
+	    } else {
+	        tar = _createDocumentFragment()
+	        this.forEach(function (el) {
+	            _appendChild(tar, el)
 	        })
-	        return this
-	    },
-	    each: function(fn) {
-	        this.forEach(fn)
-	        return this
-	    },
-	    on: function(type, listener, capture) {
-	        this.forEach(function(el) {
-	            el.addEventListener(type, listener, capture)
+	    }
+	    _parentNode(pos).insertBefore(tar, pos.nextSibling)
+	    return this
+	}
+	// return element by index
+	proto.get = function(i) {
+	    return this[i]
+	}
+	proto.append = function(n) {
+	    if (this.length) _appendChild(this[0], n)
+	    return this
+	}
+	proto.appendTo = function (p) {
+	    if (this.length == 1) _appendChild(p, this[0])
+	    else if (this.length > 1) {
+	        var f = _createDocumentFragment()
+	        this.forEach(function (n) {
+	            _appendChild(f, n)
 	        })
-	        return this
-	    },
-	    off: function(type, listener) {
-	        this.forEach(function(el) {
-	            el.removeEventListener(type, listener)
-	        })
-	        return this
-	    },
-	    html: function(html) {
-	        var len = arguments.length
-	        if (len >= 1) {
-	            this.forEach(function(el) {
-	                el.innerHTML = html
-	            })
-	        } else if (this.length) {
-	            return this[0].innerHTML
-	        }
-	        return this
-	    },
-	    parent: function() {
-	        if (!this.length) return null
-	        return Shell([_parentNode(this[0])])
-	    },
-	    remove: function() {
-	        this.forEach(function(el) {
-	            var parent = _parentNode(el)
-	            parent && parent.removeChild(el)
-	        })
-	        return this
-	    },
-	    insertBefore: function (pos) {
-	        var tar
-	        if (!this.length) return this
-	        else if (this.length == 1) {
-	            tar = this[0]
-	        } else {
-	            tar = _createDocumentFragment()
-	            this.forEach(function (el) {
-	                _appendChild(tar, el)
-	            })
-	        }
-	        _parentNode(pos).insertBefore(tar, pos)
-	        return this
-	    },
-	    insertAfter: function (pos) {
-	        var tar
-	        if (!this.length) return this
-	        else if (this.length == 1) {
-	            tar = this[0]
-	        } else {
-	            tar = _createDocumentFragment()
-	            this.forEach(function (el) {
-	                _appendChild(tar, el)
-	            })
-	        }
-	        _parentNode(pos).insertBefore(tar, pos.nextSibling)
-	        return this
-	    },
-	    // return element by index
-	    get: function(i) {
-	        return this[i]
-	    },
-	    append: function(n) {
-	        if (this.length) _appendChild(this[0], n)
-	        return this
-	    },
-	    appendTo: function (p) {
-	        if (this.length == 1) _appendChild(p, this[0])
-	        else if (this.length > 1) {
-	            var f = _createDocumentFragment()
-	            this.forEach(function (n) {
-	                _appendChild(f, n)
-	            })
-	            _appendChild(p, f)
-	        }
-	    },
-	    replace: function(n) {
-	        var tar = this[0]
-	        _parentNode(tar).replaceChild(n, tar)
-	        return this
+	        _appendChild(p, f)
 	    }
 	}
-	proto.__proto__ = Shell.prototype
-	proto.__proto__.__proto__ = Array.prototype
+	proto.replace = function(n) {
+	    var tar = this[0]
+	    _parentNode(tar).replaceChild(n, tar)
+	    return this
+	}
 
 	function _parentNode (e) {
 	    return e.parentNode
@@ -2330,11 +2343,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	var cproto = compiler.prototype
 
 	compiler.inherit = function (Ctor) {
-	    Ctor.prototype.__proto__ = cproto
-	    return function Compiler() {
-	        this.__proto__ = Ctor.prototype
+	    function SubCompiler() {
 	        Ctor.apply(this, arguments)
 	    }
+	    SubCompiler.prototype = Object.create(compiler.prototype)
+	    return SubCompiler
 	}
 	cproto.$bundle = function () {
 	    return this.$el
@@ -2494,7 +2507,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var $con = this.$container
 	        var that = this
 
-	        if (!$con.contains($ceil)) {
+	        if (!_contains($con, $ceil)) {
 	            util.domRange(_parentNode($ceil), $ceil, $floor)
 	                .forEach(function(n) {
 	                    _appendChild(that.$container, n)
@@ -2728,7 +2741,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _nextSibling (tar) {
 	    return tar.nextSibling
 	}
-
+	function _contains (con, tar) {
+	    return tar.parentNode === con
+	}
 
 	module.exports = compiler
 
