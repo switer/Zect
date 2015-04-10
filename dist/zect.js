@@ -1,5 +1,5 @@
 /**
-* Zect v1.1.0
+* Zect v1.1.1
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -713,8 +713,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function Selector(sel) {
 	    if (util.type(sel) == 'string') {
-	        var nodes = util.copyArray(document.querySelectorAll(sel))
-	        return Shell(nodes)
+	        return Shell(util.copyArray(document.querySelectorAll(sel)))
 	    }
 	    else if (util.type(sel) == 'array') {
 	        return Shell(sel)
@@ -2804,6 +2803,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        })
 	        return vars
+	    },
+	    // variableOnly: function (expr) {
+	    //     return /^[a-zA-Z_$][\w$]*$/.test(expr)
+	    // },
+	    notFunctionCall: function (expr) {
+	        return !/[()]/.test(expr)
 	    }
 	}
 
@@ -2983,11 +2988,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
 	var Scope = __webpack_require__(12)
+	var Expression = __webpack_require__(9)
 
 	function _getData (data) {
 	    return util.type(data) == 'object' ? util.copyObject(data) : {}
 	}
-
 	module.exports = function(Zect) {
 	    return {
 	        'if': {
@@ -3066,6 +3071,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (!this.child) {
 	                    return console.warn('"' + conf.namespace + 'repeat"\'s childNode must has a HTMLElement node. {' + expr + '}')
 	                }
+	                // if use filter, Zect can't patch array by array-method
+	                this._noArrayFilter = Expression.notFunctionCall(expr)
+
+	                console.log(this._noArrayFilter)
 	            },
 	            delta: function (nv, pv, kp) {
 	                if (kp && /\d+/.test(kp.split('.')[1])) {
@@ -3231,7 +3240,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                var patch = arrayPatcher[method]
-	                if (patch) {
+	                if (this._noArrayFilter && patch) {
 	                    patch.call(this)
 	                    this.last = util.copyArray(items)
 	                    return
