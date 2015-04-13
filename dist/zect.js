@@ -1,5 +1,5 @@
 /**
-* Zect v1.1.2
+* Zect v1.1.3
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -492,7 +492,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var r = _parseExpr(expr)
 	            ast[r.name] = r
 	            ;(r.vars || []).forEach(function (v) {
-	                revealAst[v] = r.name
+	                !revealAst[v] && (revealAst[v] = [])
+	                !~revealAst[v].indexOf(r.name) && revealAst[v].push(r.name)
 	            })
 	        }
 
@@ -523,10 +524,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (_isDataExpr) {
 	            parentVM.$data.$watch(function (keyPath) {
 	                var nextState
-	                util.objEach(revealAst, function (varName, bindingName) {
+	                util.objEach(revealAst, function (varName, bindingNames) {
 	                    if (keyPath.indexOf(varName) === 0) {
 	                        !nextState && (nextState = {})
-	                        nextState[bindingName] = execute(parentVM, scope, ast[bindingName].expr)
+	                        bindingNames.forEach(function (n) {
+	                            nextState[n] = execute(parentVM, scope, ast[n].expr)
+	                        })
 	                    }
 	                })
 	                nextState && compVM.$set(nextState)
