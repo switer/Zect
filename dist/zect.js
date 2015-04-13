@@ -1,5 +1,5 @@
 /**
-* Zect v1.1.3
+* Zect v1.1.4
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -160,14 +160,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // replace "z-template" of actual instance's DOM  
 	    if (el.children.length == 1 && el.firstElementChild.tagName.toLowerCase() == (NS + 'template')) {
 	        var $holder = el.firstElementChild
-	        var $childrens = _slice($holder.childNodes)
+	        var childNodes = _slice($holder.childNodes)
 	        var attributes = _slice($holder.attributes)
 
 	        el.removeChild($holder)
 	        /**
 	         *  Migrate childNodes
 	         */
-	        $($childrens).appendTo(el)
+	        $(childNodes).appendTo(el)
 	        /**
 	         *  Merge attributes
 	         */
