@@ -25,7 +25,7 @@
                         index: $index;
                     }"
                 ></c-game>
-                <input type="text" z-model="{'todoItems['+$index+'].name'}">
+                <input type="text" data-index="{$index}" z-model="{'todoItems['+$index+'].name'}">
             </z-if>
         </z-repeat>
     </div>
