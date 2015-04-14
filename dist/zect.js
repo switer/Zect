@@ -1,5 +1,5 @@
 /**
-* Zect v1.1.7
+* Zect v1.1.8
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -138,7 +138,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var _directives = [] // local refs for all directives instance of the vm    
 	    var _components = [] // local refs for all components    
 	    var NS = conf.namespace
-	    var componentProps = [NS + 'component', NS + 'data', NS + 'methods']
+	    var componentProps = [NS + 'component', NS + 'data', NS + 'methods', NS + 'ref']
 	    var $childrens = options.$childrens
 
 	    // set $parent ref
