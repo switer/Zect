@@ -184,7 +184,7 @@ new Zect({
 
 ### Template syntax
 
-* **Content render:**
+* **Content Render:**
 
 ```html
 <!-- escaped HTML value -->
@@ -192,6 +192,16 @@ new Zect({
 
 <!-- unescaped HTML value -->
 <p>{- title}</p>
+```
+
+* **Javascript Syntax In Expression:**
+
+```html
+<!-- escaped HTML value -->
+<p>{'Current time is: ' + new Date()}</p>
+
+<!-- unescaped HTML value -->
+<p>{- 'Current Page: ' + page}</p>
 ```
 
 * **Condition Statements:**
@@ -266,7 +276,7 @@ Zect.component('c-header', {
 </div>
 ```
 
-## Component properties
+## Component Atrributes
 
 * **data**
 "data" property is used to declare binding data from the parent ViewModel. 
