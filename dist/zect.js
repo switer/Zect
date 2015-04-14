@@ -73,8 +73,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var util = __webpack_require__(5)
 	var conf = __webpack_require__(6)
 	var execute = __webpack_require__(7)
-	var Compiler = __webpack_require__(9)
-	var Expression = __webpack_require__(8)
+	var Compiler = __webpack_require__(8)
+	var Expression = __webpack_require__(9)
 
 	var Directive = Compiler.Directive
 	var AttributeDirective = Compiler.Attribute
@@ -85,8 +85,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  private vars
 	 */
-	var buildInDirts = __webpack_require__(11)(Zect)  // preset directives getter
-	var elements = __webpack_require__(10)(Zect)      // preset directives getter
+	var buildInDirts = __webpack_require__(10)(Zect)  // preset directives getter
+	var elements = __webpack_require__(11)(Zect)      // preset directives getter
 	var allDirectives = [buildInDirts, {}]                // [preset, global]
 	var gdirs = allDirectives[1]
 	var gcomps = {}                                 // global define components
@@ -781,13 +781,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	proto.addClass = function(clazz) {
 	    this.forEach(function(el) {
-	        el.classList.add(clazz)
+
+	        // IE9 below not support classList
+	        // el.classList.add(clazz)
+
+	        var classList = el.className.split(' ')
+	        if (!~classList.indexOf(clazz)) classList.push(clazz)
+	        el.className = classList.join(' ')
 	    })
 	    return this
 	}
 	proto.removeClass = function(clazz) {
 	    this.forEach(function(el) {
-	        el.classList.remove(clazz)
+	        
+	        // IE9 below not support classList
+	        // el.classList.remove(clazz)
+
+	        var classList = el.className.split(' ')
+	        var index = classList.indexOf(clazz)
+	        if (~index) classList.splice(index, 1)
+	        el.className = classList.join(' ')
 	    })
 	    return this
 	}
@@ -2290,74 +2303,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var execute = __webpack_require__(7)
-
-	var _sep = ';'
-	var _sepRegexp = new RegExp(_sep, 'g')
-	var _literalSep = ','
-	var _exprRegexp = /\{[\s\S]*?\}/g
-	var _varsRegexp = /("|').+?[^\\]\1|\.\w*|\$\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)\(|([a-z_]\w*)/gi
-	/**
-	 *  Whether a text is with express syntax
-	 */
-	function _isExpr(c) {
-	    return c ? !!c.trim().match(/^\{[\s\S]*?\}$/m) : false
-	}
-	module.exports = {
-	    sep: _sep,
-	    literalSep: _literalSep,
-
-	    sepRegexp: _sepRegexp,
-	    exprRegexp: _exprRegexp,
-
-	    isExpr: _isExpr,
-	    isUnescape: function(expr) {
-	        return !!expr.match(/^\{\- /)
-	    },
-	    execLiteral: function (expr, vm, scope) {
-	        if (!_isExpr(expr)) return {}
-	        return execute(vm, scope, expr.replace(_sepRegexp, _literalSep))
-	    },
-	    veil: function (expr) {
-	        return expr.replace(/\\{/g, '\uFFF0')
-	                   .replace(/\\}/g, '\uFFF1')
-	    },
-	    unveil: function (expr) {
-	        return expr.replace(/\uFFF0/g, '\\{')
-	                   .replace(/\uFFF1/g, '\\}')
-	    },
-	    strip: function (expr) {
-	        return expr.trim()
-	                .match(/^\{([\s\S]*)\}$/m)[1]
-	                .replace(/^- /, '')
-	    },
-	    extract: function(expr) {
-	        if (!expr) return null
-	        var vars = expr.match(_varsRegexp)
-	        vars = !vars ? [] : vars.filter(function(i) {
-	            if (!i.match(/^[\."'\]\[]/) && !i.match(/\($/)) {
-	                return i
-	            }
-	        })
-	        return vars
-	    },
-	    // variableOnly: function (expr) {
-	    //     return /^[a-zA-Z_$][\w$]*$/.test(expr)
-	    // },
-	    notFunctionCall: function (expr) {
-	        return !/[()]/.test(expr)
-	    }
-	}
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	var $ = __webpack_require__(2)
 	var util = __webpack_require__(5)
-	var Expression = __webpack_require__(8)
+	var Expression = __webpack_require__(9)
 	var _execute = __webpack_require__(7)
 	var _relative = util.relative
 	/**
@@ -2824,7 +2772,234 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var execute = __webpack_require__(7)
+
+	var _sep = ';'
+	var _sepRegexp = new RegExp(_sep, 'g')
+	var _literalSep = ','
+	var _exprRegexp = /\{[\s\S]*?\}/g
+	var _varsRegexp = /("|').+?[^\\]\1|\.\w*|\$\w*|\w*:|\b(?:this|true|false|null|undefined|new|typeof|Number|String|Object|Array|Math|Date|JSON)\b|([a-z_]\w*)\(|([a-z_]\w*)/gi
+	/**
+	 *  Whether a text is with express syntax
+	 */
+	function _isExpr(c) {
+	    return c ? !!c.trim().match(/^\{[\s\S]*?\}$/m) : false
+	}
+	module.exports = {
+	    sep: _sep,
+	    literalSep: _literalSep,
+
+	    sepRegexp: _sepRegexp,
+	    exprRegexp: _exprRegexp,
+
+	    isExpr: _isExpr,
+	    isUnescape: function(expr) {
+	        return !!expr.match(/^\{\- /)
+	    },
+	    execLiteral: function (expr, vm, scope) {
+	        if (!_isExpr(expr)) return {}
+	        return execute(vm, scope, expr.replace(_sepRegexp, _literalSep))
+	    },
+	    veil: function (expr) {
+	        return expr.replace(/\\{/g, '\uFFF0')
+	                   .replace(/\\}/g, '\uFFF1')
+	    },
+	    unveil: function (expr) {
+	        return expr.replace(/\uFFF0/g, '\\{')
+	                   .replace(/\uFFF1/g, '\\}')
+	    },
+	    strip: function (expr) {
+	        return expr.trim()
+	                .match(/^\{([\s\S]*)\}$/m)[1]
+	                .replace(/^- /, '')
+	    },
+	    extract: function(expr) {
+	        if (!expr) return null
+	        var vars = expr.match(_varsRegexp)
+	        vars = !vars ? [] : vars.filter(function(i) {
+	            if (!i.match(/^[\."'\]\[]/) && !i.match(/\($/)) {
+	                return i
+	            }
+	        })
+	        return vars
+	    },
+	    // variableOnly: function (expr) {
+	    //     return /^[a-zA-Z_$][\w$]*$/.test(expr)
+	    // },
+	    notFunctionCall: function (expr) {
+	        return !/[()]/.test(expr)
+	    }
+	}
+
+/***/ },
 /* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 *  Build-in Global Directives
+	 */
+
+	'use strict';
+
+	var $ = __webpack_require__(2)
+	var conf = __webpack_require__(6)
+	var util = __webpack_require__(5)
+	var _relative = util.relative
+
+	module.exports = function(Zect) {
+	    return {
+	        'attr': {
+	            multi: true,
+	            bind: function(attname) {
+	                this.attname = attname
+	                this._$el = $(this.$el)
+	            },
+	            update: function(next) {
+	                if (!next && next !== '') {
+	                    this._$el.removeAttr(this.attname)
+	                } else {
+	                    this._$el.attr(this.attname, next)
+	                }
+	            }
+	        },
+	        'class': {
+	            multi: true,
+	            bind: function(className) {
+	                this.className = className
+	                this._$el = $(this.$el)
+	            },
+	            update: function(next) {
+	                if (next) this._$el.addClass(this.className)
+	                else this._$el.removeClass(this.className)
+	            }
+	        },
+	        'html': {
+	            update: function (nextHTML) {
+	                this.$el.innerHTML = nextHTML
+	            }
+	        },
+	        'model': {
+	            bind: function (prop) {
+	                var tagName = this.$el.tagName
+	                var type = tagName.toLowerCase()
+	                var $el = this._$el = $(this.$el)
+
+	                // pick input element type spec
+	                type = type == 'input' ? $el.attr('type') || 'text' : type
+
+	                switch (type) {
+	                    case 'tel':
+	                    case 'url':
+	                    case 'text':
+	                    case 'search':
+	                    case 'password':
+	                    case 'textarea':
+	                        this.evtType = 'input'
+	                        break
+	                    
+	                    case 'date':
+	                    case 'week':
+	                    case 'time':
+	                    case 'month':
+	                    case 'datetime':
+	                    case 'datetime-local':
+	                    case 'color':
+	                    case 'range':
+	                    case 'number':
+	                    case 'select':
+	                    case 'checkbox':
+	                        this.evtType = 'change'
+	                        break
+	                    default:
+	                        console.warn('"' + conf.namespace + 'model" only support input,textarea,select')
+	                        return
+	                }
+
+	                var vm = this.$vm
+	                var vType = type == 'checkbox' ? 'checked':'value'
+	                var that = this
+
+	                /**
+	                 *  DOM input 2 state
+	                 */
+	                this._requestChange = function () {
+	                    vm.$set(that._prop, that.$el[vType])
+	                }
+	                /**
+	                 *  State 2 DOM input
+	                 */
+	                this._update = function () {
+	                    that.$el[vType] = vm.$get(that._prop)
+	                }
+	                $el.on(this.evtType, this._requestChange)
+	                var watches = this._watches = []
+	                var wKeypath = util.normalize(prop)
+	                while (wKeypath) {
+	                    watches.push(this.$vm.$watch(wKeypath, this._update))
+	                    wKeypath = util.digest(wKeypath)
+	                }
+	            },
+	            update: function (prop) {
+	                this._prop = prop
+	                this._update()
+	            },
+	            unbind: function () {
+	                this._$el.off(this.evtType, this._requestChange)
+	                this._watches.forEach(function (f) {
+	                    f()
+	                })
+	            }
+	        },
+	        'on': {
+	            multi: true,
+	            watch: false,
+	            bind: function(evtType, handler, expression ) {
+	                this._expr = expression
+	                this.type = evtType
+	            },
+	            update: function (handler) {
+	                this.unbind()
+
+	                var fn = handler
+	                if (util.type(fn) !== 'function') 
+	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + this._expr + '}')
+
+	                this.fn = fn.bind(this.$vm)
+	                $(this.$el).on(this.type, this.fn, false)
+
+	            },
+	            unbind: function() {
+	                if (this.fn) {
+	                    $(this.$el).off(this.type, this.fn)
+	                    this.fn = null
+	                }
+	            }
+	        },
+	        'show': {
+	            update: function(next) {
+	                this.$el.style.display = next ? '' : 'none'
+	            }
+	        },
+	        'style': {
+	            multi: true,
+	            bind: function (sheet) {
+	                this.sheet = sheet
+	            },
+	            update: function (next) {
+	                this.$el.style && (this.$el.style[this.sheet] = next)
+	            }
+	        }
+	    }
+	}
+
+
+/***/ },
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2837,7 +3012,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
 	var Scope = __webpack_require__(12)
-	var Expression = __webpack_require__(8)
+	var Expression = __webpack_require__(9)
 
 	function _getData (data) {
 	    return util.type(data) == 'object' ? util.copyObject(data) : {}
@@ -3152,168 +3327,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                })
 	                updateVms = null
 	                oldVms && oldVms.forEach(destroyVM)
-	            }
-	        }
-	    }
-	}
-
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 *  Build-in Global Directives
-	 */
-
-	'use strict';
-
-	var $ = __webpack_require__(2)
-	var conf = __webpack_require__(6)
-	var util = __webpack_require__(5)
-	var _relative = util.relative
-
-	module.exports = function(Zect) {
-	    return {
-	        'attr': {
-	            multi: true,
-	            bind: function(attname) {
-	                this.attname = attname
-	                this._$el = $(this.$el)
-	            },
-	            update: function(next) {
-	                if (!next && next !== '') {
-	                    this._$el.removeAttr(this.attname)
-	                } else {
-	                    this._$el.attr(this.attname, next)
-	                }
-	            }
-	        },
-	        'class': {
-	            multi: true,
-	            bind: function(className) {
-	                this.className = className
-	                this._$el = $(this.$el)
-	            },
-	            update: function(next) {
-	                if (next) this._$el.addClass(this.className)
-	                else this._$el.removeClass(this.className)
-	            }
-	        },
-	        'html': {
-	            update: function (nextHTML) {
-	                this.$el.innerHTML = nextHTML
-	            }
-	        },
-	        'model': {
-	            bind: function (prop) {
-	                var tagName = this.$el.tagName
-	                var type = tagName.toLowerCase()
-	                var $el = this._$el = $(this.$el)
-
-	                // pick input element type spec
-	                type = type == 'input' ? $el.attr('type') || 'text' : type
-
-	                switch (type) {
-	                    case 'tel':
-	                    case 'url':
-	                    case 'text':
-	                    case 'search':
-	                    case 'password':
-	                    case 'textarea':
-	                        this.evtType = 'input'
-	                        break
-	                    
-	                    case 'date':
-	                    case 'week':
-	                    case 'time':
-	                    case 'month':
-	                    case 'datetime':
-	                    case 'datetime-local':
-	                    case 'color':
-	                    case 'range':
-	                    case 'number':
-	                    case 'select':
-	                    case 'checkbox':
-	                        this.evtType = 'change'
-	                        break
-	                    default:
-	                        console.warn('"' + conf.namespace + 'model" only support input,textarea,select')
-	                        return
-	                }
-
-	                var vm = this.$vm
-	                var vType = type == 'checkbox' ? 'checked':'value'
-	                var that = this
-
-	                /**
-	                 *  DOM input 2 state
-	                 */
-	                this._requestChange = function () {
-	                    vm.$set(that._prop, that.$el[vType])
-	                }
-	                /**
-	                 *  State 2 DOM input
-	                 */
-	                this._update = function () {
-	                    that.$el[vType] = vm.$get(that._prop)
-	                }
-	                $el.on(this.evtType, this._requestChange)
-	                var watches = this._watches = []
-	                var wKeypath = util.normalize(prop)
-	                while (wKeypath) {
-	                    watches.push(this.$vm.$watch(wKeypath, this._update))
-	                    wKeypath = util.digest(wKeypath)
-	                }
-	            },
-	            update: function (prop) {
-	                this._prop = prop
-	                this._update()
-	            },
-	            unbind: function () {
-	                this._$el.off(this.evtType, this._requestChange)
-	                this._watches.forEach(function (f) {
-	                    f()
-	                })
-	            }
-	        },
-	        'on': {
-	            multi: true,
-	            watch: false,
-	            bind: function(evtType, handler, expression ) {
-	                this._expr = expression
-	                this.type = evtType
-	            },
-	            update: function (handler) {
-	                this.unbind()
-
-	                var fn = handler
-	                if (util.type(fn) !== 'function') 
-	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + this._expr + '}')
-
-	                this.fn = fn.bind(this.$vm)
-	                $(this.$el).on(this.type, this.fn, false)
-
-	            },
-	            unbind: function() {
-	                if (this.fn) {
-	                    $(this.$el).off(this.type, this.fn)
-	                    this.fn = null
-	                }
-	            }
-	        },
-	        'show': {
-	            update: function(next) {
-	                this.$el.style.display = next ? '' : 'none'
-	            }
-	        },
-	        'style': {
-	            multi: true,
-	            bind: function (sheet) {
-	                this.sheet = sheet
-	            },
-	            update: function (next) {
-	                this.$el.style && (this.$el.style[this.sheet] = next)
 	            }
 	        }
 	    }
