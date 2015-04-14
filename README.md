@@ -205,6 +205,9 @@ new Zect({
 ```
 
 * **Condition Statements:**
+`"is"` is a keyword-attribute for the "if" directive.
+If value is truly, the template that is included by "if" directive element will be compiled and insert into to parent's DOM tree.
+Otherwise template will be removed from parent's DOM tree.
 
 ```html
 <!-- if -->
@@ -214,6 +217,8 @@ new Zect({
 ```
 
 * **Array Iterator:**
+`"items"` is a keyword-attribute for the "repeat" directive.
+The value of items's expression should be an Array object.
 
 ```html
 <!-- repeat -->
@@ -286,7 +291,7 @@ Just like your instance a component and pass data option. When those binding var
 ```html
 <div id="app">
     <my-component
-        data="{
+        z-data="{
             title: 'child ' + title;
             content: content
         }"
@@ -301,7 +306,7 @@ Just like your instance a component and pass method option. Methods only set onc
 ```html
 <div id="app">
     <my-component
-        methods="{
+        z-methods="{
             onClick: onClickItem
         }"
     ></my-component>
@@ -313,7 +318,7 @@ This property is used to save ref to parent ViewModel, so that access it's insta
 
 ```html
 <div id="app">
-    <my-component ref="header"></my-component>
+    <my-component z-ref="header"></my-component>
 </div>
 ```
 

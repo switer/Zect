@@ -1,5 +1,5 @@
 /**
-* Zect v1.1.6
+* Zect v1.1.7
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -456,7 +456,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // don't need deep into self
 	        if (node === parentVM.$el) return
 	        // suport expression, TBD
-	        var ref = $(node).attr('ref')
+	        var ref = $(node).attr(NS + 'ref')
 	        var dAttName = NS + 'data'
 	        var mAttName = NS + 'methods'
 
