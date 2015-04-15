@@ -1,5 +1,5 @@
 /**
-* Zect v1.1.9
+* Zect v1.1.10
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -174,7 +174,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        attributes.forEach(function (att) {
 	            var nv
 	            if (att.name == 'class') {
-	                nv = el.className + ' ' + att.value
+	                nv = att.value + (el.className 
+	                                    ? '' + el.className 
+	                                    : '')
+	                
 	            } else if (!el.hasAttribute(att.name)) {
 	                nv = att.value
 	            } else {
