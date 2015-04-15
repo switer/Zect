@@ -175,9 +175,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var nv
 	            if (att.name == 'class') {
 	                nv = att.value + (el.className 
-	                                    ? '' + el.className 
+	                                    ? ' ' + el.className 
 	                                    : '')
-	                
+
 	            } else if (!el.hasAttribute(att.name)) {
 	                nv = att.value
 	            } else {
