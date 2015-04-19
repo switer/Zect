@@ -1,5 +1,5 @@
 /**
-* Zect v1.1.10
+* Zect v1.1.12
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -3140,7 +3140,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
 	                var that = this
-
 	                /**
 	                 *  create a sub-vm for array item with specified index
 	                 */
@@ -3261,7 +3260,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            }
 	                        })
 	                    },
-	                    concat: function () {
+	                    $concat: function () {
 	                        var len = this.$vms.length
 	                        $(items.slice(len).map(function (item, i) {
 	                            var vm = createSubVM(item, i + len)
