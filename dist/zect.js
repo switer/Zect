@@ -16,41 +16,41 @@
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-/******/
+
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-/******/
+
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-/******/
+
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			exports: {},
 /******/ 			id: moduleId,
 /******/ 			loaded: false
 /******/ 		};
-/******/
+
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
+
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-/******/
+
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/
-/******/
+
+
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-/******/
+
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-/******/
+
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-/******/
+
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
 /******/ })
@@ -299,6 +299,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var beforeDestroy = options.destroy
 	    vm.$destroy = function () {
+	        if (vm.$destroyed) return
 	        beforeDestroy && beforeDestroy.call(vm)
 
 	        ;[_components, _directives].forEach(function (items) {
@@ -906,7 +907,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function _parentNode (e) {
-	    return e.parentNode
+	    return e && e.parentNode
 	}
 
 	function _createDocumentFragment () {
@@ -2770,13 +2771,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return con.insertBefore(child, pos)
 	}
 	function _parentNode (tar) {
-	    return tar.parentNode
+	    return tar && tar.parentNode
 	}
 	function _nextSibling (tar) {
-	    return tar.nextSibling
+	    return tar && tar.nextSibling
 	}
 	function _contains (con, tar) {
-	    return tar.parentNode === con
+	    return tar && tar.parentNode === con
 	}
 
 	module.exports = compiler
@@ -3165,10 +3166,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                function destroyVM (vm) {
+	                    // $compiler be inclued in $scope.bindings probably
+	                    vm.$compiler.$remove().$destroy()
 	                    vm.$scope.bindings.forEach(function (bd) {
 	                        bd.$destroy()
-	                    })
-	                    vm.$compiler.$remove().$destroy()
+	                    })                    
 	                }
 
 	                function updateVMIndex (vm, index) {
@@ -3374,3 +3376,4 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ }
 /******/ ])
 });
+;
