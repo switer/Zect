@@ -1,5 +1,5 @@
 /**
-* Zect v1.1.12
+* Zect v1.1.13
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -299,6 +299,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var beforeDestroy = options.destroy
 	    vm.$destroy = function () {
+	        if (vm.$destroyed) return
+
 	        beforeDestroy && beforeDestroy.call(vm)
 
 	        ;[_components, _directives].forEach(function (items) {
@@ -906,7 +908,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function _parentNode (e) {
-	    return e.parentNode
+	    return e && e.parentNode
 	}
 
 	function _createDocumentFragment () {
@@ -2770,10 +2772,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return con.insertBefore(child, pos)
 	}
 	function _parentNode (tar) {
-	    return tar.parentNode
+	    return tar && tar.parentNode
 	}
 	function _nextSibling (tar) {
-	    return tar.nextSibling
+	    return tar && tar.nextSibling
 	}
 	function _contains (con, tar) {
 	    return tar.parentNode === con
@@ -3165,10 +3167,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                function destroyVM (vm) {
+	                    vm.$compiler.$remove().$destroy()
 	                    vm.$scope.bindings.forEach(function (bd) {
 	                        bd.$destroy()
 	                    })
-	                    vm.$compiler.$remove().$destroy()
 	                }
 
 	                function updateVMIndex (vm, index) {
