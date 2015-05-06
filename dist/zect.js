@@ -1,5 +1,5 @@
 /**
-* Zect v1.1.13
+* Zect v1.1.14
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -16,41 +16,41 @@
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-
+/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-
+/******/
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-
+/******/
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			exports: {},
 /******/ 			id: moduleId,
 /******/ 			loaded: false
 /******/ 		};
-
+/******/
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
+/******/
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-
-
+/******/
+/******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-
+/******/
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-
+/******/
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-
+/******/
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
 /******/ })
@@ -187,15 +187,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	        })
 	    }
 	    // content insertion
-	    var points = _slice(document.querySelectorAll('content'))
-	    if (points && $childrens && $childrens.length) {
-	        var $con = document.createDocumentFragment()
-	        _slice($childrens).forEach(function (n) {
-	            $con.appendChild(n)
-	        })
-	        points.some(function (p) {
-	            if (!$childrens || !$childrens.length) return true
-
+	    var points = _slice(el.querySelectorAll('content'))
+	    if (points) {
+	        var $con
+	        if ($childrens && $childrens.length) {
+	            $con = document.createDocumentFragment()
+	            _slice($childrens).forEach(function (n) {
+	                $con.appendChild(n)
+	            })
+	        }
+	        points.forEach(function (p) {
+	            if (!$childrens || !$childrens.length) {
+	                return $(p).remove()
+	            }
 	            var $p = $(p)
 	            var select = $p.attr('select')
 	            var tar
@@ -300,10 +304,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var beforeDestroy = options.destroy
 	    vm.$destroy = function () {
 	        if (vm.$destroyed) return
-<<<<<<< HEAD
-
-=======
->>>>>>> 3a5f1270d865b1c616f52a417f68cbb4c93adfd6
 	        beforeDestroy && beforeDestroy.call(vm)
 
 	        ;[_components, _directives].forEach(function (items) {
@@ -3170,18 +3170,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                function destroyVM (vm) {
-<<<<<<< HEAD
-	                    vm.$compiler.$remove().$destroy()
-	                    vm.$scope.bindings.forEach(function (bd) {
-	                        bd.$destroy()
-	                    })
-=======
 	                    // $compiler be inclued in $scope.bindings probably
 	                    vm.$compiler.$remove().$destroy()
 	                    vm.$scope.bindings.forEach(function (bd) {
 	                        bd.$destroy()
 	                    })                    
->>>>>>> 3a5f1270d865b1c616f52a417f68cbb4c93adfd6
 	                }
 
 	                function updateVMIndex (vm, index) {
@@ -3387,4 +3380,3 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ }
 /******/ ])
 });
-;
