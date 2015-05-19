@@ -84,12 +84,12 @@ var app = new Zect({
     * [{- expression}]()
 
 - Direcitves
-    * [on]()
-    * [show]()
-    * [attr]()
-    * [class]()
-    * [style]()
-    * [component]()
+    * [on](https://github.com/switer/Zect/wiki/Directives#z-on)
+    * [show](https://github.com/switer/Zect/wiki/Directives#z-show)
+    * [attr](https://github.com/switer/Zect/wiki/Directives#z-attr)
+    * [class](https://github.com/switer/Zect/wiki/Directives#z-class)
+    * [style](https://github.com/switer/Zect/wiki/Directives#z-style)
+    * [component](https://github.com/switer/Zect/wiki/Directives#z-component)
 
 ## Guide
 ### Custom directive
