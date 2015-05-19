@@ -285,6 +285,29 @@ Zect.component('c-header', {
 </div>
 ```
 
+## Component Template
+
+Zect will copy all attributes for "template" element to instance component element.
+
+Component's HTML template:
+
+```html
+<script type="text/zect" id="tpl-header">
+    <z-template class="c-header" data-title="{title}">
+        <button>Back</button>
+        <div>{title}</div>
+    </z-template>
+</script>
+```
+
+Define component:
+```javascript
+Zect.component('c-header', {
+    template: document.querySelector('#tpl-header').innerHTML
+})
+```
+
+
 ## Component Atrributes
 
 * **data**
