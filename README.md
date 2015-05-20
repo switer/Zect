@@ -86,6 +86,7 @@ var app = new Zect({
 - Direcitves
     * [on](https://github.com/switer/Zect/wiki/Directives#z-on)
     * [show](https://github.com/switer/Zect/wiki/Directives#z-show)
+    * [html](https://github.com/switer/Zect/wiki/Directives#z-html)
     * [attr](https://github.com/switer/Zect/wiki/Directives#z-attr)
     * [class](https://github.com/switer/Zect/wiki/Directives#z-class)
     * [style](https://github.com/switer/Zect/wiki/Directives#z-style)
