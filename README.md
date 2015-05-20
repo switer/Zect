@@ -56,32 +56,32 @@ var app = new Zect({
     * [components](https://github.com/switer/Zect/wiki/Instance-Options#components)
 
 - Lifecyle Methods
-    * [created]()
-    * [ready]()
-    * [destroy]()
+    * [created](https://github.com/switer/Zect/wiki/Lifecyle-Methods#created)
+    * [ready](https://github.com/switer/Zect/wiki/Lifecyle-Methods#ready)
+    * [destroy](https://github.com/switer/Zect/wiki/Lifecyle-Methods#destroy)
 
 - Instance Methods
-    * [$set]()
-    * [$get]()
-    * [$watch]()
-    * [$unwatch]()
-    * [$compile]()
-    * [$component]()
-    * [$destroy]()
+    * [$set](https://github.com/switer/Zect/wiki/Instance-Methods#set)
+    * [$get](https://github.com/switer/Zect/wiki/Instance-Methods#get)
+    * [$watch](https://github.com/switer/Zect/wiki/Instance-Methods#watch)
+    * [$unwatch](https://github.com/switer/Zect/wiki/Instance-Methods#unwatch)
+    * [$compile](https://github.com/switer/Zect/wiki/Instance-Methods#compile)
+    * [$component](https://github.com/switer/Zect/wiki/Instance-Methods#component)
+    * [$destroy](https://github.com/switer/Zect/wiki/Instance-Methods#destroy)
 
 - Instance Properties
-    * [$el]()
-    * [$refs]()
-    * [$methods]()
-    * [$children]()
-    * [$destroyed]()
+    * [$el](https://github.com/switer/Zect/wiki/Instance-Properties#el)
+    * [$refs](https://github.com/switer/Zect/wiki/Instance-Properties#refs)
+    * [$methods](https://github.com/switer/Zect/wiki/Instance-Properties#methods)
+    * [$children](https://github.com/switer/Zect/wiki/Instance-Properties#children)
+    * [$destroyed](https://github.com/switer/Zect/wiki/Instance-Properties#destroyed)
 
 - Template Syntax
-    * [if]()
-    * [repeat]()
-    * [template]()
-    * [{expression}]()
-    * [{- expression}]()
+    * [if](https://github.com/switer/Zect/wiki/Template-Syntax#if)
+    * [repeat](https://github.com/switer/Zect/wiki/Template-Syntax#repeat)
+    * [template](https://github.com/switer/Zect/wiki/Template-Syntax#template)
+    * [{expression}](https://github.com/switer/Zect/wiki/Template-Syntax#expression)
+    * [{- expression}](https://github.com/switer/Zect/wiki/Template-Syntax#--expression)
 
 - Direcitves
     * [on](https://github.com/switer/Zect/wiki/Directives#z-on)
