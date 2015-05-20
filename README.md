@@ -39,9 +39,9 @@ var app = new Zect({
 
 ## API Reference
 - Global API
-    * [Zect()](https://github.com/switer/Zect/wiki/Global-API#zect)
-    * [Zect.extend()](https://github.com/switer/Zect/wiki/Global-API#zectextend)
-    * [Zect.component()](https://github.com/switer/Zect/wiki/Global-API#zectcomponent)
+    * [Zect()](https://github.com/switer/Zect/wiki/Global-API#zectoptions)
+    * [Zect.extend()](https://github.com/switer/Zect/wiki/Global-API#zectextendoptions)
+    * [Zect.component()](https://github.com/switer/Zect/wiki/Global-API#zectcomponentid-definition)
     * [Zect.namespace(namespace)](https://github.com/switer/Zect/wiki/Global-API#zectnamespacenamespace)
     * [Zect.directive(id, definition)](https://github.com/switer/Zect/wiki/Global-API#zectdirectiveid-definition)
 
