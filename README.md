@@ -391,8 +391,16 @@ var demo = new Zect({
 ## List operate
 
 - **Display List**
+
+Use `z-repeat` block element to repeat display template.
+
 ```html
 <div id="list">
+    <ul>
+        <z-repeat items="{items}">
+            <li>{$value}</li>
+        </z-repeat>
+    </ul>
 </div>
 ```
 ```js
@@ -403,7 +411,37 @@ new Zect({
 })
 ```
 Result:
+```
+* Switer
+* Zect
+* Xiaokai
+```
 
+- ** Append More **
+
+```js
+vm.$data.items.$concat(['Web Component'])
+```
+Will delta update:
+```
+* Switer
+* Zect
+* Xiaokai
++ Web Component // append
+```
+
+- ** Append Before **
+```js
+vm.$data.items.splice(0, 0, 'Web Component', 'MVVM')
+```
+Result:
+```
++ Web Component
++ MVVM
+* Switer
+* Zect
+* Xiaokai
+```
 
 
 ![Footer](http://switer.qiniudn.com/red-brick.jpg)
