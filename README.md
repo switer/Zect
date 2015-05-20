@@ -388,6 +388,23 @@ var demo = new Zect({
 })
 
 ```
+## List operate
+
+- **Display List**
+```html
+<div id="list">
+</div>
+```
+```js
+new Zect({
+    data: {
+        items: ["Switer", "Zect", "Xiaokai"]
+    }
+})
+```
+Result:
+
+
 
 ![Footer](http://switer.qiniudn.com/red-brick.jpg)
 
