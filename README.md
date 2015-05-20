@@ -61,12 +61,12 @@ var app = new Zect({
     * [destroy](https://github.com/switer/Zect/wiki/Lifecyle-Methods#destroy)
 
 - Instance Methods
-    * [$set](https://github.com/switer/Zect/wiki/Instance-Methods#set)
-    * [$get](https://github.com/switer/Zect/wiki/Instance-Methods#get)
-    * [$watch](https://github.com/switer/Zect/wiki/Instance-Methods#watch)
-    * [$unwatch](https://github.com/switer/Zect/wiki/Instance-Methods#unwatch)
-    * [$compile](https://github.com/switer/Zect/wiki/Instance-Methods#compile)
-    * [$component](https://github.com/switer/Zect/wiki/Instance-Methods#component)
+    * [$set](https://github.com/switer/Zect/wiki/Instance-Methods#setkeypath-value)
+    * [$get](https://github.com/switer/Zect/wiki/Instance-Methods#getkeypath)
+    * [$watch](https://github.com/switer/Zect/wiki/Instance-Methods#watchkeypath-callback)
+    * [$unwatch](https://github.com/switer/Zect/wiki/Instance-Methods#unwatchcallback)
+    * [$compile](https://github.com/switer/Zect/wiki/Instance-Methods#compileel-scope)
+    * [$component](https://github.com/switer/Zect/wiki/Instance-Methods#componentid)
     * [$destroy](https://github.com/switer/Zect/wiki/Instance-Methods#destroy)
 
 - Instance Properties
