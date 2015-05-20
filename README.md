@@ -388,6 +388,8 @@ var demo = new Zect({
 
 ```
 
+![Footer](http://switer.qiniudn.com/red-brick.jpg)
+
 ## License
 
 MIT
