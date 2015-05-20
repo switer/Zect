@@ -46,14 +46,14 @@ var app = new Zect({
     * [Zect.directive(id, definition)](https://github.com/switer/Zect/wiki/Global-API#zectdirectiveid-definition)
 
 - Instance Options
-    * [el]()
-    * [data]()
-    * [mixins]()
-    * [methods]()
-    * [template]()
-    * [computed]()
-    * [directives]()
-    * [components]()
+    * [el](https://github.com/switer/Zect/wiki/Instance-Options#el)
+    * [data](https://github.com/switer/Zect/wiki/Instance-Options#data)
+    * [mixins](https://github.com/switer/Zect/wiki/Instance-Options#mixins)
+    * [methods](https://github.com/switer/Zect/wiki/Instance-Options#methods)
+    * [template](https://github.com/switer/Zect/wiki/Instance-Options#template)
+    * [computed](https://github.com/switer/Zect/wiki/Instance-Options#computed)
+    * [directives](https://github.com/switer/Zect/wiki/Instance-Options#directives)
+    * [components](https://github.com/switer/Zect/wiki/Instance-Options#components)
 
 - Lifecyle Methods
     * [created]()
