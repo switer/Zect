@@ -455,19 +455,7 @@ Result:
 * Xiaokai
 ```
 
--- ** Push **
-```js
-vm.$data.items.push('Web Component')
-```
-Result:
-```
-* Switer
-* Zect
-* Xiaokai
-+ Web Component
-```
-
--- ** Push **
+- ** Push **
 ```js
 vm.$data.items.push('Web Component')
 ```
