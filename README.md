@@ -417,7 +417,8 @@ Result:
 * Xiaokai
 ```
 
-- ** Append More **
+- **Append More**
+
 ```js
 vm.$data.items.$concat(['Web Component'])
 ```
@@ -429,7 +430,8 @@ Will delta update:
 + Web Component
 ```
 
-- ** Append Before **
+- **Append Before**
+
 ```js
 vm.$data.items.splice(0, 0, 'Web Component', 'MVVM')
 ```
@@ -442,7 +444,8 @@ Result:
 * Xiaokai
 ```
 
-- ** Remove **
+- **Remove**
+
 ```js
 vm.$data.items.splice(1, 1)
 ```
@@ -455,7 +458,8 @@ Result:
 * Xiaokai
 ```
 
-- ** Push **
+- **Push**
+
 ```js
 vm.$data.items.push('Web Component')
 ```
