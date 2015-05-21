@@ -418,7 +418,6 @@ Result:
 ```
 
 - ** Append More **
-
 ```js
 vm.$data.items.$concat(['Web Component'])
 ```
@@ -427,7 +426,7 @@ Will delta update:
 * Switer
 * Zect
 * Xiaokai
-+ Web Component // append
++ Web Component
 ```
 
 - ** Append Before **
@@ -442,6 +441,45 @@ Result:
 * Zect
 * Xiaokai
 ```
+
+- ** Remove **
+```js
+vm.$data.items.splice(1, 1)
+```
+Result:
+```
++ Web Component
+- MVVM
+* Switer
+* Zect
+* Xiaokai
+```
+
+-- ** Push **
+```js
+vm.$data.items.push('Web Component')
+```
+Result:
+```
+* Switer
+* Zect
+* Xiaokai
++ Web Component
+```
+
+-- ** Push **
+```js
+vm.$data.items.push('Web Component')
+```
+Result:
+```
+* Switer
+* Zect
+* Xiaokai
++ Web Component
+```
+
+and `shift`, `unshift`, `sort`, `reverse`, `pop`. `shift`, `unshift`, `pop` whill be Update in delta (includes `splice` and `concat`).
 
 
 ![Footer](http://switer.qiniudn.com/red-brick.jpg)
