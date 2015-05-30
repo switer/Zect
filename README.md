@@ -150,7 +150,7 @@ new Zect({
 })
 ```
 
-### Use filter
+### Filter Expression
 Filters actually are function call using in template's expression.
 
 ```html

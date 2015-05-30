@@ -1,5 +1,5 @@
 /**
-* Zect v1.1.14
+* Zect v1.2.0
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -16,41 +16,41 @@
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-/******/
+
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-/******/
+
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-/******/
+
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			exports: {},
 /******/ 			id: moduleId,
 /******/ 			loaded: false
 /******/ 		};
-/******/
+
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
+
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-/******/
+
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/
-/******/
+
+
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-/******/
+
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-/******/
+
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-/******/
+
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
 /******/ })
@@ -357,6 +357,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var inst
 	        switch (node.nodeType) {
 	            case 1:
+	                node = compilePseudoDirectiveElement(node)
 	                /**
 	                 *  scope syntax
 	                 */
@@ -391,6 +392,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	            into: !!into,
 	            inst: !inst && isRoot ? new Compiler(node) : inst
 	        }
+	    }
+
+	    function compilePseudoDirectiveElement (node) {
+	        var repeatAttName = NS + 'repeat'
+	        var ifAttName = NS + 'if'
+	        var valueAttName
+	        var matchedAttName
+
+	        if (node.hasAttribute(ifAttName)) {
+	            matchedAttName = ifAttName
+	            valueAttName = 'is'
+	        } else if (node.hasAttribute(repeatAttName)) {
+	            matchedAttName = repeatAttName
+	            valueAttName = 'items'
+	        } else {
+	            return node
+	        }
+	        var attValue = node.getAttribute(matchedAttName)
+	        var blockNode = document.createElement(matchedAttName)
+	        node.removeAttribute(matchedAttName)
+	        node.parentNode && node.parentNode.replaceChild(blockNode, node)
+	        blockNode.appendChild(node)
+	        blockNode.setAttribute(valueAttName, attValue)
+
+	        while(node.hasAttribute(ifAttName) || node.hasAttribute(repeatAttName)) {
+	            compilePseudoDirectiveElement(node)
+	        }
+	        return blockNode
 	    }
 
 	    /**
@@ -508,8 +537,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var r = _parseExpr(expr)
 	            ast[r.name] = r
 	            ;(r.vars || []).forEach(function (v) {
-	                !revealAst[v] && (revealAst[v] = [])
-	                !~revealAst[v].indexOf(r.name) && revealAst[v].push(r.name)
+	                ;!revealAst[v] && (revealAst[v] = [])
+	                ;!~revealAst[v].indexOf(r.name) && revealAst[v].push(r.name)
 	            })
 	        }
 
@@ -542,7 +571,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var nextState
 	                util.objEach(revealAst, function (varName, bindingNames) {
 	                    if (keyPath.indexOf(varName) === 0) {
-	                        !nextState && (nextState = {})
+	                        ;!nextState && (nextState = {})
 	                        bindingNames.forEach(function (n) {
 	                            nextState[n] = execute(parentVM, scope, ast[n].expr)
 	                        })
@@ -3380,3 +3409,4 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ }
 /******/ ])
 });
+;

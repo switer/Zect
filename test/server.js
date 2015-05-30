@@ -17,7 +17,7 @@ app.use(compression())
 /**
  *  static folder
  **/
-app.use(express.static(path.join(__dirname, '.')))
+app.use(express.static(path.join(__dirname, '..')))
 
 /**
  *  server and port
