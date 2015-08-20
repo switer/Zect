@@ -343,7 +343,7 @@ Just like your instance a component and pass method option. Methods only set onc
 ```
 
 * **ref**
-This property is used to save ref to parent ViewModel, so that access it's instance with the specified name by "$refs".
+This option is used to save ref to parent ViewModel, so that access it's instance with the specified name by "$refs".
 
 ```html
 <div id="app">
@@ -356,7 +356,7 @@ this.$refs.header // access child component instance.
 ```
 
 * **replace**
-This options is uesed to reduce one level document structure. if attribute value equal "true",
+This option is uesed to reduce one level document structure. if attribute value equal "true",
 will replace component's element with it's main child element.
 
 Component template:
