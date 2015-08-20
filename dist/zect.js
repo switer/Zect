@@ -138,7 +138,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var _directives = [] // local refs for all directives instance of the vm    
 	    var _components = [] // local refs for all components    
 	    var NS = conf.namespace
-	    var componentProps = [NS + 'component', NS + 'data', NS + 'methods', NS + 'ref']
+	    var componentProps = [NS + 'component', NS + 'data', NS + 'methods', NS + 'ref', NS + 'replace']
 	    var $childrens = options.$childrens
 
 	    // set $parent ref
@@ -157,6 +157,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } else if (!is.Element(el)) {
 	        throw new Error('Unmatch el option')
 	    }
+
 	    // replace "$NS-template" of actual instance's DOM  
 	    if (el.children.length == 1 && el.firstElementChild.tagName.toLowerCase() == (NS + 'template')) {
 	        var $holder = el.firstElementChild
@@ -216,6 +217,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	                $childrens = null
 	            }
 	        })
+	    }
+
+	    /**
+	     * Replace external component element holder with internal child element
+	     */
+	    if (options.replace) {
+	        if (el.children.length !== 1) {
+	            console.warn('Can\'t using \'' + NS + 'replace=true\' for a component that has no or multiple child-elements.')
+	        } else if (el.parentNode) {
+	            _cloneArributes(el, el.firstElementChild)
+	            el.parentNode.replaceChild(el.firstElementChild, el)
+	        } else {
+	            el = el.firstElementChild
+	        }
 	    }
 
 	    vm.$el = el
@@ -291,7 +306,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    vm.$compile = function (el, scope) {
 	        var compiler
-	        var id = 0
 	        util.walk(el, function (node) {
 	            var isRoot = node === el
 	            var result = compile(node, scope, isRoot)
@@ -504,11 +518,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var ref = $(node).attr(NS + 'ref')
 	        var dAttName = NS + 'data'
 	        var mAttName = NS + 'methods'
+	        var rAttName = NS + 'replace'
 
 	        var dataExpr = $node.attr(dAttName)
 	        var methods = $node.attr(mAttName)
+	        var replace = $node.attr(rAttName)
 
-	        $node.removeAttr(dAttName).removeAttr(mAttName)
+	        $node.removeAttr(dAttName)
+	             .removeAttr(mAttName)
+	             .removeAttr(rAttName)
 
 	        var _isDataExpr = _isExpr(dataExpr)
 	        var bindingData
@@ -550,7 +568,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            data: bindingData,
 	            methods: bindingMethods,
 	            $parent: parentVM,
-	            $childrens: _slice(node.childNodes)
+	            $childrens: _slice(node.childNodes),
+	            replace: replace == 'true'
 	        })
 
 	        var plainDataExpr = _isDataExpr ? Expression.strip(dataExpr) : ''
@@ -596,7 +615,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  Compile attributes to directive
 	     */
 	    function compileDirective (node, scope) {
-	        var value = node.nodeValue
 	        var attrs = _slice(node.attributes)
 	        var ast = {
 	                attrs: {},
@@ -745,6 +763,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    })
 	    delete insOpt.methods.mixins
 	    return insOpt
+	}
+	function _cloneArributes(el, target) {
+	    var $tar = $(target)
+	    _slice(el.attributes).forEach(function (att) {
+	        if (att.name == 'class') $tar.addClass(att.value)
+	        else $tar.attr(att.name, att.value)
+	    })
+	    return target
 	}
 
 	module.exports = Zect
@@ -2456,7 +2482,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  Standard directive
 	 */
 	var _did = 0
-	var Directive = compiler.Directive = compiler.inherit(function (vm, scope, tar, def, name, expr) {
+	compiler.Directive = compiler.inherit(function (vm, scope, tar, def, name, expr) {
 	    var d = this
 	    var bindParams = []
 	    var isExpr = !!_isExpr(expr)
@@ -2894,7 +2920,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var $ = __webpack_require__(2)
 	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
-	var _relative = util.relative
 
 	module.exports = function(Zect) {
 	    return {
