@@ -49,6 +49,7 @@ var app = new Zect({
     * [el](https://github.com/switer/Zect/wiki/Instance-Options#el)
     * [data](https://github.com/switer/Zect/wiki/Instance-Options#data)
     * [mixins](https://github.com/switer/Zect/wiki/Instance-Options#mixins)
+    * [replace](https://github.com/switer/Zect/wiki/Instance-Options#replace)
     * [methods](https://github.com/switer/Zect/wiki/Instance-Options#methods)
     * [template](https://github.com/switer/Zect/wiki/Instance-Options#template)
     * [computed](https://github.com/switer/Zect/wiki/Instance-Options#computed)
@@ -352,6 +353,33 @@ This property is used to save ref to parent ViewModel, so that access it's insta
 
 ```js
 this.$refs.header // access child component instance.
+```
+
+* **replace**
+This options is uesed to reduce one level document structure. if attribute value equal "true",
+will replace component's element with it's main child element.
+
+Component template:
+```html
+<div class="header" data-title="header">
+    <h1>Header</h1>
+</div>
+```
+
+Usage:
+```html
+<div id="app">
+    <my-component z-replace="true" class="app-header"></my-component>
+</div>
+```
+
+Render result:
+```html
+<div id="app">
+    <div class="app-header header" data-title="header">
+        <h1>Header</h1>
+    </div>
+</div>
 ```
 
 
