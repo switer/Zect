@@ -229,9 +229,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var replacedEl = el.firstElementChild
 	            _cloneArributes(replacedEl, el)
 	            el.parentNode.replaceChild(replacedEl, el)
+	            el = replacedEl
 	        } else {
 	            el = el.firstElementChild
-	            console.log(el)
 	        }
 	    }
 
