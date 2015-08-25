@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.1
+* Zect v1.2.2
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -226,10 +226,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (el.children.length !== 1) {
 	            console.warn('Can\'t using \'' + NS + 'replace=true\' for a component that has no or multiple child-elements.')
 	        } else if (el.parentNode) {
-	            _cloneArributes(el, el.firstElementChild)
-	            el.parentNode.replaceChild(el.firstElementChild, el)
+	            var replacedEl = e.firstElementChild
+	            _cloneArributes(replacedEl, el)
+	            el.parentNode.replaceChild(replacedEl, el)
 	        } else {
 	            el = el.firstElementChild
+	            console.log(el)
 	        }
 	    }
 
@@ -515,16 +517,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // don't need deep into self
 	        if (node === parentVM.$el) return
 	        // suport expression, TBD
-	        var ref = $(node).attr(NS + 'ref')
+	        var refName = NS + 'ref'
 	        var dAttName = NS + 'data'
 	        var mAttName = NS + 'methods'
 	        var rAttName = NS + 'replace'
 
+	        var ref = $node.attr(refName)
 	        var dataExpr = $node.attr(dAttName)
 	        var methods = $node.attr(mAttName)
 	        var replace = $node.attr(rAttName)
 
-	        $node.removeAttr(dAttName)
+	        $node.removeAttr(refName)
+	             .removeAttr(dAttName)
 	             .removeAttr(mAttName)
 	             .removeAttr(rAttName)
 
