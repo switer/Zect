@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.2
+* Zect v1.2.3
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -226,7 +226,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (el.children.length !== 1) {
 	            console.warn('Can\'t using \'' + NS + 'replace=true\' for a component that has no or multiple child-elements.')
 	        } else if (el.parentNode) {
-	            var replacedEl = e.firstElementChild
+	            var replacedEl = el.firstElementChild
 	            _cloneArributes(replacedEl, el)
 	            el.parentNode.replaceChild(replacedEl, el)
 	        } else {
