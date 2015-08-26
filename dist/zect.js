@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.3
+* Zect v1.2.4
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -267,7 +267,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return $data || dataOpt
 	        },
 	        set: function(v) {
+	            if (!$data) return util.merge(dataOpt, v)
+
 	            $data.$set(v)
+	            return $data
 	        }
 	    })
 	    vm.$set = function () {
@@ -283,16 +286,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    vm.$unwatch = function (/*[ keypath ], */fn) {
 	        return $data.$unwatch.apply($data, arguments)
 	    }
+
+	    var created = options.created
 	    if (options.$data) {
 	        $data = options.$data
 	        // if state model instance passsing, call after set
-	        options.created && options.created()
+	        created && created.call(vm)
 	    } else {
-	        // Call before vm-$data instance
-	        options.created && options.created()
-
 	        util.merge(dataOpt, _funcOrObject(options, 'data'))
-	        
+	        // Call before vm-$data instance
+	        created && created.call(vm)
 	        // Instance observable state model
 	        var mopts = {
 	            props: dataOpt,
