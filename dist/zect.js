@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.4
+* Zect v1.2.5
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -398,7 +398,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	                break
 	            case 3:
-	                inst = compileText(node, vm, scope, isRoot)
+	                if (node.nodeValue.trim()) inst = compileText(node, vm, scope, isRoot)
 	                into = false
 	                break
 	            case 11:
@@ -2216,7 +2216,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    '/': '&#x2F;'
 	}
 	var escapeRex = new RegExp(_keys(escapeCharMap).join('|'), 'g')
-
 	module.exports = {
 	    type: mUtils.type,
 	    diff: mUtils.diff,
@@ -2243,10 +2242,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var into = fn(node) !== false
 	        var that = this
 	        if (into) {
-	            var children = [].slice.call(node.childNodes)
-	            children.forEach(function (i) {
-	                that.walk(i, fn)
-	            })
+	            var len = node.childNodes
+	            for (var i = 0; i < len; i ++) {
+	                this.walk(i, fn)
+	            }
 	        }
 	    },
 	    domRange: function (tar, before, after) {

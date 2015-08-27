@@ -12,7 +12,12 @@ var colors = require('colors')
 var compression = require('compression')
 app.use(compression())
 
-
+app.get('/log', function (req, res) {
+	var k = req.query.k
+	var t = req.query.t
+	console.log((k + ': ').blue.grey + t + 'ms')
+	res.send('1')
+})
 
 /**
  *  static folder
