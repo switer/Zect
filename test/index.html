@@ -30,7 +30,6 @@
         </z-repeat>
 
         <!-- component-state -->
-
         <my-component
             z-tap="{items}"
             z-data="{items: childItems}"
@@ -39,9 +38,9 @@
 
         <!-- local-component-ref -->
         <z-repeat items="{changedItems}">
-            <my-component2 ref="comp2"></my-component2>
+            <my-component2 z-ref="comp2" z-replace="true"></my-component2>
         </z-repeat>
-        <div ref="comp2" z-component="my-component2"></div>
+        <div z-ref="comp2" z-component="my-component2"></div>
 
         <!-- two way bindings -->
         <input type="text" z-model="inputs.text">
@@ -122,7 +121,7 @@
                         date: '2014-10-11',
                         range: 1,
                         tel: '',
-                        color: 'blue',
+                        color: '#0000FF',
                         search: 'kw',
                         url: 'http://'
                     },

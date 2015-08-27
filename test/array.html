@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <div id="app">
+        <p>
+            <button z-on="{click: onAddItem}">+ item</button>
+            <button z-on="{click: onConcatItem}">++ item</button>
+            <button z-on="{click: onInsertItem}">insert items</button>
+            <button z-on="{click: onShiftItem}">shift item</button>
+            <button z-on="{click: onUnShiftItem}">unshift item</button>
+            <button z-on="{click: onRemoveItem}">- item</button>
+            <button z-on="{click: onChangeValue}">Change</button>
+            <button z-on="{click: onReverse}">reverse items</button>
+
+        </p>
+        <z-repeat items="{todoItems}">
+            <z-if is="{$value.bool}">
+                <c-game
+                    z-data="{
+                        title: name;
+                        index: $index;
+                    }"
+                ></c-game>
+                <input type="text" data-index="{$index}" z-model="{'todoItems['+$index+'].name'}">
+            </z-if>
+        </z-repeat>
+    </div>
+    <script src="../dist/zect.js"></script>
+    <script>
+        var insp_times = {}
+        console.time = function (name) {
+            insp_times[name] = Date.now();
+        }
+        console.timeEnd = function (name) {
+            if (insp_times[name] == undefined) return;
+            var end = Date.now() - insp_times[name];
+            console.log('%c' + name + ': ' + end + 'ms', 'color: blue')
+        }
+
+
+        console.time('p')
+        Zect.component('c-game', {
+            template: '<p><div>I am a child component, title: {title} index: {index}</div></p>',
+            computed: {
+                concat: {
+                    deps: ['title', 'index'],
+                    get: function () {
+                        return this.$data.title + this.$data.index
+                    }
+                }
+            },
+            methods: {
+                len: function (t) {
+                    return t.length
+                }
+            }
+        })
+        var ins = new Zect.extend({
+            template: ''
+        })
+        var app = new Zect({
+            el: '#app',
+            data: function () {
+                return {
+                    input: '',
+                    inputLen: 0,
+                    todoItems: [{bool: true, name: 'a'},{bool: true, name: 'b'}],
+                }
+            },
+            created: function () {
+
+            },
+            ready: function () {
+                console.timeEnd('p')
+            },
+            destroy: function () {
+
+            },
+            computed: {
+                computed: {
+                    deps: ['input'],
+                    get: function () {
+                        
+                    },
+                    set: function () {
+                        
+                    }
+                }
+            },
+            methods: {
+                mixins: [{
+                    todos: function () {
+                        return []
+                    },
+                    part: function (text) {
+                        return text.split(' ')[0]
+                    },
+                    onAlert: function () {
+                        alert('click')
+                    },
+                    onChangeClass: function () {
+                        this.$data.isShow = false
+                    },
+                    onReverse: function () {
+                        console.time('reverse')
+                        this.$data.todoItems.reverse()
+                        console.timeEnd('reverse')
+                    },
+                    onRemoveItem: function () {
+                        console.time('remove')
+                        this.$data.todoItems.splice(1, 1)
+                        console.timeEnd('remove')
+                    },
+                    onAddItem: function () {
+                        console.time('add')
+                        this.$data.todoItems.push({name: 'd', bool: true})
+                        console.timeEnd('add')
+                    },
+                    onConcatItem: function () {
+                        console.time('$concat')
+                        this.$data.todoItems.$concat([{name: 'd', bool: true}, {name: 'd', bool: true}])
+                        console.timeEnd('$concat')
+                    },
+                    onChangeValue: function () {
+                        this.$data.todoItems[0].name = 'changed'
+                    },
+                    onInsertItem: function () {
+                        console.time('insert')
+                        this.$data.todoItems.splice(0, 0, {name: 'h', bool: true}, {name: 'i', bool: true})
+                        console.timeEnd('insert')
+                    },
+                    onShiftItem: function () {
+                        console.time('shift')
+                        this.$data.todoItems.shift()
+                        console.timeEnd('shift')
+                    },
+                    onUnShiftItem: function () {
+                        console.time('unshift')
+                        this.$data.todoItems.unshift({name: 'e', bool: true})
+                        console.timeEnd('unshift')
+                    },
+                    onKeyup: function () {
+                        
+                    },
+                    onBlur: function () {
+                        
+                    },
+                    editTodo: function () {
+                        
+                    }
+                }]
+            }
+        })
+    </script>
+</body>
+</html>

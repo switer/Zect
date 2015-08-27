@@ -8,6 +8,7 @@ A lightweight Web components and MVVM framework.
 ## Example
 
 * Todo MVC: http://zectjs.github.io/zect-todo
+* Production: http://corner.ucweb.com
 
 ## Downloads
 - [zect.js](https://raw.githubusercontent.com/switer/zect/master/dist/zect.js)
@@ -38,70 +39,74 @@ var app = new Zect({
 
 ## API Reference
 - Global API
-    * [Zect()]()
-    * [Zect.extend()]()
-    * [Zect.component()]()
-    * [Zect.namespace(namespace)]()
-    * [Zect.directive(id, definition)]()
+    * [Zect()](https://github.com/switer/Zect/wiki/Global-API#zectoptions)
+    * [Zect.extend()](https://github.com/switer/Zect/wiki/Global-API#zectextendoptions)
+    * [Zect.component()](https://github.com/switer/Zect/wiki/Global-API#zectcomponentid-definition)
+    * [Zect.namespace(namespace)](https://github.com/switer/Zect/wiki/Global-API#zectnamespacenamespace)
+    * [Zect.directive(id, definition)](https://github.com/switer/Zect/wiki/Global-API#zectdirectiveid-definition)
 
 - Instance Options
-    * [el]()
-    * [data]()
-    * [mixins]()
-    * [methods]()
-    * [template]()
-    * [computed]()
-    * [directives]()
-    * [components]()
+    * [el](https://github.com/switer/Zect/wiki/Instance-Options#el)
+    * [data](https://github.com/switer/Zect/wiki/Instance-Options#data)
+    * [mixins](https://github.com/switer/Zect/wiki/Instance-Options#mixins)
+    * [replace](https://github.com/switer/Zect/wiki/Instance-Options#replace)
+    * [methods](https://github.com/switer/Zect/wiki/Instance-Options#methods)
+    * [template](https://github.com/switer/Zect/wiki/Instance-Options#template)
+    * [computed](https://github.com/switer/Zect/wiki/Instance-Options#computed)
+    * [directives](https://github.com/switer/Zect/wiki/Instance-Options#directives)
+    * [components](https://github.com/switer/Zect/wiki/Instance-Options#components)
 
 - Lifecyle Methods
-    * [created]()
-    * [ready]()
-    * [destroy]()
+    * [created](https://github.com/switer/Zect/wiki/Lifecyle-Methods#created)
+    * [ready](https://github.com/switer/Zect/wiki/Lifecyle-Methods#ready)
+    * [destroy](https://github.com/switer/Zect/wiki/Lifecyle-Methods#destroy)
 
 - Instance Methods
-    * [$set]()
-    * [$get]()
-    * [$watch]()
-    * [$unwatch]()
-    * [$compile]()
-    * [$component]()
-    * [$destroy]()
+    * [$set](https://github.com/switer/Zect/wiki/Instance-Methods#setkeypath-value)
+    * [$get](https://github.com/switer/Zect/wiki/Instance-Methods#getkeypath)
+    * [$watch](https://github.com/switer/Zect/wiki/Instance-Methods#watchkeypath-callback)
+    * [$unwatch](https://github.com/switer/Zect/wiki/Instance-Methods#unwatchcallback)
+    * [$compile](https://github.com/switer/Zect/wiki/Instance-Methods#compileel-scope)
+    * [$component](https://github.com/switer/Zect/wiki/Instance-Methods#componentid)
+    * [$destroy](https://github.com/switer/Zect/wiki/Instance-Methods#destroy)
 
 - Instance Properties
-    * [$el]()
-    * [$refs]()
-    * [$methods]()
-    * [$children]()
-    * [$destroyed]()
+    * [$el](https://github.com/switer/Zect/wiki/Instance-Properties#el)
+    * [$refs](https://github.com/switer/Zect/wiki/Instance-Properties#refs)
+    * [$methods](https://github.com/switer/Zect/wiki/Instance-Properties#methods)
+    * [$children](https://github.com/switer/Zect/wiki/Instance-Properties#children)
+    * [$destroyed](https://github.com/switer/Zect/wiki/Instance-Properties#destroyed)
 
 - Template Syntax
-    * [if]()
-    * [repeat]()
-    * [template]()
-    * [{expression}]()
-    * [{- expression}]()
+    * [if](https://github.com/switer/Zect/wiki/Template-Syntax#if)
+    * [repeat](https://github.com/switer/Zect/wiki/Template-Syntax#repeat)
+    * [template](https://github.com/switer/Zect/wiki/Template-Syntax#template)
+    * [{expression}](https://github.com/switer/Zect/wiki/Template-Syntax#expression)
+    * [{- expression}](https://github.com/switer/Zect/wiki/Template-Syntax#--expression)
 
 - Direcitves
-    * [on]()
-    * [show]()
-    * [attr]()
-    * [class]()
-    * [style]()
-    * [component]()
+    * [on](https://github.com/switer/Zect/wiki/Directives#z-on)
+    * [show](https://github.com/switer/Zect/wiki/Directives#z-show)
+    * [html](https://github.com/switer/Zect/wiki/Directives#z-html)
+    * [attr](https://github.com/switer/Zect/wiki/Directives#z-attr)
+    * [class](https://github.com/switer/Zect/wiki/Directives#z-class)
+    * [style](https://github.com/switer/Zect/wiki/Directives#z-style)
+    * [component](https://github.com/switer/Zect/wiki/Directives#z-component)
 
 ## Guide
 ### Custom directive
 
 Options's Methods: 
 * **bind**    Call only once when directive is binding.
-* **update**  Call every time when express's value has been changed.
+* **update**  Call every time when expression's value has been changed.
 * **unbind**  Call only once when directive is unbinded.
 
 Directive instance properties:
-* **$vm**   Mounted VM of the directive
-* **$el**   Mounted target Node of the directive
-* **$id**   Current directive instance id
+* **$vm**     Mounted VM of the directive
+* **$el**     Mounted target Node of the directive
+* **$id**     Current directive instance id
+* **$scope**  Repeat directive will create a scope for each item when compiling, 
+              so your can access "$index", "$value" through "$scope". 
 
 **Example below:**
 
@@ -111,11 +116,14 @@ Directive instance properties:
 
 ```js
 Zect.directive('tap', {
-    bind: function (fn, expr) {
-        // do something when init bind
+    bind: function (result, expression) {
+        // do something when init
     },
-    update: function (fn) {
-        // do some with state change or init
+    update: function (result) {
+        // do something when state change or after init
+    },
+    unbind: function () {
+        // do something before destroy the directive instance
     }
 })
 ```
@@ -124,10 +132,7 @@ Zect.directive('tap', {
 
 ```html
 <div id="con">
-    <input type="text" 
-        id="con"
-        z-model="search" 
-    />
+    <input type="text" z-model="search" />
     <input type="submit" z-on="{onSubmit}" value="submit">
 </div>
 ```
@@ -146,12 +151,13 @@ new Zect({
 })
 ```
 
-### Use filter
+### Filter Expression
+Filters actually are function call using in template's expression.
 
 ```html
 <ul id="con">
     <z-repeat items="{lessThanFour(items)}">
-        <li>{$value}</li>
+        <li data-index="{$index}">{$value}</li>
     </z-repeat>
 </ul>
 ```
@@ -172,19 +178,19 @@ new Zect({
 })
 ```
 
-**Render result:**
+* **Render result:**
 
 ```html
 <ul id="con">
-    <li>1</li>
-    <li>2</li>
-    <li>3</li>
+    <li data-index="0">1</li>
+    <li data-index="1">2</li>
+    <li data-index="2">3</li>
 </ul>
 ```
 
 ### Template syntax
 
-Variables
+* **Content Render:**
 
 ```html
 <!-- escaped HTML value -->
@@ -194,7 +200,20 @@ Variables
 <p>{- title}</p>
 ```
 
-Condition Statement
+* **Javascript Syntax In Expression:**
+
+```html
+<!-- escaped HTML value -->
+<p>{'Current time is: ' + new Date()}</p>
+
+<!-- unescaped HTML value -->
+<p>{- 'Current Page: ' + page}</p>
+```
+
+* **Condition Statements:**
+`"is"` is a keyword-attribute for the "if" directive.
+If value is truly, the template that is included by "if" directive element will be compiled and insert into to parent's DOM tree.
+Otherwise template will be removed from parent's DOM tree.
 
 ```html
 <!-- if -->
@@ -203,7 +222,9 @@ Condition Statement
 </z-if>
 ```
 
-Iterator
+* **Array Iterator:**
+`"items"` is a keyword-attribute for the "repeat" directive.
+The value of items's expression should be an Array object.
 
 ```html
 <!-- repeat -->
@@ -216,7 +237,7 @@ Iterator
 
 Zect support reusable component that are conceptually similar to Web Components.
 
-**define:**
+* **define:**
 
 ```html
 <script type="text/zect" id="tpl-header">
@@ -237,7 +258,7 @@ Zect.component('c-header', {
     }
 })
 ```
-**use:**
+* **use:**
 
 ```html
 <body>
@@ -253,7 +274,7 @@ Zect.component('c-header', {
 </body>
 ```
 
-**render result:**
+* **render result:**
 
 ```html
 <div id="app">
@@ -265,6 +286,102 @@ Zect.component('c-header', {
     </div>
 </div>
 ```
+
+## Component Template
+
+Zect will copy all attributes for "template" element to instance component element.
+
+Component's HTML template:
+
+```html
+<script type="text/zect" id="tpl-header">
+    <z-template class="c-header" data-title="{title}">
+        <button>Back</button>
+        <div>{title}</div>
+    </z-template>
+</script>
+```
+
+Define component:
+```javascript
+Zect.component('c-header', {
+    template: document.querySelector('#tpl-header').innerHTML
+})
+```
+
+
+## Component Atrributes
+
+* **data**
+"data" property is used to declare binding data from the parent ViewModel. 
+Just like your instance a component and pass data option. When those binding variables of expression change, 
+`Zect` will be re-excute the expression and call component instance's "$set" method automatically for updating child component.
+
+```html
+<div id="app">
+    <my-component
+        z-data="{
+            title: 'child ' + title;
+            content: content
+        }"
+    >
+    </my-component>
+</div>
+```
+
+* **methods**
+Just like your instance a component and pass method option. Methods only set once, so when those binding variables of expression change, it will do nothing. 
+
+```html
+<div id="app">
+    <my-component
+        z-methods="{
+            onClick: onClickItem
+        }"
+    ></my-component>
+</div>
+```
+
+* **ref**
+This option is used to save ref to parent ViewModel, so that access it's instance with the specified name by "$refs".
+
+```html
+<div id="app">
+    <my-component z-ref="header"></my-component>
+</div>
+```
+
+```js
+this.$refs.header // access child component instance.
+```
+
+* **replace**
+This option is uesed to reduce one level document structure. if attribute value equal "true",
+will replace component's element with it's main child element.
+
+Component template:
+```html
+<div class="header" data-title="header">
+    <h1>Header</h1>
+</div>
+```
+
+Usage:
+```html
+<div id="app">
+    <my-component z-replace="true" class="app-header"></my-component>
+</div>
+```
+
+Render result:
+```html
+<div id="app">
+    <div class="app-header header" data-title="header">
+        <h1>Header</h1>
+    </div>
+</div>
+```
+
 
 ## Computed Properties
 For those complicated logic, you should use computed properties to replace inline expressions.
@@ -299,6 +416,93 @@ var demo = new Zect({
 })
 
 ```
+## List operate
+
+- **Display List**
+
+Use `z-repeat` block element to repeat display template.
+
+```html
+<div id="list">
+    <ul>
+        <z-repeat items="{items}">
+            <li>{$value}</li>
+        </z-repeat>
+    </ul>
+</div>
+```
+```js
+new Zect({
+    data: {
+        items: ["Switer", "Zect", "Xiaokai"]
+    }
+})
+```
+Result:
+```
+* Switer
+* Zect
+* Xiaokai
+```
+
+- **Append More**
+
+```js
+vm.$data.items.$concat(['Web Component'])
+```
+Will delta update:
+```
+* Switer
+* Zect
+* Xiaokai
++ Web Component
+```
+
+- **Append Before**
+
+```js
+vm.$data.items.splice(0, 0, 'Web Component', 'MVVM')
+```
+Result:
+```
++ Web Component
++ MVVM
+* Switer
+* Zect
+* Xiaokai
+```
+
+- **Remove**
+
+```js
+vm.$data.items.splice(1, 1)
+```
+Result:
+```
++ Web Component
+- MVVM
+* Switer
+* Zect
+* Xiaokai
+```
+
+- **Push**
+
+```js
+vm.$data.items.push('Web Component')
+```
+Result:
+```
+* Switer
+* Zect
+* Xiaokai
++ Web Component
+```
+
+and `shift`, `unshift`, `sort`, `reverse`, `pop`. `shift`, `unshift`, `pop` whill be Update in delta (includes `splice` and `concat`).
+
+
+![Footer](http://switer.qiniudn.com/red-brick.jpg)
 
 ## License
 
