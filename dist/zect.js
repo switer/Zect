@@ -311,12 +311,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    vm.$compile = function (el, scope) {
 	        var compiler
+
+	        vm._$directives = _getAllDirts()
 	        util.walk(el, function (node) {
 	            var isRoot = node === el
 	            var result = compile(node, scope, isRoot)
 	            if (isRoot) compiler = result.inst
 	            return result.into
 	        })
+	        vm._$directives = null
 	        return compiler
 	    }
 
@@ -352,17 +355,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // marked
 	        vm.$destroyed = true
 	    }
+	    console.time('Compile')
 	    vm.$compiler = vm.$compile(el)
+	    console.timeEnd('Compile')
 
 	    /**
 	     *  Call ready after compile
 	     */
 	    options.ready && options.ready.call(vm)
 
+	    function _getAllDirts () {
+	        var _dirts = {}
+	        directives.forEach(function(group) {
+	            util.objEach(group, function(id, def) {
+	                _dirts[NS + id] = def
+	            })
+	        })
+	        return _dirts
+	    }
 	    function _setBindings2Scope (scope, ref) {
 	        scope && scope.bindings && (scope.bindings.push(ref))
 	    }
-
 	    function compile (node, scope, isRoot) {
 	        /**
 	         *  1. ELEMENT_NODE; 
@@ -506,15 +519,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  comment
 	     */
 	    function compileComponent (node, parentVM, scope) {
-	        var $node = $(node)
 	        var cAttName = NS + 'component'
-	        var CompName = $node.attr(cAttName) || node.tagName
+	        var CompName = node.getAttribute(cAttName) || node.tagName
 	        var Comp = getComponent(CompName)
 
 	        /**
 	         *  Tag is not a custom component element
 	         */
 	        if (!Comp) return
+	        var $node = $(node)
 	        $node.removeAttr(cAttName)
 
 	        // don't need deep into self
@@ -617,12 +630,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	        return compVM
 	    }
-
 	    /**
 	     *  Compile attributes to directive
 	     */
 	    function compileDirective (node, scope) {
-	        var attrs = _slice(node.attributes)
 	        var ast = {
 	                attrs: {},
 	                dires: {}
@@ -631,18 +642,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         *  attributes walk
 	         */
-	        attrs.forEach(function(att) {
+	        util.forEach(node.attributes, function(att) {
 	            var aname = att.name
 	            var v = att.value
 	            // parse att
 	            if (~componentProps.indexOf(aname)) {
 	                return
-	            }else if (_isExpr(aname)) {
+	            } else if (_isExpr(aname)) {
 	                // variable attribute name
 	                ast.attrs[aname] = v
 	            } else if (aname.indexOf(NS) === 0) {
-	                // directive
-	                ast.dires[aname] = v
+	                var def = vm._$directives[aname]
+	                if (def) {
+	                    // directive
+	                    ast.dires[aname] = {
+	                        def: def,
+	                        expr: v
+	                    }
+	                } else {
+	                    return
+	                }
 	            } else if (_isExpr(v.trim())) {
 	                // named attribute with expression
 	                ast.attrs[aname] = v
@@ -664,33 +683,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         *  Directives binding
 	         */
-	        directives.forEach(function(group) {
-	            util.objEach(group, function(id, def) {
-	                var dname = NS + id
-	                var expr = ast.dires[dname]
-
-	                if (ast.dires.hasOwnProperty(dname)) {
-	                    var sep = ';'
-	                    var d
-	                    // multiple defines expression parse
-	                    if (def.multi && expr.match(sep)) {
-	                        Expression.strip(expr)
-	                                .split(sep)
-	                                .forEach(function(item) {
-	                                    // discard empty expression 
-	                                    if (!item.trim()) return
-	                                    
-	                                    d = new Directive(vm, scope, node, def, dname, '{' + item + '}')
-	                                    _directives.push(d)
-	                                    _setBindings2Scope(scope, d)
-	                                })
-	                    } else {
-	                        d = new Directive(vm, scope, node, def, dname, expr)
-	                        _directives.push(d)
-	                        _setBindings2Scope(scope, d)
-	                    }
-	                }
-	            })
+	        util.objEach(ast.dires, function(dname, spec) {
+	            var def = spec.def
+	            var expr = spec.expr
+	            var sep = ';'
+	            var d
+	            // multiple defines expression parse
+	            if (def.multi && expr.match(sep)) {
+	                Expression.strip(expr)
+	                        .split(sep)
+	                        .forEach(function(item) {
+	                            // discard empty expression 
+	                            if (!item.trim()) return
+	                            
+	                            d = new Directive(vm, scope, node, def, dname, '{' + item + '}')
+	                            _directives.push(d)
+	                            _setBindings2Scope(scope, d)
+	                        })
+	            } else {
+	                d = new Directive(vm, scope, node, def, dname, expr)
+	                _directives.push(d)
+	                _setBindings2Scope(scope, d)
+	            }
 	        })
 	    }
 
@@ -2206,6 +2220,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _keys(o) {
 	    return Object.keys(o)
 	}
+	function _forEach (items, fn) {
+	    var len = items.length || 0
+	    for (var i = 0; i < len; i ++) {
+	        if(fn(items[i], i)) break
+	    }
+	}
 
 	var escapeCharMap = {
 	    '&': '&amp;',
@@ -2242,25 +2262,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var into = fn(node) !== false
 	        var that = this
 	        if (into) {
-	            var len = node.childNodes
-	            for (var i = 0; i < len; i ++) {
-	                this.walk(i, fn)
-	            }
+	            _forEach(node.childNodes, function (node) {
+	                that.walk(node, fn)
+	            })
 	        }
 	    },
 	    domRange: function (tar, before, after) {
 	        var children = []
-	        var nodes = tar.childNodes
 	        var start = false
-	        for (var i = 0; i < nodes.length; i++) {
-	            var item = nodes[i]
-	            if (item === after) break
+	        _forEach(tar.childNodes, function (item) {
+	            if (item === after) return false
 	            else if (start) {
 	                children.push(item)
 	            } else if (item == before) {
 	                start = true
 	            }
-	        }
+	        })
 	        return children
 	    },
 	    immutable: function (obj) {
@@ -2306,6 +2323,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return escapeCharMap[m]
 	        })
 	    },
+	    forEach: _forEach,
 	    normalize: _normalize,
 	    digest: _digest
 	}
