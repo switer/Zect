@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Zect-performance-debug</title>
+	<script src="../dist/zect.js"></script>
+</head>
+<body>
+	<div id="app">
+		<div class="container">
+			<div class="mod_bigbang_banner">
+				<div class="bigbang_num">已售出<div class="num odometer" r-odometer="{onlines}"></div>份</div>
+				<div class="bigbang_music" r-class="{off: !turnOnMusic}">
+					<a class="btn_music" href="javascript:;" r-on="{click: onToggleMusic}"></a>
+				</div>
+				<div class="bigbang_banner" r-class="{banner_toggle: openGift}">
+					<img src="http://imgcache.gtimg.cn/tencentvideo_v1/vstyle/mobile/topic/style/bigbang/img/cover_bg01.png" class="def_img" alt="bigband" />
+					<span class="ele_gift_box"></span>
+					<div class="banner_tips">
+						<h4 class="title">购买即获得</h4>
+						<ul class="tips_list">
+							<r-repeat items="{benefits}">
+								<li class="item"><p class="txt">{$index + 1} {$value.title}</p></li>
+							</r-repeat>
+						</ul>
+					</div>
+				</div>
+				<div class="btn"><a class="btn_a" href="javascript:;">查看我的礼包</a></div>
+				<span class="mod_btm_tips"></span>
+			</div>
+			<div class="mod_gift_list">
+				<div class="gift_tit">官方授权 / 礼包详情</div>
+				<ul class="gift_list">
+					<li class="item item_title">
+						<span class="pic pic_1">
+							<img src="http://i.gtimg.cn/qqlive/images/20150826/ele_cover.jpg" alt="">
+						</span>
+						<p class="txt">签名壁纸</p>
+						<p class="status">已获得<em class="str">2</em>/5个</p>
+					</li>
+					<li class="item">
+						<span class="pic pic_2">
+							<img src="http://i.gtimg.cn/qqlive/images/20150815/pic_gift_4.png" alt="">
+						</span>
+						<p class="txt">全球巡演纪录片</p>
+						<p class="status">已获得</p>
+					</li>
+					<li class="item">
+						<span class="pic pic_3">
+							<img src="http://i.gtimg.cn/qqlive/images/20150815/pic_gift_3.png" alt="">
+						</span>
+						<p class="txt">选他陪你看视频</p>
+						<p class="status">已获得<em class="str">2</em>/5个</p>
+					</li>
+				</ul>
+			</div>
+		<!-- 	<div class="mod_gift_list">
+				<div class="gift_tit">礼品详情</div>
+				<ul class="gift_list">
+						<r-repeat items="{benefits}">
+							<li class="item">
+								<span class="pic pic_1">
+									<img r-attr="{src: $value.pic}" alt="">
+								</span>
+								<p class="txt">{$value.title}</p>
+							</li>
+						</r-repeat>
+				</ul>
+				<div class="gift_tips">
+					<span class="txt">官方<br>授权</span>
+				</div>
+			</div> -->
+			<div class="mod_tit_linethrough">
+				<h3 class="tit_info"><span class="tit">我已领取的奖品</span></h3>
+			</div>
+			<ul class="mailinfo_list">
+				<li class="item">
+					<img src="http://i.gtimg.cn/qqlive/images/20150815/pic_gift_4.png" alt="">
+					<span class="name">BANG签名背包</span>
+					<span class="address notice">未填写邮寄地址</span>
+				</li>
+				<li class="item">
+					<img src="http://i.gtimg.cn/qqlive/images/20150815/pic_gift_4.png" alt="">
+					<span class="name">BANG签名背包</span>
+					<span class="address">邮寄地址:北京礼包福利,官方正版财边限量送</span>
+				</li>
+			</ul>
+			<div class="mod_tit_linethrough">
+				<h3 class="tit_info"><span class="tit">礼包福利,官方正版财边限量送</span></h3>
+			</div>
+		    <div class="mod_tit_top mod_tit_top_1">
+		    	<span class="icon icon_1"></span>
+				<p class="tit">V.I.P真爱贡献榜</p>
+		    	<div class="time">距结束还有: {remainFromEndTimes.d}天  {remainFromEndTimes.h}时  {remainFromEndTimes.m}分  {remainFromEndTimes.s}秒</div>
+				<a class="btn_rule" href="javascript:;">活动规则</a>
+		    </div>
+			<div class="mod_top_gift">
+				<ul class="top_gift">
+					<li class="item">
+						<span class="pic">
+							<img src="http://i.gtimg.cn/qqlive/images/20150815/top_gift_1.png" alt="">
+							<span class="mask_official"></span>
+						</span>
+						<span class="txt">同款背包</span>
+					</li>
+					<li class="item">
+						<span class="pic">
+							<img src="http://i.gtimg.cn/qqlive/images/20150815/top_gift_2.png" alt="">
+							<span class="mask_official"></span>
+						</span>
+						<span class="txt">签名CD</span>
+					</li>
+					<li class="item">
+						<span class="pic">
+							<img src="http://i.gtimg.cn/qqlive/images/20150815/top_gift_3.png" alt="">
+							<span class="mask_official"></span>
+						</span>
+						<span class="txt">皇冠灯</span>
+					</li>
+				</ul>
+			</div>
+		    <div class="mod_kick_list">
+		        <r-repeat items="{top3fans}">
+		            <dl class="kick_list cf">
+		              <dt>
+		                <span class="user_pic user_pic_1">
+		                  <img r-attr="{src: strFaceUrl}" alt="">
+		                  <span class="{'num num_' + ($index + 1)}">{$index + 1}</span>
+		                </span>
+		              </dt>
+		              <dd>
+		                <p class="name">{strNick}</p>
+		                <p class="txt">{iScoreNum}份~</p>
+		                <p class="tips">可获得BANG同款背包</p>
+		                <a class="btn_kick" href="javascript:;">踢榜</a>
+		              </dd>
+		            </dl>
+		        </r-repeat>       
+			</div>
+			<div class="mod_gift_single">
+		    	<div class="gift_single">
+		    		<span class="pic">
+		                <img src="http://i.gtimg.cn/qqlive/images/20150820/pic_gift_glasses.png" alt="">
+		            </span>
+		            <p class="tit">免费送 价值269元限量版 VR眼镜 !</p>
+		            <p class="txt">截止到: 2015年8月20日 10:00</p>
+		            <div class="btn">
+		            	<a class="btn_a" href="javascript:;">马上拥有</a>
+		            </div>
+		            
+		    	</div>
+		    </div>
+			<div class="mod_tit_top mod_tit_top_2">
+				<span class="icon icon_2"></span>
+				<p class="tit">五只定制专属生日熊</p>
+				<a class="btn_rule" href="javascript:;">活动规则</a>
+			</div>
+			<div class="mod_tit_vip">
+				<div class="tit_vip cf">
+					<div class="lt_vip">
+						<div class="vip_num">
+							<span class="num">1234567</span>
+						</div>
+						<span class="txt">当前徽章号</span>
+					</div>
+					<div class="ct_vip">
+						<span class="num">204</span>
+						<span class="arrow"></span>
+					</div>
+					<div class="rt_vip">
+						<div class="vip_num">
+							<span class="num">1234567</span>
+						</div>
+						<span class="txt">下轮得奖徽章号</span>
+					</div>
+				</div>
+				<div class="tit_info">下轮奖品</div>
+			</div>
+			<div class="mod_prize_list">
+				<ul class="prize_list">
+					<li class="item">
+						<div class="item_inner">
+							<span class="pic pic_1">
+								<img src="http://i.gtimg.cn/qqlive/images/20150815/pic_prize_1.png" alt="">
+							</span>
+							<div class="detail">
+								<p class="txt">尾号1104可得</p>
+								<p class="name">崔胜贤</p>
+							</div>
+						</div>
+					</li>
+					<li class="item current">
+						<div class="item_inner">
+							<span class="pic pic_1">
+								<img src="http://i.gtimg.cn/qqlive/images/20150815/pic_prize_2.png" alt="">
+							</span>
+							<div class="detail">
+								<p class="txt">尾号0818可得</p>
+								<p class="name">权志龙</p>
+							</div>
+						</div>
+					</li>
+					<li class="item">
+						<div class="item_inner">
+							<span class="pic pic_1">
+								<img src="http://i.gtimg.cn/qqlive/images/20150815/pic_prize_3.png" alt="">
+							</span>
+							<div class="detail">
+								<p class="txt">尾号1212可得</p>
+								<p class="name">李胜贤</p>
+							</div>
+						</div>
+					</li>
+					<li class="item">
+						<div class="item_inner">
+							<span class="pic pic_1">
+								<img src="http://i.gtimg.cn/qqlive/images/20150815/pic_prize_4.png" alt="">
+							</span>
+							<div class="detail">
+								<p class="txt">尾号0819可得</p>
+								<p class="name">姜大声</p>
+							</div>
+						</div>
+					</li>
+					<li class="item">
+						<div class="item_inner">
+							<span class="pic pic_1">
+								<img src="http://i.gtimg.cn/qqlive/images/20150815/pic_prize_5.png" alt="">
+							</span>
+							<div class="detail">
+								<p class="txt">尾号0518可得</p>
+								<p class="name">东永裴</p>
+							</div>
+						</div>
+					</li>
+					<li class="item">
+						<div class="item_inner">
+							<span class="pic pic_1">
+								<img src="http://i.gtimg.cn/qqlive/images/20150815/pic_prize_6.png" alt="">
+							</span>
+							<div class="detail">
+								<p class="txt">尾号000可得</p>
+								<p class="name">特别奖</p>
+							</div>
+						</div>
+					</li>
+				</ul>
+				<div class="btn">
+					<a class="btn_a" href="javascript:;">参加抢号</a>
+				</div>
+			</div>
+			<c-lottery r-replace=true></c-lottery>
+		    <div class="mod_support_list">
+		    	<div class="support_list cf">
+			    	<div class="sup_txt">
+			    		<span class="num">{price}元</span><span class="txt">马上拥有V.I.P大礼包</span>
+			    	</div>
+			    	<div class="sup_btn">
+			    		<a class="btn_a" href="javascript:;">支持BIGBANG</a>
+			    	</div>
+		    	</div>
+		    </div>
+		    <c-lotteryresult r-replace=true></c-lotteryresult>
+		</div>
+	</div>
+	<script>
+		Zect.namespace('r')
+		console.time('running')
+		new Zect({
+			el: '#app',
+			data: function () {
+				return {
+					onlines: 0,
+					openGift: false,
+					turnOnMusic: false,
+					benefits: [],
+					price: '',
+					desc: '',
+					startTime: 0,
+					endTime: 0,
+					remainFromEndTimes: {
+						d: ' ',
+						h: ' ',
+						m: ' ',
+						s: ' ',
+					},
+					top3fans: []
+				}
+			},
+			methods: {
+				onToggleMusic: function () {
+				}
+			}
+		})
+		console.timeEnd('running')
+	</script>
+</body>
+</html>
