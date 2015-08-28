@@ -520,7 +520,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    function compileComponent (node, parentVM, scope) {
 	        var cAttName = NS + 'component'
-	        var CompName = node.getAttribute(cAttName) || node.tagName
+	        var CompName = node.getAttribute(cAttName)
+	        var tagName = node.tagName
+	        // filtrate most no-compoment element
+	        if (!CompName && (tagName == 'DIV' || tagName == 'SPAN' || tagName == 'A' || tagName == 'IMG')) return
+	        CompName = CompName || tagName
 	        var Comp = getComponent(CompName)
 
 	        /**
