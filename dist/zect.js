@@ -280,7 +280,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return $data.$get.apply($data, arguments)
 	    }
 	    vm.$watch = function (/*[ keypath ], */fn) {
-	        // if (util.type(fn) !== 'function') return console.warn('Listener handler is not a function.')
 	        return $data.$watch.apply($data, arguments)
 	    }
 	    vm.$unwatch = function (/*[ keypath ], */fn) {
@@ -312,7 +311,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    vm.$compile = function (el, scope) {
 	        var compiler
 
-	        vm._$directives = _getAllDirts()
 	        util.walk(el, function (node) {
 	            var isRoot = node === el
 	            var result = compile(node, scope, isRoot)
@@ -354,9 +352,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // marked
 	        vm.$destroyed = true
 	    }
-	    console.time('Compile')
 	    vm.$compiler = vm.$compile(el)
-	    console.timeEnd('Compile')
 
 	    /**
 	     *  Call ready after compile
@@ -404,12 +400,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	                 *  Compile custom-element
 	                 */
 	                if (inst = compileComponent(node, vm, scope, isRoot)) {
-	                    // inst = new Compiler(node)
 	                    into = false
 	                    break
 	                }
 	                break
 	            case 3:
+	                // ignore whitespace
 	                if (node.nodeValue.trim()) inst = compileText(node, vm, scope, isRoot)
 	                into = false
 	                break
@@ -641,7 +637,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                attrs: {},
 	                dires: {}
 	            }
-
+	        var dirtDefs = _getAllDirts()
 	        /**
 	         *  attributes walk
 	         */
@@ -655,7 +651,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                // variable attribute name
 	                ast.attrs[aname] = v
 	            } else if (aname.indexOf(NS) === 0) {
-	                var def = vm._$directives[aname]
+	                var def = dirtDefs[aname]
 	                if (def) {
 	                    // directive
 	                    ast.dires[aname] = {
@@ -734,7 +730,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  private functions
 	 */
 	function _slice (obj) {
-	    if (!obj) return obj
+	    if (!obj) return []
 	    return [].slice.call(obj)
 	}
 	function _funcOrObject(obj, prop) {
@@ -2229,7 +2225,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if(fn(items[i], i)) break
 	    }
 	}
-
+	function _slice (obj) {
+	    if (!obj) return []
+	    return [].slice.call(obj)
+	}
 	var escapeCharMap = {
 	    '&': '&amp;',
 	    '<': '&lt;',
@@ -2265,22 +2264,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var into = fn(node) !== false
 	        var that = this
 	        if (into) {
-	            ;[].slice.call(node.childNodes).forEach(function (node) {
+	            _slice(node.childNodes).forEach(function (node) {
 	                that.walk(node, fn)
 	            })
 	        }
 	    },
 	    domRange: function (tar, before, after) {
 	        var children = []
+	        var nodes = tar.childNodes
 	        var start = false
-	        _forEach(tar.childNodes, function (item) {
-	            if (item === after) return false
+	        for (var i = 0; i < nodes.length; i++) {
+	            var item = nodes[i]
+	            if (item === after) break
 	            else if (start) {
 	                children.push(item)
 	            } else if (item == before) {
 	                start = true
 	            }
-	        })
+	        }
 	        return children
 	    },
 	    immutable: function (obj) {
