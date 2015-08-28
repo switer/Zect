@@ -319,7 +319,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            if (isRoot) compiler = result.inst
 	            return result.into
 	        })
-	        vm._$directives = null
 	        return compiler
 	    }
 
@@ -646,7 +645,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         *  attributes walk
 	         */
-	        util.forEach(node.attributes, function(att) {
+	        _slice(node.attributes).forEach(function(att) {
 	            var aname = att.name
 	            var v = att.value
 	            // parse att
@@ -2266,7 +2265,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var into = fn(node) !== false
 	        var that = this
 	        if (into) {
-	            _forEach(node.childNodes, function (node) {
+	            ;[].slice.call(node.childNodes).forEach(function (node) {
 	                that.walk(node, fn)
 	            })
 	        }
