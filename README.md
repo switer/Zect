@@ -1,6 +1,7 @@
 ![logo](http://switer.qiniudn.com/zect.png?imageView2/0/w/160/) 
 Zect , component & mvvm
 ====
+[![Build Status](https://travis-ci.org/switer/Zect.svg)](https://travis-ci.org/switer/Zect)
 
 A lightweight Web components and MVVM framework.
 **Zect**'s state observer is power by [muxjs](https://github.com/switer/muxjs)
