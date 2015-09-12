@@ -1,32 +1,37 @@
 {
-	"name": "zect",
-	"version": "1.2.6",
-	"description": "A lightweight Web components and MVVM framework.",
-	"main": "index.js",
-	"scripts": {
-		"test": "node test",
-		"start": "node server"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/switer/Zect.git"
-	},
-	"keywords": [
-		"mvvm",
-		"zect",
-		"web components",
-		"data-binding"
-	],
-	"author": "switer",
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/switer/Zect/issues"
-	},
-	"devDependencies": {
-		"gulp": "^3.8.10",
-		"gulp-header": "^1.2.2",
-		"gulp-uglifyjs": "^0.5.0",
-		"gulp-watch": "^4.1.0",
-		"gulp-webpack": "^1.1.2"
-	}
+  "name": "zect",
+  "version": "1.2.6",
+  "description": "A lightweight Web components and MVVM framework.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha-phantomjs ./test/runner.html",
+    "start": "node server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/switer/Zect.git"
+  },
+  "keywords": [
+    "mvvm",
+    "zect",
+    "web components",
+    "data-binding"
+  ],
+  "author": "switer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/switer/Zect/issues"
+  },
+  "devDependencies": {
+    "gulp": "^3.8.10",
+    "gulp-header": "^1.2.2",
+    "gulp-uglifyjs": "^0.5.0",
+    "gulp-watch": "^4.1.0",
+    "gulp-webpack": "^1.1.2"
+  },
+  "dependencies": {
+    "chai": "^3.2.0",
+    "mocha": "^2.3.2",
+    "phantomjs": "^1.9.7-15"
+  }
 }
