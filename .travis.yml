@@ -2,5 +2,3 @@ sudo: false
 language: node_js
 node_js:
 - '0.11'
-before_install:
-- npm install -g phantomjs@1.9.17-15
