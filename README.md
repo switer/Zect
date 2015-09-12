@@ -92,6 +92,7 @@ var app = new Zect({
     * [class](https://github.com/switer/Zect/wiki/Directives#z-class)
     * [style](https://github.com/switer/Zect/wiki/Directives#z-style)
     * [component](https://github.com/switer/Zect/wiki/Directives#z-component)
+    * [static] (https://github.com/switer/Zect/wiki/Directives#z-static)
 
 ## Guide
 ### Custom directive
@@ -310,7 +311,7 @@ Zect.component('c-header', {
 ```
 
 
-## Component Atrributes
+## Component Attributes
 
 * **data**
 "data" property is used to declare binding data from the parent ViewModel. 
