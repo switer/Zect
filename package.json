@@ -4,7 +4,7 @@
   "description": "A lightweight Web components and MVVM framework.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha-phantomjs ./test/runner.html",
+    "test": "./node_modules/.bin/mocha-phantomjs ./test/runner.html",
     "start": "node server"
   },
   "repository": {
