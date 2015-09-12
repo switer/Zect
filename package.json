@@ -32,6 +32,7 @@
   "dependencies": {
     "chai": "^3.2.0",
     "mocha": "^2.3.2",
+    "mocha-phantomjs": "^3.6.0",
     "phantomjs": "^1.9.7-15"
   }
 }
