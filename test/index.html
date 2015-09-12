@@ -9,7 +9,7 @@
         <!-- if-repeat-component -->
         <z-if is="{!disabled}">
             <z-repeat items="{items}" xname="parent">
-                <z-repeat items="{$value}" xname="child-repeat">
+                <z-repeat items="{$value}" xname="child-repeat" z-static>
                     <my-component 
                         data-value="{$value}"
                         data-row="{$parent.$index}" 

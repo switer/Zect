@@ -384,6 +384,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var inst
 	        switch (node.nodeType) {
 	            case 1:
+	                /**
+	                 * static block no parsing
+	                 */
+	                if (node.hasAttribute(NS + 'static')) {
+	                    into = false
+	                    break
+	                }
+	                /**
+	                 * convert those $ns-if, $ns-repeat attribute to block element
+	                 */
 	                node = compilePseudoDirectiveElement(node)
 	                /**
 	                 *  scope syntax
@@ -1007,10 +1017,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	var conf = __webpack_require__(6)
 	module.exports = {
 	    Element: function(el) {
-	        return el instanceof HTMLElement || el instanceof DocumentFragment
+	        // 1: ELEMENT_NODE, 11: DOCUMENT_FRAGMENT_NODE
+	        return el.nodeType == 1 || el.nodeType == 11
 	    },
 	    DOM: function (el) {
-	        return this.Element(el) || el instanceof Comment
+	        // 8: COMMENT_NODE
+	        return this.Element(el) || el.nodeType == 8
 	    },
 	    IfElement: function(tn) {
 	        return tn == (conf.namespace + 'if').toUpperCase()
@@ -2327,6 +2339,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return escapeCharMap[m]
 	        })
 	    },
+	    isUndef: function (o) {
+	        return this.type(o) === 'undefined'
+	    },
 	    forEach: _forEach,
 	    normalize: _normalize,
 	    digest: _digest
@@ -2505,6 +2520,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.$el = null
 	    return this
 	}
+	/**
+	 * Can be overwrited
+	 * @type {[type]}
+	 */
 	cproto.$update = noop
 	/**
 	 *  Standard directive
@@ -2802,22 +2821,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // cache last name/value
 	    var preName = isNameExpr ? _exec(nexpr) : name
 	    var preValue = isValueExpr ? _exec(vexpr) : value
-
-	    tar.setAttribute(preName, preValue)
+	    var $tar = $(tar)
+	    function _emptyUndef(v) {
+	        return util.isUndef(v) ? '' : v
+	    }
+	    $tar.attr(preName, _emptyUndef(preValue))
 
 	    function _updateName() {
 	        var next = _exec(nexpr)
 
 	        if (util.diff(next, preName)) {
-	            $(tar).removeAttr(preName)
-	                  .attr(next, preValue)
+	            $tar.removeAttr(preName)
+	                  .attr(next, _emptyUndef(preValue))
 	            preValue = next
 	        }
 	    }
 	    function _updateValue() {
 	        var next = _exec(vexpr)
 	        if (util.diff(next, preValue)) {
-	            $(tar).attr(preName, next)
+	            $tar.attr(preName, _emptyUndef(next))
 	            preValue = next
 	        }
 	    }
@@ -2958,7 +2980,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this._$el = $(this.$el)
 	            },
 	            update: function(next) {
-	                if (!next && next !== '') {
+	                if (util.isUndef(next)) {
 	                    this._$el.removeAttr(this.attname)
 	                } else {
 	                    this._$el.attr(this.attname, next)
