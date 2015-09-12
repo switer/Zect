@@ -75,7 +75,6 @@ var app = new Zect({
     * [$el](https://github.com/switer/Zect/wiki/Instance-Properties#el)
     * [$refs](https://github.com/switer/Zect/wiki/Instance-Properties#refs)
     * [$methods](https://github.com/switer/Zect/wiki/Instance-Properties#methods)
-    * [$children](https://github.com/switer/Zect/wiki/Instance-Properties#children)
     * [$destroyed](https://github.com/switer/Zect/wiki/Instance-Properties#destroyed)
 
 - Template Syntax
@@ -93,7 +92,7 @@ var app = new Zect({
     * [class](https://github.com/switer/Zect/wiki/Directives#z-class)
     * [style](https://github.com/switer/Zect/wiki/Directives#z-style)
     * [component](https://github.com/switer/Zect/wiki/Directives#z-component)
-    * [static] (https://github.com/switer/Zect/wiki/Directives#z-static)
+    * [static](https://github.com/switer/Zect/wiki/Directives#z-static)
 
 ## Guide
 ### Custom directive
