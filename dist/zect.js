@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.6
+* Zect v1.2.7
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -147,13 +147,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     *  Mounted element detect
 	     */
+	    if (util.type(el) == 'string') {
+	        el = document.querySelector(el)
+	    } 
 	    if (el && options.template) {
 	        el.innerHTML = options.template
 	    } else if (options.template) {
 	        el = document.createElement('div')
 	        el.innerHTML = options.template
-	    } else if (util.type(el) == 'string') {
-	        el = document.querySelector(el)
 	    } else if (!is.Element(el)) {
 	        throw new Error('Unmatch el option')
 	    }
