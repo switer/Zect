@@ -3230,6 +3230,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            },
 	            deltaUpdate: function (nextItems, preItems, kp) {
+	                console.log('delta', kp)
 	                var index = Number(kp.split('.')[1])
 	                var nv = nextItems[index]
 	                // delta update
@@ -3246,6 +3247,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                $vm.$scope.$update()
 	            },
 	            update: function(items, preItems, kp, method, args) {
+	                console.log('update', items, kp)
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
@@ -3275,6 +3277,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                function destroyVM (vm) {
+	                    console.log('vm')
 	                    // $compiler be inclued in $scope.bindings probably
 	                    vm.$compiler.$remove().$destroy()
 	                    vm.$scope.bindings.forEach(function (bd) {
