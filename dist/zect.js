@@ -2442,6 +2442,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _watch(vm, vars, update) {
 	    var watchKeys = []
 	    function _handler (kp) {
+	        console.log(kp, vars)
 	        if (watchKeys.some(function(key, index) {
 	                if (_relative(kp, key)) {
 	                    return true
@@ -2677,6 +2678,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  update handler
 	     */
 	    function _update(kp, nv, pv, method, ind, len) {
+	        console.log('trigger update', kp, expr)
 	        var nexv = _exec(expr)
 	        if (delta && delta.call(d, nexv, prev, kp)) {
 	            return deltaUpdate && deltaUpdate.call(d, nexv, p, kp)
@@ -2699,6 +2701,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    prev = isExpr ? _exec(expr) : expr
 	    if (def.watch !== false && isExpr) {
+	        console.log(_extractVars(expr))
 	        unwatch = _watch(vm, _extractVars(expr), _update)
 	    }
 	    bind && bind.call(d, prev, expr)
@@ -3201,9 +3204,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        $scope.$update()
 	                        $update.apply(this, arguments)
 	                    }
-	                    if(this.$scope) {
-	                        this.$scope.children.push($scope)
-	                    }
+	                    // if(this.$scope) {
+	                    //     this.$scope.children.push($scope)
+	                    // }
 	                    this.$vm.$compile(this._tmpCon, $scope)
 	                    this._mount()
 	                }
@@ -3230,7 +3233,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            },
 	            deltaUpdate: function (nextItems, preItems, kp) {
-	                console.log('delta', kp)
 	                var index = Number(kp.split('.')[1])
 	                var nv = nextItems[index]
 	                // delta update
@@ -3243,11 +3245,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                $vm.$value = nv
 	                $vm.$index = index
-
-	                $vm.$scope.$update()
+	                var keys = kp.split('.')
+	                keys.shift()
+	                $vm.$scope.$update(keys.join('.') || '')
 	            },
 	            update: function(items, preItems, kp, method, args) {
-	                console.log('update', items, kp)
+	                console.log('---update')
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
@@ -3265,9 +3268,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var $scope = new Scope(data, that.$scope)
 	                    // this.$scope is a parent scope, 
 	                    // on the top of current scope
-	                    if(that.$scope) {
-	                        that.$scope.children.push($scope)
-	                    }
+	                    // if(that.$scope) {
+	                    //     that.$scope.children.push($scope)
+	                    // }
 	                    return {
 	                        $index: index,
 	                        $value: item,
@@ -3277,7 +3280,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                function destroyVM (vm) {
-	                    console.log('vm')
+	                    var prefIndex = vm.$scope.$parent ? vm.$scope.$parent.children.indexOf(vm.$scope) : -1
+	                    ~prefIndex && vm.$scope.$parent.children.splice(prefIndex, 1)
 	                    // $compiler be inclued in $scope.bindings probably
 	                    vm.$compiler.$remove().$destroy()
 	                    vm.$scope.bindings.forEach(function (bd) {
@@ -3475,11 +3479,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	Scope.prototype.$update = function () {
+	    var args = arguments
 	    this.bindings.forEach(function (bd) {
-	        bd.$update()
+	        bd.$update.apply(bd, args)
 	    })
 	    this.children.forEach(function (child) {
-	        child.$update()
+	        child.$update.apply(child, args)
 	    })
 	}
 
