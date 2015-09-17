@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.7
+* Zect v1.2.7-1
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -7,7 +7,7 @@
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define([], factory);
+		define(factory);
 	else if(typeof exports === 'object')
 		exports["Zect"] = factory();
 	else
@@ -68,9 +68,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var is = __webpack_require__(5)
+	var is = __webpack_require__(3)
 	var Mux = __webpack_require__(4)
-	var util = __webpack_require__(3)
+	var util = __webpack_require__(5)
 	var conf = __webpack_require__(6)
 	var execute = __webpack_require__(7)
 	var Compiler = __webpack_require__(8)
@@ -121,7 +121,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	Zect.namespace = function(ns) {
 	    conf.namespace = ns
 	}
-
+	Zect.$ = $
 	_inherit(Zect, Compiler)
 
 	/*******************************
@@ -816,8 +816,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	'use strict';
-	var util = __webpack_require__(3)
-	var is = __webpack_require__(5)
+	var util = __webpack_require__(5)
+	var is = __webpack_require__(3)
 
 	function Selector(sel) {
 	    if (util.type(sel) == 'string') {
@@ -1015,131 +1015,23 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-
-	var Mux = __webpack_require__(4)
-	var mUtils = Mux.utils
-	var _normalize = Mux.keyPath.normalize
-	var _digest = Mux.keyPath.digest
-
-	function _keys(o) {
-	    return Object.keys(o)
-	}
-	function _forEach (items, fn) {
-	    var len = items.length || 0
-	    for (var i = 0; i < len; i ++) {
-	        if(fn(items[i], i)) break
+	var conf = __webpack_require__(6)
+	module.exports = {
+	    Element: function(el) {
+	        // 1: ELEMENT_NODE, 11: DOCUMENT_FRAGMENT_NODE
+	        return el.nodeType == 1 || el.nodeType == 11
+	    },
+	    DOM: function (el) {
+	        // 8: COMMENT_NODE
+	        return this.Element(el) || el.nodeType == 8
+	    },
+	    IfElement: function(tn) {
+	        return tn == (conf.namespace + 'if').toUpperCase()
+	    },
+	    RepeatElement: function(tn) {
+	        return tn == (conf.namespace + 'repeat').toUpperCase()
 	    }
 	}
-	function _slice (obj) {
-	    if (!obj) return []
-	    return [].slice.call(obj)
-	}
-	var escapeCharMap = {
-	    '&': '&amp;',
-	    '<': '&lt;',
-	    '>': '&gt;',
-	    '\"': '&quot;',
-	    '\'': '&#x27;',
-	    '/': '&#x2F;'
-	}
-	var escapeRex = new RegExp(_keys(escapeCharMap).join('|'), 'g')
-	module.exports = {
-	    type: mUtils.type,
-	    diff: mUtils.diff,
-	    merge: mUtils.merge,
-	    objEach: mUtils.objEach,
-	    copyArray: mUtils.copyArray,
-	    copyObject: mUtils.copyObject,
-	    
-	    extend: function(obj) {
-	        if (this.type(obj) != 'object') return obj;
-	        var source, prop;
-	        for (var i = 1, length = arguments.length; i < length; i++) {
-	            source = arguments[i];
-	            for (prop in source) {
-	                obj[prop] = source[prop];
-	            }
-	        }
-	        return obj;
-	    },
-	    valueDiff: function(next, pre) {
-	        return next !== pre || next instanceof Object
-	    },
-	    walk: function(node, fn) {
-	        var into = fn(node) !== false
-	        var that = this
-	        if (into) {
-	            _slice(node.childNodes).forEach(function (node) {
-	                that.walk(node, fn)
-	            })
-	        }
-	    },
-	    domRange: function (tar, before, after) {
-	        var children = []
-	        var nodes = tar.childNodes
-	        var start = false
-	        for (var i = 0; i < nodes.length; i++) {
-	            var item = nodes[i]
-	            if (item === after) break
-	            else if (start) {
-	                children.push(item)
-	            } else if (item == before) {
-	                start = true
-	            }
-	        }
-	        return children
-	    },
-	    immutable: function (obj) {
-	        var that = this
-	        var _t = this.type(obj)
-	        var n
-
-	        if (_t == 'array') {
-	            n = obj.map(function (item) {
-	                return that.immutable(item)
-	            })
-	        } else if (_t == 'object') {
-	            n = {}
-	            this.objEach(obj, function (k, v) {
-	                n[k] = that.immutable(v)
-	            })
-	        } else {
-	            n = obj
-	        }
-	        return n
-	    },
-	    tagHTML: function (tag) {
-	        var h = tag.outerHTML
-	        var open = h.match(/^<[^>]+?>/)
-	        var close = h.match(/<\/[^<]+?>$/)
-	        
-	        return [open ? open[0]:'', close ? close[0]:'']
-	    },
-	    relative: function (src, dest) {
-	        src = _normalize(src)
-	        dest = _normalize(dest)
-
-	        if (src == dest) return true
-	        else {
-	            var start = src.indexOf(dest) === 0
-	            var subkp = src.replace(dest, '').match(/^[\.\[]/)
-	            return start && subkp
-	        }
-	    },
-	    escape: function (str) {
-	        if (!this.type(str) == 'string') return str
-	        return str.replace(escapeRex, function (m) {
-	            return escapeCharMap[m]
-	        })
-	    },
-	    isUndef: function (o) {
-	        return this.type(o) === 'undefined'
-	    },
-	    forEach: _forEach,
-	    normalize: _normalize,
-	    digest: _digest
-	}
-
 
 /***/ },
 /* 4 */
@@ -2331,27 +2223,135 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var conf = __webpack_require__(6)
-	module.exports = {
-	    Element: function(el) {
-	        // 1: ELEMENT_NODE, 11: DOCUMENT_FRAGMENT_NODE
-	        return el.nodeType == 1 || el.nodeType == 11
-	    },
-	    DOM: function (el) {
-	        // 8: COMMENT_NODE
-	        return this.Element(el) || el.nodeType == 8
-	    },
-	    IfElement: function(tn) {
-	        return tn == (conf.namespace + 'if').toUpperCase()
-	    },
-	    RepeatElement: function(tn) {
-	        return tn == (conf.namespace + 'repeat').toUpperCase()
+
+	var Mux = __webpack_require__(4)
+	var mUtils = Mux.utils
+	var _normalize = Mux.keyPath.normalize
+	var _digest = Mux.keyPath.digest
+
+	function _keys(o) {
+	    return Object.keys(o)
+	}
+	function _forEach (items, fn) {
+	    var len = items.length || 0
+	    for (var i = 0; i < len; i ++) {
+	        if(fn(items[i], i)) break
 	    }
 	}
+	function _slice (obj) {
+	    if (!obj) return []
+	    return [].slice.call(obj)
+	}
+	var escapeCharMap = {
+	    '&': '&amp;',
+	    '<': '&lt;',
+	    '>': '&gt;',
+	    '\"': '&quot;',
+	    '\'': '&#x27;',
+	    '/': '&#x2F;'
+	}
+	var escapeRex = new RegExp(_keys(escapeCharMap).join('|'), 'g')
+	module.exports = {
+	    type: mUtils.type,
+	    diff: mUtils.diff,
+	    merge: mUtils.merge,
+	    objEach: mUtils.objEach,
+	    copyArray: mUtils.copyArray,
+	    copyObject: mUtils.copyObject,
+	    
+	    extend: function(obj) {
+	        if (this.type(obj) != 'object') return obj;
+	        var source, prop;
+	        for (var i = 1, length = arguments.length; i < length; i++) {
+	            source = arguments[i];
+	            for (prop in source) {
+	                obj[prop] = source[prop];
+	            }
+	        }
+	        return obj;
+	    },
+	    valueDiff: function(next, pre) {
+	        return next !== pre || next instanceof Object
+	    },
+	    walk: function(node, fn) {
+	        var into = fn(node) !== false
+	        var that = this
+	        if (into) {
+	            _slice(node.childNodes).forEach(function (node) {
+	                that.walk(node, fn)
+	            })
+	        }
+	    },
+	    domRange: function (tar, before, after) {
+	        var children = []
+	        var nodes = tar.childNodes
+	        var start = false
+	        for (var i = 0; i < nodes.length; i++) {
+	            var item = nodes[i]
+	            if (item === after) break
+	            else if (start) {
+	                children.push(item)
+	            } else if (item == before) {
+	                start = true
+	            }
+	        }
+	        return children
+	    },
+	    immutable: function (obj) {
+	        var that = this
+	        var _t = this.type(obj)
+	        var n
+
+	        if (_t == 'array') {
+	            n = obj.map(function (item) {
+	                return that.immutable(item)
+	            })
+	        } else if (_t == 'object') {
+	            n = {}
+	            this.objEach(obj, function (k, v) {
+	                n[k] = that.immutable(v)
+	            })
+	        } else {
+	            n = obj
+	        }
+	        return n
+	    },
+	    tagHTML: function (tag) {
+	        var h = tag.outerHTML
+	        var open = h.match(/^<[^>]+?>/)
+	        var close = h.match(/<\/[^<]+?>$/)
+	        
+	        return [open ? open[0]:'', close ? close[0]:'']
+	    },
+	    relative: function (src, dest) {
+	        src = _normalize(src)
+	        dest = _normalize(dest)
+
+	        if (src == dest) return true
+	        else {
+	            var start = src.indexOf(dest) === 0
+	            var subkp = src.replace(dest, '').match(/^[\.\[]/)
+	            return start && subkp
+	        }
+	    },
+	    escape: function (str) {
+	        if (!this.type(str) == 'string') return str
+	        return str.replace(escapeRex, function (m) {
+	            return escapeCharMap[m]
+	        })
+	    },
+	    isUndef: function (o) {
+	        return this.type(o) === 'undefined'
+	    },
+	    forEach: _forEach,
+	    normalize: _normalize,
+	    digest: _digest
+	}
+
 
 /***/ },
 /* 6 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
@@ -2374,7 +2374,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  execute expression from template with specified Scope and ViewModel
 	 */
 
-	var util = __webpack_require__(3)
+	var util = __webpack_require__(5)
 	/**
 	 *  Calc expression value
 	 */
@@ -2419,7 +2419,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var util = __webpack_require__(3)
+	var util = __webpack_require__(5)
 	var Expression = __webpack_require__(9)
 	var _execute = __webpack_require__(7)
 	var _relative = util.relative
@@ -2973,7 +2973,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var $ = __webpack_require__(2)
 	var conf = __webpack_require__(6)
-	var util = __webpack_require__(3)
+	var util = __webpack_require__(5)
 
 	module.exports = function(Zect) {
 	    return {
@@ -3094,12 +3094,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + this._expr + '}')
 
 	                this.fn = fn.bind(this.$vm)
-	                $(this.$el).on(this.type, this.fn, false)
+	                this.$el && $(this.$el).on(this.type, this.fn, false)
 
 	            },
 	            unbind: function() {
 	                if (this.fn) {
-	                    $(this.$el).off(this.type, this.fn)
+	                    this.$el && $(this.$el).off(this.type, this.fn)
 	                    this.fn = null
 	                }
 	            }
@@ -3134,7 +3134,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var $ = __webpack_require__(2)
 	var conf = __webpack_require__(6)
-	var util = __webpack_require__(3)
+	var util = __webpack_require__(5)
 	var Scope = __webpack_require__(12)
 	var Expression = __webpack_require__(9)
 
@@ -3463,7 +3463,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 12 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 *  Scope abstraction is a colletor when compiler child template with scope 

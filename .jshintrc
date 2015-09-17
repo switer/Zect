@@ -1,0 +1,18 @@
+{
+    "bitwise": false, 
+    "strict": true,
+    "browser": true,
+    "node": true,
+    "strict": true,
+    "expr": true,
+    "globals": {
+    	"require": true,
+    	"module": true,
+    	"Zect": true,
+        "it": true,
+        "describe": true,
+        "assert": true,
+        "expect": true
+    },
+    "asi": true //makes it an error to leave a trailing whitespace in your code
+}
