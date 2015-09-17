@@ -2442,7 +2442,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _watch(vm, vars, update) {
 	    var watchKeys = []
 	    function _handler (kp) {
-	        console.log(kp, vars)
 	        if (watchKeys.some(function(key, index) {
 	                if (_relative(kp, key)) {
 	                    return true
@@ -2482,11 +2481,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var cproto = compiler.prototype
 
 	compiler.inherit = function (Ctor) {
-	    function SubCompiler() {
-	        Ctor.apply(this, arguments)
-	    }
-	    SubCompiler.prototype = Object.create(compiler.prototype)
-	    return SubCompiler
+	    Ctor.prototype = Object.create(compiler.prototype)
+	    return Ctor
 	}
 	cproto.$bundle = function () {
 	    return this.$el
@@ -2531,11 +2527,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  Standard directive
 	 */
 	var _did = 0
-	compiler.Directive = compiler.inherit(function (vm, scope, tar, def, name, expr) {
+	compiler.Directive = compiler.inherit(function Directive (vm, scope, tar, def, name, expr) {
 	    var d = this
 	    var bindParams = []
 	    var isExpr = !!_isExpr(expr)
 
+	    d.$expr = expr
+	    
 	    isExpr && (expr = _strip(expr))
 
 	    if (def.multi) {
@@ -2549,9 +2547,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        bindParams.push(key)
 	    }
 
+	    d.$id = _did++
+	    d.$name = name
 	    d.$el = tar
 	    d.$vm = vm
-	    d.$id = _did++
 	    d.$scope = scope
 
 	    var bind = def.bind
@@ -2613,7 +2612,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	var _eid = 0
-	compiler.Element = compiler.inherit(function (vm, scope, tar, def, name, expr) {
+	compiler.Element = compiler.inherit(function TemplateElement(vm, scope, tar, def, name, expr) {
 	    var d = this
 	    var bind = def.bind
 	    var unbind = def.unbind
@@ -2624,9 +2623,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var prev
 	    var unwatch
 
-	    isExpr && (expr = _strip(expr))
+	    d.$expr = expr
 
+	    isExpr && (expr = _strip(expr))
 	    d.$id = _eid ++
+	    d.$name = name
 	    d.$vm = vm
 	    d.$el = tar
 	    d.$scope = scope // save the scope reference
@@ -2678,7 +2679,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  update handler
 	     */
 	    function _update(kp, nv, pv, method, ind, len) {
-	        console.log('trigger update', kp, expr)
 	        var nexv = _exec(expr)
 	        if (delta && delta.call(d, nexv, prev, kp)) {
 	            return deltaUpdate && deltaUpdate.call(d, nexv, p, kp)
@@ -2701,7 +2701,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    prev = isExpr ? _exec(expr) : expr
 	    if (def.watch !== false && isExpr) {
-	        console.log(_extractVars(expr))
 	        unwatch = _watch(vm, _extractVars(expr), _update)
 	    }
 	    bind && bind.call(d, prev, expr)
@@ -2709,7 +2708,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 
-	compiler.Text = compiler.inherit(function(vm, scope, tar, originExpr, parts, exprs) {
+	compiler.Text = compiler.inherit(function TemplateText(vm, scope, tar, originExpr, parts, exprs) {
+	    this.$expr = originExpr
+
 	    function _exec (expr) {
 	        return _execute(vm, scope, expr, null)
 	    }
@@ -2806,8 +2807,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    render()
 	})
 
-	compiler.Attribute = function(vm, scope, tar, name, value) {
-	    
+	compiler.Attribute = function Attribute (vm, scope, tar, name, value) {
+	    this.$name = name
+	    this.$expr = value
+
 	    var isNameExpr = _isExpr(name)
 	    var isValueExpr = _isExpr(value)
 
@@ -3247,10 +3250,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                $vm.$index = index
 	                var keys = kp.split('.')
 	                keys.shift()
+	                console.log($vm.$scope.bindings)
 	                $vm.$scope.$update(keys.join('.') || '')
 	            },
 	            update: function(items, preItems, kp, method, args) {
-	                console.log('---update')
+
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
