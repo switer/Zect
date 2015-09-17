@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.7
+* Zect v1.2.7-1
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -121,7 +121,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	Zect.namespace = function(ns) {
 	    conf.namespace = ns
 	}
-
+	Zect.$ = $
 	_inherit(Zect, Compiler)
 
 	/*******************************
@@ -3091,12 +3091,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + this._expr + '}')
 
 	                this.fn = fn.bind(this.$vm)
-	                $(this.$el).on(this.type, this.fn, false)
+	                this.$el && $(this.$el).on(this.type, this.fn, false)
 
 	            },
 	            unbind: function() {
 	                if (this.fn) {
-	                    $(this.$el).off(this.type, this.fn)
+	                    this.$el && $(this.$el).off(this.type, this.fn)
 	                    this.fn = null
 	                }
 	            }

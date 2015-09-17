@@ -107,6 +107,30 @@ describe('#Global API', function () {
 })
 
 
+describe('#Instance Options', function () {
+	it('el', function () {
+		var app = new Zect({
+			el: '#app'
+		})
+		checkInstance(app)
+		assert(app.$el === document.querySelector('#app'))
+
+		var el = document.createElement('div')
+		app = new Zect({
+			el: el
+		})
+		checkInstance(app)
+		assert(app.$el === el)
+
+		app = new Zect({
+			el: '#app',
+			template: '<div class="tpl"></div>'
+		})
+		checkInstance(app)
+		assert(app.$el.querySelector('.tpl'))
+	})
+})
+
 
 
 
