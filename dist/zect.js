@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.7-1
+* Zect v1.2.8
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -7,7 +7,7 @@
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define([], factory);
+		define(factory);
 	else if(typeof exports === 'object')
 		exports["Zect"] = factory();
 	else
@@ -68,9 +68,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var is = __webpack_require__(5)
+	var is = __webpack_require__(3)
 	var Mux = __webpack_require__(4)
-	var util = __webpack_require__(3)
+	var util = __webpack_require__(5)
 	var conf = __webpack_require__(6)
 	var execute = __webpack_require__(7)
 	var Compiler = __webpack_require__(8)
@@ -816,8 +816,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	'use strict';
-	var util = __webpack_require__(3)
-	var is = __webpack_require__(5)
+	var util = __webpack_require__(5)
+	var is = __webpack_require__(3)
 
 	function Selector(sel) {
 	    if (util.type(sel) == 'string') {
@@ -1015,131 +1015,23 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-
-	var Mux = __webpack_require__(4)
-	var mUtils = Mux.utils
-	var _normalize = Mux.keyPath.normalize
-	var _digest = Mux.keyPath.digest
-
-	function _keys(o) {
-	    return Object.keys(o)
-	}
-	function _forEach (items, fn) {
-	    var len = items.length || 0
-	    for (var i = 0; i < len; i ++) {
-	        if(fn(items[i], i)) break
+	var conf = __webpack_require__(6)
+	module.exports = {
+	    Element: function(el) {
+	        // 1: ELEMENT_NODE, 11: DOCUMENT_FRAGMENT_NODE
+	        return el.nodeType == 1 || el.nodeType == 11
+	    },
+	    DOM: function (el) {
+	        // 8: COMMENT_NODE
+	        return this.Element(el) || el.nodeType == 8
+	    },
+	    IfElement: function(tn) {
+	        return tn == (conf.namespace + 'if').toUpperCase()
+	    },
+	    RepeatElement: function(tn) {
+	        return tn == (conf.namespace + 'repeat').toUpperCase()
 	    }
 	}
-	function _slice (obj) {
-	    if (!obj) return []
-	    return [].slice.call(obj)
-	}
-	var escapeCharMap = {
-	    '&': '&amp;',
-	    '<': '&lt;',
-	    '>': '&gt;',
-	    '\"': '&quot;',
-	    '\'': '&#x27;',
-	    '/': '&#x2F;'
-	}
-	var escapeRex = new RegExp(_keys(escapeCharMap).join('|'), 'g')
-	module.exports = {
-	    type: mUtils.type,
-	    diff: mUtils.diff,
-	    merge: mUtils.merge,
-	    objEach: mUtils.objEach,
-	    copyArray: mUtils.copyArray,
-	    copyObject: mUtils.copyObject,
-	    
-	    extend: function(obj) {
-	        if (this.type(obj) != 'object') return obj;
-	        var source, prop;
-	        for (var i = 1, length = arguments.length; i < length; i++) {
-	            source = arguments[i];
-	            for (prop in source) {
-	                obj[prop] = source[prop];
-	            }
-	        }
-	        return obj;
-	    },
-	    valueDiff: function(next, pre) {
-	        return next !== pre || next instanceof Object
-	    },
-	    walk: function(node, fn) {
-	        var into = fn(node) !== false
-	        var that = this
-	        if (into) {
-	            _slice(node.childNodes).forEach(function (node) {
-	                that.walk(node, fn)
-	            })
-	        }
-	    },
-	    domRange: function (tar, before, after) {
-	        var children = []
-	        var nodes = tar.childNodes
-	        var start = false
-	        for (var i = 0; i < nodes.length; i++) {
-	            var item = nodes[i]
-	            if (item === after) break
-	            else if (start) {
-	                children.push(item)
-	            } else if (item == before) {
-	                start = true
-	            }
-	        }
-	        return children
-	    },
-	    immutable: function (obj) {
-	        var that = this
-	        var _t = this.type(obj)
-	        var n
-
-	        if (_t == 'array') {
-	            n = obj.map(function (item) {
-	                return that.immutable(item)
-	            })
-	        } else if (_t == 'object') {
-	            n = {}
-	            this.objEach(obj, function (k, v) {
-	                n[k] = that.immutable(v)
-	            })
-	        } else {
-	            n = obj
-	        }
-	        return n
-	    },
-	    tagHTML: function (tag) {
-	        var h = tag.outerHTML
-	        var open = h.match(/^<[^>]+?>/)
-	        var close = h.match(/<\/[^<]+?>$/)
-	        
-	        return [open ? open[0]:'', close ? close[0]:'']
-	    },
-	    relative: function (src, dest) {
-	        src = _normalize(src)
-	        dest = _normalize(dest)
-
-	        if (src == dest) return true
-	        else {
-	            var start = src.indexOf(dest) === 0
-	            var subkp = src.replace(dest, '').match(/^[\.\[]/)
-	            return start && subkp
-	        }
-	    },
-	    escape: function (str) {
-	        if (!this.type(str) == 'string') return str
-	        return str.replace(escapeRex, function (m) {
-	            return escapeCharMap[m]
-	        })
-	    },
-	    isUndef: function (o) {
-	        return this.type(o) === 'undefined'
-	    },
-	    forEach: _forEach,
-	    normalize: _normalize,
-	    digest: _digest
-	}
-
 
 /***/ },
 /* 4 */
@@ -2331,27 +2223,135 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var conf = __webpack_require__(6)
-	module.exports = {
-	    Element: function(el) {
-	        // 1: ELEMENT_NODE, 11: DOCUMENT_FRAGMENT_NODE
-	        return el.nodeType == 1 || el.nodeType == 11
-	    },
-	    DOM: function (el) {
-	        // 8: COMMENT_NODE
-	        return this.Element(el) || el.nodeType == 8
-	    },
-	    IfElement: function(tn) {
-	        return tn == (conf.namespace + 'if').toUpperCase()
-	    },
-	    RepeatElement: function(tn) {
-	        return tn == (conf.namespace + 'repeat').toUpperCase()
+
+	var Mux = __webpack_require__(4)
+	var mUtils = Mux.utils
+	var _normalize = Mux.keyPath.normalize
+	var _digest = Mux.keyPath.digest
+
+	function _keys(o) {
+	    return Object.keys(o)
+	}
+	function _forEach (items, fn) {
+	    var len = items.length || 0
+	    for (var i = 0; i < len; i ++) {
+	        if(fn(items[i], i)) break
 	    }
 	}
+	function _slice (obj) {
+	    if (!obj) return []
+	    return [].slice.call(obj)
+	}
+	var escapeCharMap = {
+	    '&': '&amp;',
+	    '<': '&lt;',
+	    '>': '&gt;',
+	    '\"': '&quot;',
+	    '\'': '&#x27;',
+	    '/': '&#x2F;'
+	}
+	var escapeRex = new RegExp(_keys(escapeCharMap).join('|'), 'g')
+	module.exports = {
+	    type: mUtils.type,
+	    diff: mUtils.diff,
+	    merge: mUtils.merge,
+	    objEach: mUtils.objEach,
+	    copyArray: mUtils.copyArray,
+	    copyObject: mUtils.copyObject,
+	    
+	    extend: function(obj) {
+	        if (this.type(obj) != 'object') return obj;
+	        var source, prop;
+	        for (var i = 1, length = arguments.length; i < length; i++) {
+	            source = arguments[i];
+	            for (prop in source) {
+	                obj[prop] = source[prop];
+	            }
+	        }
+	        return obj;
+	    },
+	    valueDiff: function(next, pre) {
+	        return next !== pre || next instanceof Object
+	    },
+	    walk: function(node, fn) {
+	        var into = fn(node) !== false
+	        var that = this
+	        if (into) {
+	            _slice(node.childNodes).forEach(function (node) {
+	                that.walk(node, fn)
+	            })
+	        }
+	    },
+	    domRange: function (tar, before, after) {
+	        var children = []
+	        var nodes = tar.childNodes
+	        var start = false
+	        for (var i = 0; i < nodes.length; i++) {
+	            var item = nodes[i]
+	            if (item === after) break
+	            else if (start) {
+	                children.push(item)
+	            } else if (item == before) {
+	                start = true
+	            }
+	        }
+	        return children
+	    },
+	    immutable: function (obj) {
+	        var that = this
+	        var _t = this.type(obj)
+	        var n
+
+	        if (_t == 'array') {
+	            n = obj.map(function (item) {
+	                return that.immutable(item)
+	            })
+	        } else if (_t == 'object') {
+	            n = {}
+	            this.objEach(obj, function (k, v) {
+	                n[k] = that.immutable(v)
+	            })
+	        } else {
+	            n = obj
+	        }
+	        return n
+	    },
+	    tagHTML: function (tag) {
+	        var h = tag.outerHTML
+	        var open = h.match(/^<[^>]+?>/)
+	        var close = h.match(/<\/[^<]+?>$/)
+	        
+	        return [open ? open[0]:'', close ? close[0]:'']
+	    },
+	    relative: function (src, dest) {
+	        src = _normalize(src)
+	        dest = _normalize(dest)
+
+	        if (src == dest) return true
+	        else {
+	            var start = src.indexOf(dest) === 0
+	            var subkp = src.replace(dest, '').match(/^[\.\[]/)
+	            return start && subkp
+	        }
+	    },
+	    escape: function (str) {
+	        if (!this.type(str) == 'string') return str
+	        return str.replace(escapeRex, function (m) {
+	            return escapeCharMap[m]
+	        })
+	    },
+	    isUndef: function (o) {
+	        return this.type(o) === 'undefined'
+	    },
+	    forEach: _forEach,
+	    normalize: _normalize,
+	    digest: _digest
+	}
+
 
 /***/ },
 /* 6 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
@@ -2374,7 +2374,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  execute expression from template with specified Scope and ViewModel
 	 */
 
-	var util = __webpack_require__(3)
+	var util = __webpack_require__(5)
 	/**
 	 *  Calc expression value
 	 */
@@ -2419,7 +2419,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var $ = __webpack_require__(2)
-	var util = __webpack_require__(3)
+	var util = __webpack_require__(5)
 	var Expression = __webpack_require__(9)
 	var _execute = __webpack_require__(7)
 	var _relative = util.relative
@@ -2481,11 +2481,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var cproto = compiler.prototype
 
 	compiler.inherit = function (Ctor) {
-	    function SubCompiler() {
-	        Ctor.apply(this, arguments)
-	    }
-	    SubCompiler.prototype = Object.create(compiler.prototype)
-	    return SubCompiler
+	    Ctor.prototype = Object.create(compiler.prototype)
+	    return Ctor
 	}
 	cproto.$bundle = function () {
 	    return this.$el
@@ -2530,11 +2527,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  Standard directive
 	 */
 	var _did = 0
-	compiler.Directive = compiler.inherit(function (vm, scope, tar, def, name, expr) {
+	compiler.Directive = compiler.inherit(function Directive (vm, scope, tar, def, name, expr) {
 	    var d = this
 	    var bindParams = []
 	    var isExpr = !!_isExpr(expr)
 
+	    d.$expr = expr
+	    
 	    isExpr && (expr = _strip(expr))
 
 	    if (def.multi) {
@@ -2548,9 +2547,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        bindParams.push(key)
 	    }
 
+	    d.$id = _did++
+	    d.$name = name
 	    d.$el = tar
 	    d.$vm = vm
-	    d.$id = _did++
 	    d.$scope = scope
 
 	    var bind = def.bind
@@ -2612,7 +2612,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	var _eid = 0
-	compiler.Element = compiler.inherit(function (vm, scope, tar, def, name, expr) {
+	compiler.Element = compiler.inherit(function ZElement(vm, scope, tar, def, name, expr) {
 	    var d = this
 	    var bind = def.bind
 	    var unbind = def.unbind
@@ -2623,9 +2623,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var prev
 	    var unwatch
 
-	    isExpr && (expr = _strip(expr))
+	    d.$expr = expr
 
+	    isExpr && (expr = _strip(expr))
 	    d.$id = _eid ++
+	    d.$name = name
 	    d.$vm = vm
 	    d.$el = tar
 	    d.$scope = scope // save the scope reference
@@ -2678,8 +2680,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    function _update(kp, nv, pv, method, ind, len) {
 	        var nexv = _exec(expr)
-	        if (delta && delta.call(d, nexv, prev, kp)) {
-	            return deltaUpdate && deltaUpdate.call(d, nexv, p, kp)
+	        var deltaResult 
+	        if ( delta && (deltaResult = delta.call(d, nexv, prev, kp)) ) {
+	            return deltaUpdate && deltaUpdate.call(d, nexv, p, kp, deltaResult)
 	        }
 	        if (util.diff(nexv, prev)) {
 	            var p = prev
@@ -2706,7 +2709,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 
-	compiler.Text = compiler.inherit(function(vm, scope, tar, originExpr, parts, exprs) {
+	compiler.Text = compiler.inherit(function ZText(vm, scope, tar, originExpr, parts, exprs) {
+	    this.$expr = originExpr
+
 	    function _exec (expr) {
 	        return _execute(vm, scope, expr, null)
 	    }
@@ -2803,8 +2808,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    render()
 	})
 
-	compiler.Attribute = function(vm, scope, tar, name, value) {
-	    
+	compiler.Attribute = function ZAttribute (vm, scope, tar, name, value) {
+	    this.$name = name
+	    this.$expr = value
+
 	    var isNameExpr = _isExpr(name)
 	    var isValueExpr = _isExpr(value)
 
@@ -2970,7 +2977,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var $ = __webpack_require__(2)
 	var conf = __webpack_require__(6)
-	var util = __webpack_require__(3)
+	var util = __webpack_require__(5)
+
 
 	module.exports = function(Zect) {
 	    return {
@@ -3042,6 +3050,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                var vm = this.$vm
+	                var _update = this.$update
 	                var vType = type == 'checkbox' ? 'checked':'value'
 	                var that = this
 
@@ -3056,6 +3065,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                 */
 	                this._update = function () {
 	                    that.$el[vType] = vm.$get(that._prop)
+	                }
+	                this.$update = function () {
+	                    that._update()
+	                    _update && _update.apply(this, arguments)
 	                }
 	                $el.on(this.evtType, this._requestChange)
 	                var watches = this._watches = []
@@ -3091,7 +3104,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + this._expr + '}')
 
 	                this.fn = fn.bind(this.$vm)
-	                this.$el && $(this.$el).on(this.type, this.fn, false)
+	                $(this.$el).on(this.type, this.fn, false)
 
 	            },
 	            unbind: function() {
@@ -3118,7 +3131,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 
-
 /***/ },
 /* 11 */
 /***/ function(module, exports, __webpack_require__) {
@@ -3131,13 +3143,52 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var $ = __webpack_require__(2)
 	var conf = __webpack_require__(6)
-	var util = __webpack_require__(3)
+	var util = __webpack_require__(5)
 	var Scope = __webpack_require__(12)
 	var Expression = __webpack_require__(9)
 
 	function _getData (data) {
 	    return util.type(data) == 'object' ? util.copyObject(data) : {}
 	}
+	/**
+	 *  create a sub-vm for array item with specified index
+	 */
+	function createSubVM(item, index) {
+	    var subEl = this.child.cloneNode(true)
+	    var data = _getData(item)
+
+	    data.$index = index
+	    data.$value = item
+
+	    var $scope = new Scope(data, this.$scope)
+	    // this.$scope is a parent scope, 
+	    // on the top of current scope
+	    if(this.$scope) {
+	        this.$scope.children.push($scope)
+	    }
+	    return {
+	        $index: index,
+	        $value: item,
+	        $compiler: this.$vm.$compile(subEl, $scope),
+	        $scope: $scope
+	    }
+	}
+	function updateVMIndex (vm, index) {
+	    vm.$index = index
+	    var $data = vm.$scope.data
+	    $data.$index = index
+	    vm.$scope.$update()
+	}
+	function destroyVM (vm) {
+	    var $parent = vm.$scope.$parent
+	    $parent && $parent.$removeChild($scope)
+	    // $compiler be inclued in $scope.bindings probably
+	    vm.$compiler.$remove().$destroy()
+	    vm.$scope.bindings.forEach(function (bd) {
+	        bd.$destroy()
+	    })                    
+	}
+
 	module.exports = function(Zect) {
 	    return {
 	        'if': {
@@ -3184,7 +3235,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                } else {
 	                    this.compiled = true
 
-	                    var $parent = this.$scope || {}
+	                    var $parent = this.$scope || new Scope()
 	                    // inherit parent scope's properties
 	                    var $scope = new Scope($parent.data, $parent)
 	                    var protoUpdate = $scope.$update
@@ -3220,17 +3271,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this._noArrayFilter = Expression.notFunctionCall(expr)
 	            },
 	            delta: function (nv, pv, kp) {
-	                if (kp && /\d+/.test(kp.split('.')[1])) {
-	                    var index = Number(kp.split('.')[1])
+	                if (!kp) return false
+	                var exprProp = util.normalize(Expression.strip(this.$expr).trim())
+	                var path = kp.replace(exprProp, '')
+	                var matches
+	                /**
+	                 * 1. mount.0
+	                 * 2. mount.0.0.prop
+	                 * 3. $value.prop
+	                 */
+	                if (
+	                    (exprProp == '$value' && (matches = path.match(/^(\d+)(\.|$)/))) ||
+	                    (matches = path.match(/^\.(\d+)(\.|$)/))
+	                ) {
+	                    var index = Number(matches[1])
 	                    // can be delta update
-	                    if (this.$vms && index < this.$vms.length) return true
+	                    if (this.$vms && index < this.$vms.length) return {
+	                        index: index,
+	                        path:  path.replace(/^(\.|\d+\.?)/, ''),
+	                        mount: exprProp
+	                    }
 	                    else return false
 	                } else {
 	                    return false
 	                }
 	            },
-	            deltaUpdate: function (nextItems, preItems, kp) {
-	                var index = Number(kp.split('.')[1])
+	            deltaUpdate: function (nextItems, preItems, kp, payload) {
+	                var index = payload.index
 	                var nv = nextItems[index]
 	                // delta update
 	                this.last[index] = nv
@@ -3242,53 +3309,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                $vm.$value = nv
 	                $vm.$index = index
-
-	                $vm.$scope.$update()
+	                $vm.$scope.$update(payload.path || '')
 	            },
 	            update: function(items, preItems, kp, method, args) {
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
 	                var that = this
-	                /**
-	                 *  create a sub-vm for array item with specified index
-	                 */
-	                function createSubVM(item, index) {
-	                    var subEl = that.child.cloneNode(true)
-	                    var data = _getData(item)
-
-	                    data.$index = index
-	                    data.$value = item
-
-	                    var $scope = new Scope(data, that.$scope)
-	                    // this.$scope is a parent scope, 
-	                    // on the top of current scope
-	                    if(that.$scope) {
-	                        that.$scope.children.push($scope)
-	                    }
-	                    return {
-	                        $index: index,
-	                        $value: item,
-	                        $compiler: that.$vm.$compile(subEl, $scope),
-	                        $scope: $scope
-	                    }
-	                }
-
-	                function destroyVM (vm) {
-	                    // $compiler be inclued in $scope.bindings probably
-	                    vm.$compiler.$remove().$destroy()
-	                    vm.$scope.bindings.forEach(function (bd) {
-	                        bd.$destroy()
-	                    })                    
-	                }
-
-	                function updateVMIndex (vm, index) {
-	                    vm.$index = index
-	                    var $data = vm.$scope.data
-	                    $data.$index = index
-	                    vm.$scope.$update()
-	                }
-
+	                
 	                // it's not modify
 	                if (method == 'splice' && args.length == 2 && (!args[1] || args[1] < 0)) return
 
@@ -3306,7 +3334,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                             */
 	                            // create vms for each inserted item
 	                            var insertVms = [].slice.call(args, 2).map(function (item, index) {
-	                                return createSubVM(item, ind + index)
+	                                return createSubVM.call(that, item, ind + index)
 	                            })
 	                            // insert items into current $vms
 	                            this.$vms.splice.apply(this.$vms, [ind, len].concat(insertVms))
@@ -3346,7 +3374,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    },
 	                    push: function () {
 	                        var index = items.length - 1
-	                        var vm = createSubVM(items[index], index)
+	                        var vm = createSubVM.call(that, items[index], index)
 	                        this.$vms.push(vm)
 	                        vm.$compiler.$insertBefore($floor)
 	                    },
@@ -3362,7 +3390,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        })
 	                    },
 	                    unshift: function () {
-	                        var vm = createSubVM(items[0], 0)
+	                        var vm = createSubVM.call(that, items[0], 0)
 	                        this.$vms.unshift(vm)
 	                        vm.$compiler.$insertAfter($ceil)
 	                        this.$vms.forEach(function (v, i) {
@@ -3374,7 +3402,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    $concat: function () {
 	                        var len = this.$vms.length
 	                        $(items.slice(len).map(function (item, i) {
-	                            var vm = createSubVM(item, i + len)
+	                            var vm = createSubVM.call(that, item, i + len)
 	                            that.$vms.push(vm)
 	                            return vm.$compiler.$bundle()
 	                        })).insertBefore($floor)
@@ -3397,7 +3425,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                items.forEach(function(item, index) {
 	                    var v
 	                    if (!olds) {
-	                        v = createSubVM(item, index)
+	                        v = createSubVM.call(that, item, index)
 	                    } else {
 
 	                        var i = -1
@@ -3427,7 +3455,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            updateVms.push(v)
 	                            
 	                        } else {
-	                            v = createSubVM(item, index)
+	                            v = createSubVM.call(that, item, index)
 	                        }
 	                    }
 	                    vms[index] = v
@@ -3456,7 +3484,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 12 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 *  Scope abstraction is a colletor when compiler child template with scope 
@@ -3468,16 +3496,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.data = data
 	    this.bindings = []
 	    this.children = []
-	    this.$parent = parent || {}
+	    this.$parent = parent || null
 	}
 
 	Scope.prototype.$update = function () {
+	    var args = arguments
 	    this.bindings.forEach(function (bd) {
-	        bd.$update()
+	        bd.$update.apply(bd, args)
 	    })
 	    this.children.forEach(function (child) {
-	        child.$update()
+	        child.$update.apply(child, args)
 	    })
+	}
+	Scope.prototype.$removeChild = function (scope) {
+	    var i = this.children.indexOf(scope)
+	    if (~i) {
+	        scope.$parent = null
+	        this.children.splice(i, 1)
+	    }
+	    return this
+	}
+	Scope.prototype.$addChild = function (scope) {
+	    if (!~this.children.indexOf(scope)) this.children.push(scope)
+	    return this
 	}
 
 	module.exports = Scope
