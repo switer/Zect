@@ -2612,7 +2612,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	var _eid = 0
-	compiler.Element = compiler.inherit(function TemplateElement(vm, scope, tar, def, name, expr) {
+	compiler.Element = compiler.inherit(function ZElement(vm, scope, tar, def, name, expr) {
 	    var d = this
 	    var bind = def.bind
 	    var unbind = def.unbind
@@ -2708,7 +2708,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 
-	compiler.Text = compiler.inherit(function TemplateText(vm, scope, tar, originExpr, parts, exprs) {
+	compiler.Text = compiler.inherit(function ZText(vm, scope, tar, originExpr, parts, exprs) {
 	    this.$expr = originExpr
 
 	    function _exec (expr) {
@@ -2807,7 +2807,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    render()
 	})
 
-	compiler.Attribute = function Attribute (vm, scope, tar, name, value) {
+	compiler.Attribute = function ZAttribute (vm, scope, tar, name, value) {
 	    this.$name = name
 	    this.$expr = value
 
@@ -2978,6 +2978,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var conf = __webpack_require__(6)
 	var util = __webpack_require__(5)
 
+
 	module.exports = function(Zect) {
 	    return {
 	        'attr': {
@@ -3048,6 +3049,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                var vm = this.$vm
+	                var _update = this.$update
 	                var vType = type == 'checkbox' ? 'checked':'value'
 	                var that = this
 
@@ -3062,6 +3064,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                 */
 	                this._update = function () {
 	                    that.$el[vType] = vm.$get(that._prop)
+	                }
+	                this.$update = function () {
+	                    that._update()
+	                    _update && _update.apply(this, arguments)
 	                }
 	                $el.on(this.evtType, this._requestChange)
 	                var watches = this._watches = []
@@ -3097,7 +3103,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + this._expr + '}')
 
 	                this.fn = fn.bind(this.$vm)
-	                this.$el && $(this.$el).on(this.type, this.fn, false)
+	                $(this.$el).on(this.type, this.fn, false)
 
 	            },
 	            unbind: function() {
@@ -3124,7 +3130,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 
-
 /***/ },
 /* 11 */
 /***/ function(module, exports, __webpack_require__) {
@@ -3144,6 +3149,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _getData (data) {
 	    return util.type(data) == 'object' ? util.copyObject(data) : {}
 	}
+	/**
+	 *  create a sub-vm for array item with specified index
+	 */
+	function createSubVM(item, index) {
+	    var subEl = this.child.cloneNode(true)
+	    var data = _getData(item)
+
+	    data.$index = index
+	    data.$value = item
+
+	    var $scope = new Scope(data, this.$scope)
+	    // this.$scope is a parent scope, 
+	    // on the top of current scope
+	    if(this.$scope) {
+	        this.$scope.children.push($scope)
+	    }
+	    return {
+	        $index: index,
+	        $value: item,
+	        $compiler: this.$vm.$compile(subEl, $scope),
+	        $scope: $scope
+	    }
+	}
+	function updateVMIndex (vm, index) {
+	    vm.$index = index
+	    var $data = vm.$scope.data
+	    $data.$index = index
+	    vm.$scope.$update()
+	}
+	function destroyVM (vm) {
+	    var $parent = vm.$scope.$parent
+	    $parent && $parent.$removeChild($scope)
+	    // $compiler be inclued in $scope.bindings probably
+	    vm.$compiler.$remove().$destroy()
+	    vm.$scope.bindings.forEach(function (bd) {
+	        bd.$destroy()
+	    })                    
+	}
+
 	module.exports = function(Zect) {
 	    return {
 	        'if': {
@@ -3190,7 +3234,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                } else {
 	                    this.compiled = true
 
-	                    var $parent = this.$scope || {}
+	                    var $parent = this.$scope || new Scope()
 	                    // inherit parent scope's properties
 	                    var $scope = new Scope($parent.data, $parent)
 	                    var protoUpdate = $scope.$update
@@ -3207,9 +3251,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        $scope.$update()
 	                        $update.apply(this, arguments)
 	                    }
-	                    // if(this.$scope) {
-	                    //     this.$scope.children.push($scope)
-	                    // }
+	                    if(this.$scope) {
+	                        this.$scope.children.push($scope)
+	                    }
 	                    this.$vm.$compile(this._tmpCon, $scope)
 	                    this._mount()
 	                }
@@ -3226,8 +3270,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this._noArrayFilter = Expression.notFunctionCall(expr)
 	            },
 	            delta: function (nv, pv, kp) {
-	                if (kp && /\d+/.test(kp.split('.')[1])) {
-	                    var index = Number(kp.split('.')[1])
+	                var parts = kp.split('.')
+	                var exprProp = Expression.strip(this.$expr).trim()
+	                var rootProp
+	                kp.replace()
+
+	                if (kp && rootProp == exprProp && /\d+/.test(parts[1])) {
+	                    var index = Number(parts[1])
 	                    // can be delta update
 	                    if (this.$vms && index < this.$vms.length) return true
 	                    else return false
@@ -3236,7 +3285,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            },
 	            deltaUpdate: function (nextItems, preItems, kp) {
-	                var index = Number(kp.split('.')[1])
+	                console.log(kp, this.$expr)
+	                var index = Number(parts[1])
 	                var nv = nextItems[index]
 	                // delta update
 	                this.last[index] = nv
@@ -3250,56 +3300,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	                $vm.$index = index
 	                var keys = kp.split('.')
 	                keys.shift()
-	                console.log($vm.$scope.bindings)
 	                $vm.$scope.$update(keys.join('.') || '')
 	            },
 	            update: function(items, preItems, kp, method, args) {
-
 	                if (!items || !items.forEach) {
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
 	                var that = this
-	                /**
-	                 *  create a sub-vm for array item with specified index
-	                 */
-	                function createSubVM(item, index) {
-	                    var subEl = that.child.cloneNode(true)
-	                    var data = _getData(item)
-
-	                    data.$index = index
-	                    data.$value = item
-
-	                    var $scope = new Scope(data, that.$scope)
-	                    // this.$scope is a parent scope, 
-	                    // on the top of current scope
-	                    // if(that.$scope) {
-	                    //     that.$scope.children.push($scope)
-	                    // }
-	                    return {
-	                        $index: index,
-	                        $value: item,
-	                        $compiler: that.$vm.$compile(subEl, $scope),
-	                        $scope: $scope
-	                    }
-	                }
-
-	                function destroyVM (vm) {
-	                    var prefIndex = vm.$scope.$parent ? vm.$scope.$parent.children.indexOf(vm.$scope) : -1
-	                    ~prefIndex && vm.$scope.$parent.children.splice(prefIndex, 1)
-	                    // $compiler be inclued in $scope.bindings probably
-	                    vm.$compiler.$remove().$destroy()
-	                    vm.$scope.bindings.forEach(function (bd) {
-	                        bd.$destroy()
-	                    })                    
-	                }
-
-	                function updateVMIndex (vm, index) {
-	                    vm.$index = index
-	                    var $data = vm.$scope.data
-	                    $data.$index = index
-	                    vm.$scope.$update()
-	                }
-
+	                
 	                // it's not modify
 	                if (method == 'splice' && args.length == 2 && (!args[1] || args[1] < 0)) return
 
@@ -3317,7 +3325,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                             */
 	                            // create vms for each inserted item
 	                            var insertVms = [].slice.call(args, 2).map(function (item, index) {
-	                                return createSubVM(item, ind + index)
+	                                return createSubVM.call(that, item, ind + index)
 	                            })
 	                            // insert items into current $vms
 	                            this.$vms.splice.apply(this.$vms, [ind, len].concat(insertVms))
@@ -3357,7 +3365,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    },
 	                    push: function () {
 	                        var index = items.length - 1
-	                        var vm = createSubVM(items[index], index)
+	                        var vm = createSubVM.call(that, items[index], index)
 	                        this.$vms.push(vm)
 	                        vm.$compiler.$insertBefore($floor)
 	                    },
@@ -3373,7 +3381,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        })
 	                    },
 	                    unshift: function () {
-	                        var vm = createSubVM(items[0], 0)
+	                        var vm = createSubVM.call(that, items[0], 0)
 	                        this.$vms.unshift(vm)
 	                        vm.$compiler.$insertAfter($ceil)
 	                        this.$vms.forEach(function (v, i) {
@@ -3385,7 +3393,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    $concat: function () {
 	                        var len = this.$vms.length
 	                        $(items.slice(len).map(function (item, i) {
-	                            var vm = createSubVM(item, i + len)
+	                            var vm = createSubVM.call(that, item, i + len)
 	                            that.$vms.push(vm)
 	                            return vm.$compiler.$bundle()
 	                        })).insertBefore($floor)
@@ -3408,7 +3416,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                items.forEach(function(item, index) {
 	                    var v
 	                    if (!olds) {
-	                        v = createSubVM(item, index)
+	                        v = createSubVM.call(that, item, index)
 	                    } else {
 
 	                        var i = -1
@@ -3438,7 +3446,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            updateVms.push(v)
 	                            
 	                        } else {
-	                            v = createSubVM(item, index)
+	                            v = createSubVM.call(that, item, index)
 	                        }
 	                    }
 	                    vms[index] = v
@@ -3479,7 +3487,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.data = data
 	    this.bindings = []
 	    this.children = []
-	    this.$parent = parent || {}
+	    this.$parent = parent || null
 	}
 
 	Scope.prototype.$update = function () {
@@ -3490,6 +3498,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.children.forEach(function (child) {
 	        child.$update.apply(child, args)
 	    })
+	}
+	Scope.prototype.$removeChild = function (scope) {
+	    var i = this.children.indexOf(scope)
+	    if (~i) {
+	        scope.$parent = null
+	        this.children.splice(i, 1)
+	    }
+	    return this
+	}
+	Scope.prototype.$addChild = function (scope) {
+	    if (!~this.children.indexOf(scope)) this.children.push(scope)
+	    return this
 	}
 
 	module.exports = Scope

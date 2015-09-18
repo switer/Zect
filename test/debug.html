@@ -3,17 +3,15 @@
 <head>
     <title></title>
     <style type="text/css">
-        .selected {color: blue}
+        .selected {color: red}
     </style>
 </head>
 <body>
 <div id="app">
     <z-repeat items="{items}">
         <z-repeat items="{$value}">
-            <p z-class="{selected: selected}"
-                
-            >
-                <a href="javascript:;" z-on="{click: onSelected.bind(null, $parent.$index, id)}">{title}</a>
+            <p>
+                <a href="javascript:;" z-class="{selected: selected}" z-on="{click: onSelected.bind(null, $parent.$index, id)}">{title}</a>
             </p>
         </z-repeat>
     </z-repeat>
