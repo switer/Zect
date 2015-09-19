@@ -2343,6 +2343,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    isUndef: function (o) {
 	        return this.type(o) === 'undefined'
 	    },
+	    isNon: function (o) {
+	        var t = this.type(o)
+	        return t === 'undefined' || t === 'null'
+	    },
 	    forEach: _forEach,
 	    normalize: _normalize,
 	    digest: _digest
@@ -3003,6 +3007,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                } else {
 	                    this._$el.attr(this.attname, next)
 	                }
+	            },
+	            unbind: function () {
+	                this._$el = this.attname = null
 	            }
 	        },
 	        'class': {
@@ -3014,6 +3021,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            update: function(next) {
 	                if (next) this._$el.addClass(this.className)
 	                else this._$el.removeClass(this.className)
+	            },
+	            unbind: function () {
+	                this._$el = this.className = null
 	            }
 	        },
 	        'html': {
@@ -3096,6 +3106,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this._watches.forEach(function (f) {
 	                    f()
 	                })
+	                this._$el = null
+	                this._requestChange = this._update = noop
 	            }
 	        },
 	        'on': {
@@ -3104,6 +3116,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            bind: function(evtType, handler, expression ) {
 	                this._expr = expression
 	                this.type = evtType
+	                this._$el = $(this.$el)
 	            },
 	            update: function (handler) {
 	                this.unbind()
@@ -3113,14 +3126,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + this._expr + '}')
 
 	                this.fn = fn.bind(this.$vm)
-	                $(this.$el).on(this.type, this.fn, false)
+	                this._$el.on(this.type, this.fn, false)
 
 	            },
 	            unbind: function() {
 	                if (this.fn) {
-	                    this.$el && $(this.$el).off(this.type, this.fn)
+	                    this._$el && this._$el.off(this.type, this.fn)
 	                    this.fn = null
 	                }
+	                this._$el = this.type = null
 	            }
 	        },
 	        'show': {
@@ -3135,10 +3149,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	            },
 	            update: function (next) {
 	                this.$el.style && (this.$el.style[this.sheet] = next)
+	            },
+	            unbind: function () {
+	                this.sheet = null
+	            }
+	        },
+	        'src': {
+	            bind: function () {
+	                this._$el = $(this.$el)
+	            },
+	            update: function (src) {
+	                if (util.isNon(src)) {
+	                    this._$el.removeAttr('src')
+	                } else {
+	                    this._$el.attr('src', src)
+	                }
+	            },
+	            unbind: function () {
+	                this._$el = null
 	            }
 	        }
 	    }
 	}
+	function noop () {}
 
 /***/ },
 /* 11 */
