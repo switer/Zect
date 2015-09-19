@@ -9,7 +9,7 @@
         <!-- if-repeat-component -->
         <z-if is="{!disabled}">
             <z-repeat items="{items}" xname="parent">
-                <z-repeat items="{$value}" xname="child-repeat">
+                <z-repeat items="{$value}" xname="child-repeat" z-static>
                     <my-component 
                         data-value="{$value}"
                         data-row="{$parent.$index}" 
@@ -25,10 +25,11 @@
             </z-repeat>
             <h1>switer</h1>
         </z-if>
+        <section z-style="{height: '100px'; backgroundImage: 'url(http://www.baidu.com/img/bdlogo.png)'}"></section>
         <z-repeat items="{todoItems}">
             <input type="text" z-model="{'todoItems[' + $index + '].value'}">
         </z-repeat>
-
+        <img z-attr="{_src: undef}" data-src="{undef}">
         <!-- component-state -->
         <my-component
             z-tap="{items}"
@@ -76,7 +77,8 @@
             template: '<z-template z-on="{click: onClick}" data-region="comp"><span>{subtitle}</span> <ul><z-repeat items="{items}"><li>{$value}</li></z-repeat></ul> </z-template>',
             data: {
                 items: [],
-                subtitle: 'sub title'
+                subtitle: 'sub title',
+                undef: undefined
             },
             ready: function () {},
             destroy: function () {
@@ -104,6 +106,7 @@
             },
             data: function () {
                 return {
+                    undef: undefined,
                     todoItems:[{
                         value: 'input two way binding'
                     }],
@@ -143,7 +146,7 @@
             },
             ready: function () {
                 console.timeEnd('p')
-                setTimeout( function() {
+                setTimeout(function() {
                     this.$data.text = 'renew'
                     // this.$data.inputs.text = '<div>hello world</div>'
                     // this.$data.isShow = false

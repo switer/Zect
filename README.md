@@ -1,6 +1,7 @@
 ![logo](http://switer.qiniudn.com/zect.png?imageView2/0/w/160/) 
 Zect , component & mvvm
 ====
+[![Build Status](https://travis-ci.org/switer/Zect.svg)](https://travis-ci.org/switer/Zect)
 
 A lightweight Web components and MVVM framework.
 **Zect**'s state observer is power by [muxjs](https://github.com/switer/muxjs)
@@ -74,7 +75,6 @@ var app = new Zect({
     * [$el](https://github.com/switer/Zect/wiki/Instance-Properties#el)
     * [$refs](https://github.com/switer/Zect/wiki/Instance-Properties#refs)
     * [$methods](https://github.com/switer/Zect/wiki/Instance-Properties#methods)
-    * [$children](https://github.com/switer/Zect/wiki/Instance-Properties#children)
     * [$destroyed](https://github.com/switer/Zect/wiki/Instance-Properties#destroyed)
 
 - Template Syntax
@@ -92,6 +92,7 @@ var app = new Zect({
     * [class](https://github.com/switer/Zect/wiki/Directives#z-class)
     * [style](https://github.com/switer/Zect/wiki/Directives#z-style)
     * [component](https://github.com/switer/Zect/wiki/Directives#z-component)
+    * [static](https://github.com/switer/Zect/wiki/Directives#z-static)
 
 ## Guide
 ### Custom directive
@@ -310,7 +311,7 @@ Zect.component('c-header', {
 ```
 
 
-## Component Atrributes
+## Component Attributes
 
 * **data**
 "data" property is used to declare binding data from the parent ViewModel. 

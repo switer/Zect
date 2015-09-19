@@ -18,7 +18,7 @@ var bannerVars = {
     }
 
 gulp.task('watch', function () {
-    watch('lib/*.js', function () {
+    watch(['lib/*.js', './package.json'], function () {
         gulp.start('default')
     })
 });
