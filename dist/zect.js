@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.8
+* Zect v1.2.9
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -2907,7 +2907,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var execute = __webpack_require__(7)
-
+	var util = __webpack_require__(5)
 	var _sep = ';'
 	var _sepRegexp = new RegExp(_sep, 'g')
 	var _literalSep = ','
@@ -2957,9 +2957,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        })
 	        return vars
 	    },
-	    // variableOnly: function (expr) {
-	    //     return /^[a-zA-Z_$][\w$]*$/.test(expr)
-	    // },
+	    /**
+	     * abc
+	     * abc.0
+	     * abc[0]
+	     * abc[0].abc
+	     * abc["xx-xx"] || abc['xx-xx']
+	     */
+	    variableOnly: function (expr) {
+	        return !util.normalize(expr || '').split('.').some(function (k) {
+	            return !k.match(/^([a-zA-Z_$][\w$]*|\d+|".*"|'.*')$/)  
+	        })
+	    },
 	    notFunctionCall: function (expr) {
 	        return !/[()]/.test(expr)
 	    }
@@ -3274,27 +3283,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (!kp) return false
 	                var exprProp = util.normalize(Expression.strip(this.$expr).trim())
 	                var path = kp.replace(exprProp, '')
+	                var index
 	                var matches
 	                /**
 	                 * 1. mount.0
 	                 * 2. mount.0.0.prop
 	                 * 3. $value.prop
 	                 */
-	                if (
-	                    (exprProp == '$value' && (matches = path.match(/^(\d+)(\.|$)/))) ||
-	                    (matches = path.match(/^\.(\d+)(\.|$)/))
-	                ) {
-	                    var index = Number(matches[1])
-	                    // can be delta update
-	                    if (this.$vms && index < this.$vms.length) return {
-	                        index: index,
-	                        path:  path.replace(/^(\.|\d+\.?)/, ''),
-	                        mount: exprProp
-	                    }
-	                    else return false
+	                if (exprProp == '$value' && (matches = path.match(/^\d+\.(\d+)(\.|$)/))) {
+	                    path = path.replace(/\d+\.?/, '')
+	                } else if (matches = path.match(/^\.(\d+)(\.|$)/)) {
+	                    path = path.replace(/^\./, '')
 	                } else {
 	                    return false
 	                }
+	                index = Number(matches[1])
+	                // can be delta update
+	                if (this.$vms && index < this.$vms.length) return {
+	                    index: index,
+	                    path:  path,
+	                    mount: exprProp
+	                }
+	                else return false
 	            },
 	            deltaUpdate: function (nextItems, preItems, kp, payload) {
 	                var index = payload.index
@@ -3316,9 +3326,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'repeat" only accept Array data. {' + this.expr + '}')
 	                }
 	                var that = this
+	                var valueOnly = Expression.variableOnly(this.$expr)
 	                
 	                // it's not modify
-	                if (method == 'splice' && args.length == 2 && (!args[1] || args[1] < 0)) return
+	                if (valueOnly && method == 'splice' && args.length == 2 && (!args[1] || args[1] < 0)) return
 
 	                var $floor = this.$floor()
 	                var $ceil = this.$ceil()
@@ -3410,7 +3421,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                var patch = arrayPatcher[method]
-	                if (this._noArrayFilter && patch) {
+	                if (valueOnly && this._noArrayFilter && patch) {
 	                    patch.call(this)
 	                    this.last = util.copyArray(items)
 	                    return

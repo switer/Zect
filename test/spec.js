@@ -1,31 +1,9 @@
-'use strict';
-
-function checkInstance(inst) {
-	// element
-    assert(inst.$el.nodeType == 1 || inst.$el.nodeType == 11)
-    // instance properties
-    expect(inst.$refs).to.be.an('object')
-    expect(inst.$methods).to.be.an('object')
-    // instance methods
-    expect(inst.$set).to.be.a('function')
-    expect(inst.$get).to.be.a('function')
-    expect(inst.$watch).to.be.a('function')
-    expect(inst.$unwatch).to.be.a('function')
-    expect(inst.$compile).to.be.a('function')
-    expect(inst.$component).to.be.a('function')
-    expect(inst.$destroy).to.be.a('function')
-}
-
-function template(fn) {
-	return fn.toString().replace(/^function\s*\(\s*\)\s*\{\s*\/\*|\*\/\s*\}$/, '')
-}
-
 describe('#Global API', function () {
 	it('Zect()', function () {
 		var app = new Zect({
 			el: '#app'
 		})
-		checkInstance(app)
+		tools.checkInstance(app)
     })
     it('Zect.extend()', function () {
 		var Comp = Zect.extend({
@@ -34,7 +12,7 @@ describe('#Global API', function () {
 		var app = new Comp({
 			el: document.createElement('div')
 		})
-		checkInstance(app)
+		tools.checkInstance(app)
 		assert(app.$el.querySelector('.tpl'))
     })
     it('Zect.component()', function () {
@@ -42,15 +20,15 @@ describe('#Global API', function () {
     		template: '<div class="c-comp"></div>'
     	})
 		var app = new Zect({
-			template: template(function () {/*
+			template: tools.template(function () {/*
 				<div class="tpl">
 					<c-comp></c-comp>
 					<div z-component="c-comp"></div>
 				</div>
 			*/})
 		})
-		checkInstance(app)
-		checkInstance(new Comp())
+		tools.checkInstance(app)
+		tools.checkInstance(new Comp())
 		assert(app.$el.querySelectorAll('.c-comp').length == 2)
     })
     it('Zect.namespace()', function () {
@@ -60,7 +38,7 @@ describe('#Global API', function () {
 			template: '<div class="tpl" r-class="{tpl: true}"></div>'
 		})
     	Zect.namespace('z')
-		checkInstance(app)
+		tools.checkInstance(app)
 		assert(app.$el.querySelector('.tpl'))
     })
     it('Zect.directive()', function () {
@@ -101,7 +79,7 @@ describe('#Global API', function () {
 			},
 			template: '<div class="tpl" z-dataset="{tpl: \'test\'}"><div z-number="{num}"></div></div>'
 		})
-		checkInstance(app)
+		tools.checkInstance(app)
 		expect(app.$el.querySelector('.tpl').dataset.tpl).to.equal('test')
     })
 })
@@ -112,26 +90,87 @@ describe('#Instance Options', function () {
 		var app = new Zect({
 			el: '#app'
 		})
-		checkInstance(app)
+		tools.checkInstance(app)
 		assert(app.$el === document.querySelector('#app'))
 
 		var el = document.createElement('div')
 		app = new Zect({
 			el: el
 		})
-		checkInstance(app)
+		tools.checkInstance(app)
 		assert(app.$el === el)
 
 		app = new Zect({
 			el: '#app',
 			template: '<div class="tpl"></div>'
 		})
-		checkInstance(app)
+		tools.checkInstance(app)
 		assert(app.$el.querySelector('.tpl'))
 	})
 })
 
-
+describe('#Directives', function () {
+	it('repeat', function () {
+		var app = new Zect({
+			data: function () {
+				return {
+					items: [{id: 1, name: '1'}, {id: 2, name: '2'}]
+				}
+			},
+			template: tools.template(function () {/*
+				<z-repeat items="{items}">
+					<div data-id="{id}">{name}</div>
+				</z-repeat>
+			*/})
+		})
+		var $items = app.$el.querySelectorAll('[data-id]')
+		expect($items.length).to.equal(2)
+		/**
+		 * delta update
+		 */
+		app.$data.items[0].id = 3
+		app.$data.items[1].id = 4
+		var $nextItems = app.$el.querySelectorAll('[data-id]')
+		expect($items[0]).to.equal($nextItems[0])
+		expect($items[1]).to.equal($nextItems[1])
+		expect($items[0].dataset.id).to.equal('3')
+		expect($items[1].dataset.id).to.equal('4')
+	})
+	it('repeat:x2', function () {
+		var app = new Zect({
+			data: function () {
+				return {
+					items: [[{id: 1, name: '1'}, {id: 2, name: '2'}]]
+				}
+			},
+			template: tools.template(function () {/*
+				<z-repeat items="{items}">
+					<ul>
+					<z-repeat items="{$value}">
+						<li data-id="{id}">{name}</li>
+					</z-repeat>
+					</ul>
+				</z-repeat>
+			*/})
+		})
+		var $uls = app.$el.querySelectorAll('ul')
+		var $lis = app.$el.querySelectorAll('ul li')
+		expect($uls.length).to.equal(1)
+		expect($lis.length).to.equal(2)
+		/**
+		 * delta update
+		 */
+		// app.$data.items[0][0].id = 3
+		app.$data.items[0][1].id = 4
+		var $nextUls = app.$el.querySelectorAll('ul')
+		var $nextLis = app.$el.querySelectorAll('ul li')
+		expect($nextUls[0]).to.equal($nextUls[0])
+		expect($nextLis[0]).to.equal($nextLis[0])
+		expect($nextLis[1]).to.equal($nextLis[1])
+		// expect($nextLis[0].dataset.id).to.equal('3')
+		expect($nextLis[1].dataset.id).to.equal('4')
+	})
+})
 
 
 
