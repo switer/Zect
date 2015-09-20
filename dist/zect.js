@@ -3512,7 +3512,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                                // reuse old vm
 	                                if (!item.used) {
 	                                    vm = that.$vms[ind]
-	                                    return true
+	                                    return item.used = true
 	                                }
 	                            })) {
 	                                updateVMData(vm, item.data, index, kp)
