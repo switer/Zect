@@ -177,8 +177,28 @@ describe('#Directives', function () {
 		$nextLis = app.$el.querySelectorAll('ul li')
 		expect($uls[0]).to.equal($nextUls[0])
 		expect($lis[0]).to.equal($nextLis[0])
-		assert($lis[1] === $nextLis[1])
+		expect($lis[1]).to.equal($nextLis[1])
 		expect($nextLis[1].dataset.id).to.equal('5')
+
+		/**
+		 * array.shift()
+		 */
+		app.$data.items[0].shift()
+		$nextUls = app.$el.querySelectorAll('ul')
+		$nextLis = app.$el.querySelectorAll('ul li')
+		expect($uls[0]).to.equal($nextUls[0])
+		expect($lis[0]).to.equal($nextLis[0])
+		expect($lis.length).to.equal(1)
+		expect($nextLis[0].dataset.id).to.equal('1')
+
+		/**
+		 * array.splice()
+		 */
+		// app.$data.items[0].splice(1, {id: 2, name: '2'})
+		// $nextUls = app.$el.querySelectorAll('ul')
+		// $nextLis = app.$el.querySelectorAll('ul li')
+		// expect($lis.length).to.equal(2)
+		// expect($nextLis[0].dataset.id).to.equal('1')
 	})
 })
 
