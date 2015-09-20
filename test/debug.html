@@ -44,7 +44,11 @@
             ready: function () {},
             methods: {
                 onSelected: function (index, id) {
-                    this.$data.items[0].shift()
+                    this.$data.items[0].splice(0, 0, {
+                        id: 2,
+                        title: 'Hello',
+                        selected: false
+                    })
                     // this.$data.items[0][1].id = 4
                     // this.$data.items[index].some(function (item) {
                     //     console.log(item.id, id)

@@ -167,15 +167,13 @@ describe('#Directives', function () {
 		expect($uls[0]).to.equal($nextUls[0])
 		expect($lis[0]).to.equal($nextLis[0])
 		expect($lis[1]).to.equal($nextLis[1])
-		expect($lis[1].dataset.id).to.equal('4')
+		expect($nextLis[1].dataset.id).to.equal('4')
 
 		/**
 		 * delta update item
 		 */
 		app.$data.$set('items[0][1]', {id: 5, name: '5'})
-		$nextUls = app.$el.querySelectorAll('ul')
 		$nextLis = app.$el.querySelectorAll('ul li')
-		expect($uls[0]).to.equal($nextUls[0])
 		expect($lis[0]).to.equal($nextLis[0])
 		expect($lis[1]).to.equal($nextLis[1])
 		expect($nextLis[1].dataset.id).to.equal('5')
@@ -184,21 +182,18 @@ describe('#Directives', function () {
 		 * array.shift()
 		 */
 		app.$data.items[0].shift()
-		$nextUls = app.$el.querySelectorAll('ul')
 		$nextLis = app.$el.querySelectorAll('ul li')
-		expect($uls[0]).to.equal($nextUls[0])
-		expect($lis[0]).to.equal($nextLis[0])
-		expect($lis.length).to.equal(1)
-		expect($nextLis[0].dataset.id).to.equal('1')
+		assert.notEqual($lis[0], $nextLis[0])
+		assert.equal($nextLis.length, 1)
+		assert.equal($nextLis[0].dataset.id, '5')
 
 		/**
 		 * array.splice()
 		 */
-		// app.$data.items[0].splice(1, {id: 2, name: '2'})
-		// $nextUls = app.$el.querySelectorAll('ul')
-		// $nextLis = app.$el.querySelectorAll('ul li')
-		// expect($lis.length).to.equal(2)
-		// expect($nextLis[0].dataset.id).to.equal('1')
+		app.$data.items[0].splice(0, 0, {id: 2, name: '2'})
+		$nextLis = app.$el.querySelectorAll('ul li')
+		assert.equal($nextLis.length, 2)
+		assert.equal($nextLis[0].dataset.id, '2')
 	})
 })
 
