@@ -153,8 +153,8 @@ describe('#Directives', function () {
 				</z-repeat>
 			*/})
 		})
-		var $uls = app.$el.querySelectorAll('ul')
-		var $lis = app.$el.querySelectorAll('ul li')
+		var $uls = [].slice.call(app.$el.querySelectorAll('ul'))
+		var $lis = [].slice.call(app.$el.querySelectorAll('ul li'))
 		expect($uls.length).to.equal(1)
 		expect($lis.length).to.equal(2)
 		/**
@@ -164,11 +164,41 @@ describe('#Directives', function () {
 		app.$data.items[0][1].id = 4
 		var $nextUls = app.$el.querySelectorAll('ul')
 		var $nextLis = app.$el.querySelectorAll('ul li')
-		expect($nextUls[0]).to.equal($nextUls[0])
-		expect($nextLis[0]).to.equal($nextLis[0])
-		expect($nextLis[1]).to.equal($nextLis[1])
-		// expect($nextLis[0].dataset.id).to.equal('3')
-		expect($nextLis[1].dataset.id).to.equal('4')
+		expect($uls[0]).to.equal($nextUls[0])
+		expect($lis[0]).to.equal($nextLis[0])
+		expect($lis[1]).to.equal($nextLis[1])
+		expect($lis[1].dataset.id).to.equal('4')
+
+		/**
+		 * delta update item
+		 */
+		app.$data.$set('items[0][1]', {id: 5, name: '5'})
+		$nextUls = app.$el.querySelectorAll('ul')
+		$nextLis = app.$el.querySelectorAll('ul li')
+		expect($uls[0]).to.equal($nextUls[0])
+		expect($lis[0]).to.equal($nextLis[0])
+		expect($lis[1]).to.equal($nextLis[1])
+		expect($nextLis[1].dataset.id).to.equal('5')
+
+		/**
+		 * array.shift()
+		 */
+		app.$data.items[0].shift()
+		$nextUls = app.$el.querySelectorAll('ul')
+		$nextLis = app.$el.querySelectorAll('ul li')
+		expect($uls[0]).to.equal($nextUls[0])
+		expect($lis[0]).to.equal($nextLis[0])
+		expect($lis.length).to.equal(1)
+		expect($nextLis[0].dataset.id).to.equal('1')
+
+		/**
+		 * array.splice()
+		 */
+		// app.$data.items[0].splice(1, {id: 2, name: '2'})
+		// $nextUls = app.$el.querySelectorAll('ul')
+		// $nextLis = app.$el.querySelectorAll('ul li')
+		// expect($lis.length).to.equal(2)
+		// expect($nextLis[0].dataset.id).to.equal('1')
 	})
 })
 
