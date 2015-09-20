@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.10
+* Zect v1.2.11
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -2478,16 +2478,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  Compoiler constructor for wrapping node with consistent API
 	 *  @node <Node>
-	 *  // TODO it should not be named "compiler"
 	 */
-	function compiler (node) {
+	function Compiler (node) {
 	    this.$el = node
 	}
 
-	var cproto = compiler.prototype
+	var cproto = Compiler.prototype
 
-	compiler.inherit = function (Ctor) {
-	    Ctor.prototype = Object.create(compiler.prototype)
+	Compiler.inherit = function (Ctor) {
+	    Ctor.prototype = Object.create(Compiler.prototype)
 	    return Ctor
 	}
 	cproto.$bundle = function () {
@@ -2524,6 +2523,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.$el = null
 	    return this
 	}
+	function _nextTo (src, tar) {
+	    var next = tar.nextSibling
+	    while(next) {
+	        if (next === src) return true
+	        else if (next.nodeType == 3 && /^\s*$/m.test(next.nodeValue)) {
+	            next = next.nextSibling
+	            continue
+	        } else {
+	            break
+	        }
+	    }
+	    return false
+	}
+	cproto.$nextTo = function (tar) {
+	    // Compiler of Node
+	    tar = tar instanceof Compiler ? tar.$ceil() : tar
+	    return _nextTo(tar, this.$floor())
+	}
+	cproto.$preTo = function (tar) {
+	    tar = tar instanceof Compiler ? tar.$floor() : tar
+	    return _nextTo(this.$ceil(), tar)
+	}
 	/**
 	 * Can be overwrited
 	 * @type {[type]}
@@ -2533,7 +2554,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  Standard directive
 	 */
 	var _did = 0
-	compiler.Directive = compiler.inherit(function Directive (vm, scope, tar, def, name, expr) {
+	Compiler.Directive = Compiler.inherit(function Directive (vm, scope, tar, def, name, expr) {
 	    var d = this
 	    var bindParams = []
 	    var isExpr = !!_isExpr(expr)
@@ -2618,7 +2639,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	var _eid = 0
-	compiler.Element = compiler.inherit(function ZElement(vm, scope, tar, def, name, expr) {
+	Compiler.Element = Compiler.inherit(function ZElement(vm, scope, tar, def, name, expr) {
 	    var d = this
 	    var bind = def.bind
 	    var unbind = def.unbind
@@ -2715,7 +2736,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 
-	compiler.Text = compiler.inherit(function ZText(vm, scope, tar, originExpr, parts, exprs) {
+	Compiler.Text = Compiler.inherit(function ZText(vm, scope, tar, originExpr, parts, exprs) {
 	    this.$expr = originExpr
 
 	    function _exec (expr) {
@@ -2814,7 +2835,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    render()
 	})
 
-	compiler.Attribute = function ZAttribute (vm, scope, tar, name, value) {
+	Compiler.Attribute = function ZAttribute (vm, scope, tar, name, value) {
 	    this.$name = name
 	    this.$expr = value
 
@@ -2903,7 +2924,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return tar && tar.parentNode === con
 	}
 
-	module.exports = compiler
+	module.exports = Compiler
 
 
 /***/ },
@@ -3193,48 +3214,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Scope = __webpack_require__(12)
 	var Expression = __webpack_require__(9)
 
-	function _getData (data) {
-	    return util.type(data) == 'object' ? util.copyObject(data) : {}
-	}
-	/**
-	 *  create a sub-vm for array item with specified index
-	 */
-	function createSubVM(item, index) {
-	    var subEl = this.child.cloneNode(true)
-	    var data = _getData(item)
-
-	    data.$index = index
-	    data.$value = item
-
-	    var $scope = new Scope(data, this.$scope)
-	    // this.$scope is a parent scope, 
-	    // on the top of current scope
-	    if(this.$scope) {
-	        this.$scope.children.push($scope)
-	    }
-	    return {
-	        $index: index,
-	        $value: item,
-	        $compiler: this.$vm.$compile(subEl, $scope),
-	        $scope: $scope
-	    }
-	}
-	function updateVMIndex (vm, index) {
-	    vm.$index = index
-	    var $data = vm.$scope.data
-	    $data.$index = index
-	    vm.$scope.$update()
-	}
-	function destroyVM (vm) {
-	    var $parent = vm.$scope.$parent
-	    $parent && $parent.$removeChild(vm.$scope)
-	    // $compiler be inclued in $scope.bindings probably
-	    vm.$compiler.$remove().$destroy()
-	    vm.$scope.bindings.forEach(function (bd) {
-	        bd.$destroy()
-	    })                    
-	}
-
 	module.exports = function(Zect) {
 	    return {
 	        'if': {
@@ -3347,16 +3326,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var index = payload.index
 	                var nv = nextItems[index]
 	                // delta update
-	                this.last[index] = nv
+	                this._lastItems[index] = nv
 
 	                var $vm = this.$vms[index]
-	                var $data = $vm.$scope.data = _getData(nv)
-	                $data.$index = index
-	                $data.$value = nv
-
-	                $vm.$value = nv
-	                $vm.$index = index
-	                $vm.$scope.$update(payload.path || '')
+	                updateVMData($vm, nv, index, payload.path)
 	            },
 	            update: function(items, preItems, kp, method, args) {
 	                if (!items || !items.forEach) {
@@ -3460,75 +3433,181 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var patch = arrayPatcher[method]
 	                if (valueOnly && this._noArrayFilter && patch) {
 	                    patch.call(this)
-	                    this.last = util.copyArray(items)
+	                    this._lastItems = util.copyArray(items)
 	                    return
 	                }
 	                /**
 	                 *  vms diff
 	                 */
 	                var vms = new Array(items.length)
-	                var olds = this.last ? util.copyArray(this.last) : olds
+	                var olds = this._lastItems ? util.copyArray(this._lastItems) : olds
 	                var oldVms = this.$vms ? util.copyArray(this.$vms) : oldVms
-	                var updateVms = []
-	                items.forEach(function(item, index) {
-	                    var v
-	                    if (!olds) {
-	                        v = createSubVM.call(that, item, index)
-	                    } else {
+	                var source = this._lastItems 
+	                                ? this._lastItems.map(function (item) {
+	                                        return {
+	                                            data: item
+	                                        }
+	                                    })
+	                                : null
 
+	                var diffItems = items.map(function (item, index) {
+	                    var data = {
+	                        data: item
+	                    }
+	                    if (!source) {
+	                        data.status = 'created'
+	                    } else {
 	                        var i = -1
-	                        olds.some(function (dest, index) {
-	                            // one level diff
-	                            if (!util.diff(dest, item)) {
-	                                i = index
-	                                return true
+	                        var dontUpdated
+	                        source.some(function (s, k) {
+	                            if (s.used) return
+
+	                            var hasDiff = util.diff(s.data, item)
+	                            if (!hasDiff) {
+	                                i = k
+	                                // and reuse the pos
+	                                if (index === i) return dontUpdated = true
+	                                else if (!~i) i = k
 	                            }
 	                        })
-
-	                        if (~i) {
-	                            // reused
-	                            v = oldVms[i]
-	                            // clean
-	                            olds.splice(i, 1)
-	                            oldVms.splice(i, 1)
-
-	                            // reset $index and $value
-	                            v.$index = index
-	                            v.$value = item
-
-	                            var $data = v.$scope.data = _getData(item)
-
-	                            $data.$index = index
-	                            $data.$value = item
-	                            updateVms.push(v)
-	                            
+	                        if (~i && dontUpdated) {
+	                            source[i].used = true
+	                            data.status = 'reused'
+	                        } else if (~i) {
+	                            source[i].used = true
+	                            data.status = 'moved'
+	                            data.from = i
 	                        } else {
-	                            v = createSubVM.call(that, item, index)
+	                            source.some(function (s, k) {
+	                                if (!s.used && index == k) {
+	                                    i = k
+	                                    return true
+	                                }
+	                            })
+	                            if (~i) {
+	                                source[i].used = true
+	                                data.status = 'updated'
+	                                data.from = i
+	                            } else {
+	                                data.status = 'created'
+	                            }
 	                        }
 	                    }
-	                    vms[index] = v
+	                    return data
 	                })
-	                
-	                this.$vms = vms
-	                this.last = util.copyArray(items)
-	                // from rear to head
-	                var len = vms.length
-	                var i = 0
-	                while (i < len) {
-	                    var v = vms[i++]
-	                    v.$compiler.$insertBefore($floor)
-	                }
-	                updateVms.forEach(function (v) {
-	                    // reset $index
-	                    v.$scope.$update()
+	                /**
+	                 * Patch
+	                 */
+	                source && source.forEach(function (item, index) {
+	                    if (!item.used) {
+	                        destroyVM(that.$vms[index])
+	                    }
 	                })
-	                updateVms = null
-	                oldVms && oldVms.forEach(destroyVM)
+	                var floor = $ceil
+	                this.$vms = diffItems.map(function (item, index) {
+	                    var vm
+	                    switch (item.status) {
+	                        case 'created':
+	                            if (source && source.some(function (item, ind) {
+	                                // reuse old vm
+	                                if (!item.used) {
+	                                    vm = that.$vms[ind]
+	                                    return true
+	                                }
+	                            })) {
+	                                updateVMData(vm, item.data, index, kp)
+	                            } else {
+	                                vm = createSubVM.call(that, item.data, index)
+	                            }
+	                            break
+	                        case 'updated':
+	                            vm = that.$vms[index]
+	                            updateVMData(vm, item.data, index, kp)
+	                            break
+	                        case 'moved':
+	                            vm = that.$vms[item.from]
+	                            updateVMIndex(vm, index)
+	                            break
+	                        case 'reused':
+	                            vm = that.$vms[index]
+	                            break
+	                    }
+	                    var $compiler = vm.$compiler
+	                    if (!$compiler.$preTo(floor)) {
+	                        vm.$compiler.$insertAfter(floor)
+	                    }
+	                    floor = $compiler.$floor()
+	                    return vm
+	                })
+	                // prevent data source changed
+	                this._lastItems = util.copyArray(items)
 	            }
 	        }
 	    }
 	}
+	function shallowClone (data) {
+	    return util.type(data) == 'object' ? util.copyObject(data) : {}
+	}
+	// function RepeatViewModel (el, data, index, parentVM, parentScope) {
+	//     data = shallowClone(data)
+	//     data.$index = index
+	//     data.$value = data
+	//     var $scope = new Scope(data, parentScope)
+	//     // on the top of current scope
+	//     parentScope && parentScope.children.push($scope)
+	//     this.$index = index
+	//     this.$value = data
+	//     this.$compiler = parentVM.$compile(el, $scope)
+	//     this.$scope = $scope
+	// }
+	/**
+	 *  create a sub-vm for array item with specified index
+	 */
+	function createSubVM (item, index) {
+	    var subEl = this.child.cloneNode(true)
+	    var data = shallowClone(item)
 
+	    data.$index = index
+	    data.$value = item
+
+	    var $scope = new Scope(data, this.$scope)
+	    // this.$scope is a parent scope, 
+	    // on the top of current scope
+	    if(this.$scope) {
+	        this.$scope.children.push($scope)
+	    }
+	    return {
+	        $index: index,
+	        $value: item,
+	        $compiler: this.$vm.$compile(subEl, $scope),
+	        $scope: $scope
+	    }
+	}
+	function updateVMData (vm, data, index, mounted) {
+	    // next time will add props to data object
+	    var $data = vm.$scope.data = shallowClone(data)
+	    $data.$index = index
+	    $data.$value = data
+
+	    vm.$value = data
+	    vm.$index = index
+	    vm.$scope.$update(mounted || '')
+	}
+	function updateVMIndex (vm, index) {
+	    vm.$index = index
+	    var $data = vm.$scope.data
+	    $data.$index = index
+	    vm.$scope.$update()
+	}
+	function destroyVM (vm) {
+	    var $parent = vm.$scope.$parent
+	    $parent && $parent.$removeChild(vm.$scope)
+	    // $compiler be inclued in $scope.bindings probably
+	    vm.$compiler.$remove().$destroy()
+	    vm.$scope.bindings.forEach(function (bd) {
+	        bd.$destroy()
+	    })                    
+	}
 
 /***/ },
 /* 12 */
