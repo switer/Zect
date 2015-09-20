@@ -11,12 +11,14 @@
     <z-repeat items="{items}">
         <ul>
         <z-repeat items="{$value}">
+                <z-if is="{true}">
             <li>
-                <a href="javascript:;" 
-                    z-class="{selected: selected}" 
-                    z-on="{click: onSelected.bind(null, $parent.$index, id)}"
-                >{id}:{title}</a>
+                    <a href="javascript:;" 
+                        z-class="{selected: selected}" 
+                        z-on="{click: onSelected.bind(null, $parent.$index, id)}"
+                    >{id}:{title}</a>
             </li>
+                </z-if>
         </z-repeat>
         </ul>
     </z-repeat>
@@ -38,17 +40,30 @@
                         id: 1,
                         title: 'Hello',
                         selected: false
+                    }, {
+                        id: 2,
+                        title: 'Hello',
+                        selected: false
                     }]],
                 }
             },
             ready: function () {},
             methods: {
                 onSelected: function (index, id) {
-                    this.$data.items[0].splice(0, 0, {
+                    this.$data.$set('items[0]', [{
+                        id: 1,
+                        title: 'Hello',
+                        selected: false
+                    }, {
                         id: 2,
                         title: 'Hello',
                         selected: false
-                    })
+                    }])
+                    // this.$data.items[0].splice(0, 0, {
+                    //     id: 2,
+                    //     title: 'Hello',
+                    //     selected: false
+                    // })
                     // this.$data.items[0][1].id = 4
                     // this.$data.items[index].some(function (item) {
                     //     console.log(item.id, id)

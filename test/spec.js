@@ -195,6 +195,40 @@ describe('#Directives', function () {
 		assert.equal($nextLis.length, 2)
 		assert.equal($nextLis[0].dataset.id, '2')
 	})
+	it('repeat:diff', function () {
+		var app = new Zect({
+			data: function () {
+				return {
+					items: [[{id: 0, name: '0'}, {id: 1, name: '1'}, {id: 2, name: '2'}]]
+				}
+			},
+			template: tools.template(function () {/*
+				<z-repeat items="{items}">
+					<ul>
+					<z-repeat items="{$value}">
+						<li data-id="{id}">{name}</li>
+					</z-repeat>
+					</ul>
+				</z-repeat>
+			*/})
+		})
+		var $uls = [].slice.call(app.$el.querySelectorAll('ul'))
+		var $lis = [].slice.call(app.$el.querySelectorAll('ul li'))
+		assert.equal($uls.length, 1)
+		assert.equal($lis.length, 3)
+		// diff update
+		app.$data.$set('items[0]', [{
+            id: 1,
+            name: '1'
+        }, {
+            id: 2,
+            name: '2'
+        }])
+        var $nextLis = [].slice.call(app.$el.querySelectorAll('ul li'))
+		assert.equal($nextLis.length, 2)
+		assert.equal($nextLis[0], $lis[1])
+		assert.equal($nextLis[1], $lis[2])
+	})
 })
 
 
