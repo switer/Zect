@@ -22,7 +22,7 @@
         </z-repeat>
         </ul>
     </z-repeat> -->
-    <z-repeat items="{to2d(items)}">
+    <z-repeat items="{ to2d(items) }">
         <ul>
             <z-repeat items="{$value}">
                 <li>{$value}</li>
@@ -55,9 +55,17 @@
                 }
             },
             ready: function () {
-                this.$data.items = [4,5,3,6]
+                // this.$data.items = [4,5,3,6]
             },
             methods: {
+                to2d: function (list) {
+                    var next = []
+                    list = list.slice(0)
+                    while(list.length) {
+                        next.push(list.splice(0, 2))
+                    }
+                    return next
+                },
                 onSelected: function (index, id) {
                     this.$data.$set('items[0]', [{
                         id: 1,
@@ -84,6 +92,8 @@
                 }
             }
         })
+        app.$data.items = []
+
 </script>
 
 </body>

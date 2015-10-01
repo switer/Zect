@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.11-1
+* Zect v1.2.11
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -2473,10 +2473,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        })
 	        if (!watchKeys.length) return noop
-	        vm.$watch(_handler)
-	        return function () {
-	            vm.$unwatch(_handler)
-	        }
+	        return vm.$watch(_handler)
 	    }
 	    return noop
 	}
@@ -2583,7 +2580,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        bindParams.push(key)
 	    }
 
-	    d.$id = _did++
+	    d.$id = 'd' + _did++
 	    d.$name = name
 	    d.$el = tar
 	    d.$vm = vm
@@ -2612,6 +2609,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  update handler
 	     */
 	    function _update(kp) {
+	        if (d.$destroyed) return
 	        var nexv = _exec(expr)
 	        if (util.diff(nexv, prev)) {
 	            var p = prev
@@ -2637,6 +2635,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        d.$el = null
 	        d.$vm = null
 	        d.$scope = null
+	        d.$destroyed = true
 	    }
 	    d.$update = _update
 
@@ -2662,7 +2661,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.$expr = expr
 
 	    isExpr && (expr = _strip(expr))
-	    d.$id = _eid ++
+	    d.$id = 'e' + _eid ++
 	    d.$name = name
 	    d.$vm = vm
 	    d.$el = tar
@@ -2710,11 +2709,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        d.$el = null
 	        d.$vm = null
 	        d.$scope = null
+	        d.$destroyed = true
 	    }
 	    /**
 	     *  update handler
 	     */
 	    function _update(kp, nv, pv, method, ind, len) {
+	        if (d.$destroyed) return
+
 	        var nexv = _exec(expr)
 	        var deltaResult 
 	        if ( delta && (deltaResult = delta.call(d, nexv, prev, kp)) ) {
@@ -2744,9 +2746,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    upda && upda.call(d, prev)
 	})
 
-
+	var _tid = 0
 	Compiler.Text = Compiler.inherit(function ZText(vm, scope, tar, originExpr, parts, exprs) {
-	    this.$expr = originExpr
+	    var d = this
+	    d.$expr = originExpr
+	    d.$id = 't' + _tid ++
 
 	    function _exec (expr) {
 	        return _execute(vm, scope, expr, null)
@@ -2763,6 +2767,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var vars = _extractVars(exp)
 
 	        function _update() {
+	            if (d.$destroyed) return
+
 	            var pv = cache[index]
 	            var nv = _exec(exp)
 
@@ -2818,12 +2824,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    this.$destroy = function () {
+	        d.$destroyed = true
 	        unwatches.forEach(function (f) {
 	            f()
 	        })
 	    }
 
 	    this.$update = function () {
+	        if (d.$destroyed) return
+
 	        var hasDiff
 	        exprs.forEach(function(exp, index) {
 	            exp = _strip(exp)
@@ -2844,9 +2853,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    render()
 	})
 
+	var _aid = 0
 	Compiler.Attribute = function ZAttribute (vm, scope, tar, name, value) {
-	    this.$name = name
-	    this.$expr = value
+	    var d = this
+	    d.$name = name
+	    d.$expr = value
+	    d.$id = 'a' + _aid ++
 
 	    var isNameExpr = _isExpr(name)
 	    var isValueExpr = _isExpr(value)
@@ -2872,6 +2884,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    $tar.attr(preName, _emptyUndef(preValue))
 
 	    function _updateName() {
+	        if (d.$destroyed) return
+
 	        var next = _exec(nexpr)
 
 	        if (util.diff(next, preName)) {
@@ -2881,6 +2895,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 	    function _updateValue() {
+	        if (d.$destroyed) return
+	        
 	        var next = _exec(vexpr)
 	        if (util.diff(next, preValue)) {
 	            $tar.attr(preName, _emptyUndef(next))
@@ -2893,9 +2909,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        unwatches.forEach(function (f) {
 	            f()
 	        })
+	        d.$destroyed = true
 	    }
 
 	    this.$update = function () {
+	        if (d.$destroyed) return
+
 	        isNameExpr && _updateName()
 	        isValueExpr && _updateValue()
 	    }
@@ -3292,6 +3311,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    this.$vm.$compile(this._tmpCon, $scope)
 	                    this._mount()
 	                }
+	            },
+	            unbind: function () {
+	                this.$update = this._mount = this._unmount = noop
 	            }
 	        },
 	        'repeat': {
@@ -3303,6 +3325,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	                // if use filter, Zect can't patch array by array-method
 	                this._noArrayFilter = Expression.notFunctionCall(expr)
+	            },
+	            unbind: function () {
+	                this.$vms && this.$vms.forEach(function (vm) {
+	                    destroyVM(vm)
+	                })
+	                this.child = this.$vms = this._lastItems = null
 	            },
 	            delta: function (nv, pv, kp) {
 	                if (!kp) return false
@@ -3629,6 +3657,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        bd.$destroy()
 	    })                    
 	}
+	function noop () {}
+
 
 /***/ },
 /* 12 */

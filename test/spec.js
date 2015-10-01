@@ -229,7 +229,7 @@ describe('#Directives', function () {
 		assert.equal($nextLis[0], $lis[1])
 		assert.equal($nextLis[1], $lis[2])
 	})
-	it('repeat:function', function () {
+	it('repeat:reused', function () {
 		/**
 		 * and test recycled
 		 */
@@ -261,7 +261,39 @@ describe('#Directives', function () {
 		assert.equal($nextLis[1].innerHTML, 5)
 		assert.equal($nextLis[2].innerHTML, 3)
 		assert.equal($nextLis[3].innerHTML, 6)
-		
+	})
+	it('repeat:destroy', function () {
+		/**
+		 * and test recycled
+		 */
+		var app = new Zect({
+			data: function () {
+				return {
+					items: [1,2,3,4]
+				}
+			},
+			template: tools.template(function () {/*
+				<z-repeat items="{to2d(items)}">
+					<ul>
+						<z-repeat items="{$value}">
+							<li>{$value}</li>
+						</z-repeat>
+					</ul>
+				</z-repeat>
+			*/}),
+			methods: {
+				to2d: function (list) {
+					var next = []
+					list = list.slice(0)
+					while(list.length) {
+						next.push(list.splice(0, 2))
+					}
+					return next
+				}
+			}
+		})
+		app.$data.items = []
+		assert.equal(app.$el.querySelectorAll('ul li').length, 0) // moved
 	})
 })
 
