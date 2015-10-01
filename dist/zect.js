@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.10
+* Zect v1.2.11-1
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -254,7 +254,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var methods = {}
 	    util.objEach(options.methods, function(k, v) {
 	        if (util.type(v) !== 'function') return console.warn(k + ' is not a function.')
-	        vm[k] = methods[k] = v.bind(vm)
+	        vm[k] = methods[k] = util.bind(vm, v)
 	    })
 	    vm.$methods = methods
 
@@ -2349,6 +2349,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var t = this.type(o)
 	        return t === 'undefined' || t === 'null'
 	    },
+	    bind: function (fn, ctx) {
+	        var dummy = function () {
+	            return fn.apply(ctx, arguments)
+	        }
+	        dummy.toString = function () {
+	            return fn.toString.apply(fn, arguments)
+	        }
+	        return dummy
+	    },
 	    forEach: _forEach,
 	    normalize: _normalize,
 	    digest: _digest
@@ -3127,7 +3136,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return console.warn('"' + conf.namespace + 'on" only accept function. {' + this._expr + '}')
 
 	                this.fn = fn.bind(this.$vm)
-	                this._$el.on(this.type, this.fn, false)
+	                this._$el && this._$el.on(this.type, this.fn, false)
 
 	            },
 	            off: function () {
