@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.11
+* Zect v1.2.11-1
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -254,7 +254,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var methods = {}
 	    util.objEach(options.methods, function(k, v) {
 	        if (util.type(v) !== 'function') return console.warn(k + ' is not a function.')
-	        vm[k] = methods[k] = util.bind(vm, v)
+	        vm[k] = methods[k] = util.bind(v, vm)
 	    })
 	    vm.$methods = methods
 
@@ -3448,9 +3448,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                /**
 	                 *  vms diff
 	                 */
-	                var vms = new Array(items.length)
-	                var olds = this._lastItems ? util.copyArray(this._lastItems) : olds
-	                var oldVms = this.$vms ? util.copyArray(this.$vms) : oldVms
 	                var source = this._lastItems 
 	                                ? this._lastItems.map(function (item) {
 	                                        return {
@@ -3458,7 +3455,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                                        }
 	                                    })
 	                                : null
-
 	                var diffItems = items.map(function (item, index) {
 	                    var data = {
 	                        data: item
@@ -3504,30 +3500,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    }
 	                    return data
 	                })
+
+	                
+	                /**
+	                 * reuse those instance that data changed and index unmatch
+	                 * state from "created" to "recycled"
+	                 */
+	                var reusables = (source || []).reduce(function (collects, item, index) {
+	                    if (!item.used) {
+	                        collects.push(index)
+	                    }
+	                    return collects
+	                }, [])
+
+	                diffItems.some(function (item, index) {
+	                    if (!reusables.length) return true
+
+	                    if (item.status == 'created') {
+	                        item.from = reusables.pop()
+	                        item.status = 'recycled'
+	                    }
+	                })
+	                /**
+	                 * destroy
+	                 */
+	                reusables.forEach(function (i) {
+	                    destroyVM(that.$vms[i])
+	                })
 	                /**
 	                 * Patch
 	                 */
-	                source && source.forEach(function (item, index) {
-	                    if (!item.used) {
-	                        destroyVM(that.$vms[index])
-	                    }
-	                })
 	                var floor = $ceil
 	                this.$vms = diffItems.map(function (item, index) {
 	                    var vm
 	                    switch (item.status) {
 	                        case 'created':
-	                            if (source && source.some(function (item, ind) {
-	                                // reuse old vm
-	                                if (!item.used) {
-	                                    vm = that.$vms[ind]
-	                                    return item.used = true
-	                                }
-	                            })) {
-	                                updateVMData(vm, item.data, index, kp)
-	                            } else {
-	                                vm = createSubVM.call(that, item.data, index)
-	                            }
+	                            vm = createSubVM.call(that, item.data, index)
 	                            break
 	                        case 'updated':
 	                            vm = that.$vms[index]
@@ -3539,6 +3547,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            break
 	                        case 'reused':
 	                            vm = that.$vms[index]
+	                            break
+	                        case 'recycled':
+	                            vm = that.$vms[item.from]
+	                            updateVMData(vm, item.data, item.from, kp)
 	                            break
 	                    }
 	                    var $compiler = vm.$compiler

@@ -8,21 +8,27 @@
 </head>
 <body>
 <div id="app">
-    <z-repeat items="{items}">
+    <!-- <z-repeat items="{items}">
         <ul>
         <z-repeat items="{$value}">
                 <z-if is="{true}">
-            <li>
+                <li>
                     <a href="javascript:;" 
                         z-class="{selected: selected}" 
                         z-on="{click: onSelected.bind(null, $parent.$index, id)}"
                     >{id}:{title}</a>
-            </li>
+                </li>
                 </z-if>
         </z-repeat>
         </ul>
+    </z-repeat> -->
+    <z-repeat items="{to2d(items)}">
+        <ul>
+            <z-repeat items="{$value}">
+                <li>{$value}</li>
+            </z-repeat>
+        </ul>
     </z-repeat>
-
 </div>
 <script type="text/html" class="tpl">
 </script>
@@ -32,22 +38,25 @@
             el: '#app',
             data: function () {
                 return {
-                    items: [[{
-                        id: 0,
-                        title: 'Hello',
-                        selected: false
-                    }, {
-                        id: 1,
-                        title: 'Hello',
-                        selected: false
-                    }, {
-                        id: 2,
-                        title: 'Hello',
-                        selected: false
-                    }]],
+                    // items: [[{
+                    //     id: 0,
+                    //     title: 'Hello',
+                    //     selected: false
+                    // }, {
+                    //     id: 1,
+                    //     title: 'Hello',
+                    //     selected: false
+                    // }, {
+                    //     id: 2,
+                    //     title: 'Hello',
+                    //     selected: false
+                    // }]],
+                    items: [1,2,3,4]
                 }
             },
-            ready: function () {},
+            ready: function () {
+                this.$data.items = [4,5,3,6]
+            },
             methods: {
                 onSelected: function (index, id) {
                     this.$data.$set('items[0]', [{

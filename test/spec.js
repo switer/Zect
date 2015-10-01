@@ -229,6 +229,40 @@ describe('#Directives', function () {
 		assert.equal($nextLis[0], $lis[1])
 		assert.equal($nextLis[1], $lis[2])
 	})
+	it('repeat:function', function () {
+		/**
+		 * and test recycled
+		 */
+		var app = new Zect({
+			data: function () {
+				return {
+					items: [1,2,3,4]
+				}
+			},
+			template: tools.template(function () {/*
+				<ul>
+					<z-repeat items="{items}">
+						<li>{$value}</li>
+					</z-repeat>
+				</ul>
+			*/})
+		})
+
+		var $lis = [].slice.call(app.$el.querySelectorAll('ul li'))
+		app.$data.items = [4,5,3,6]
+		var $nextLis = [].slice.call(app.$el.querySelectorAll('ul li'))
+
+		assert.equal($nextLis[0], $lis[3]) // moved
+		assert.equal($nextLis[1], $lis[1]) // updated
+		assert.equal($nextLis[2], $lis[2]) // reused
+		assert.equal($nextLis[3], $lis[0]) // recycled
+
+		assert.equal($nextLis[0].innerHTML, 4)
+		assert.equal($nextLis[1].innerHTML, 5)
+		assert.equal($nextLis[2].innerHTML, 3)
+		assert.equal($nextLis[3].innerHTML, 6)
+		
+	})
 })
 
 
