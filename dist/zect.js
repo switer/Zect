@@ -2979,9 +2979,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                   .replace(/\uFFF1/g, '\\}')
 	    },
 	    strip: function (expr) {
-	        return expr.trim()
-	                .match(/^\{([\s\S]*)\}$/m)[1]
-	                .replace(/^- /, '')
+	        // -\d*\.?\d* TBD
+	        var m =  expr.trim().match(/^\{([\s\S]*)\}$/m)
+	        return m && m[1] ? m[1].replace(/^- /, '') : ''
 	    },
 	    extract: function(expr) {
 	        if (!expr) return null
