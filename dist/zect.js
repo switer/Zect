@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.12
+* Zect v1.2.13
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -3134,7 +3134,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                 *  State 2 DOM input
 	                 */
 	                this._update = function () {
-	                    that.$el[vType] = vm.$get(that._prop)
+	                    var nextValue = vm.$get(that._prop)
+	                    if (that.$el[vType] !== nextValue) {
+	                        that.$el[vType] = nextValue
+	                    }
 	                }
 	                this.$update = function () {
 	                    that._update()
