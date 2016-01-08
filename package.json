@@ -27,9 +27,7 @@
     "gulp-header": "^1.2.2",
     "gulp-uglifyjs": "^0.5.0",
     "gulp-watch": "^4.1.0",
-    "gulp-webpack": "^1.1.2"
-  },
-  "dependencies": {
+    "gulp-webpack": "^1.1.2",
     "chai": "^3.2.0",
     "mocha": "^2.3.2",
     "mocha-phantomjs": "^3.6.0",
