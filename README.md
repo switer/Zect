@@ -2,6 +2,7 @@
 Zect , component & mvvm
 ====
 [![Build Status](https://travis-ci.org/switer/Zect.svg)](https://travis-ci.org/switer/Zect)
+[![npm version](https://badge.fury.io/js/zect.svg)](https://badge.fury.io/js/zect)
 
 A lightweight Web components and MVVM framework.
 **Zect**'s state observer is power by [muxjs](https://github.com/switer/muxjs)
