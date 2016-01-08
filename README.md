@@ -7,10 +7,12 @@ Zect , component & mvvm
 A lightweight Web components and MVVM framework.
 **Zect**'s state observer is power by [muxjs](https://github.com/switer/muxjs)
 
-## Example
+## Examples
 
 * Todo MVC: http://zectjs.github.io/zect-todo
-* Production: http://corner.ucweb.com
+* Production: 
+    - http://corner.ucweb.com
+    - http://m.v.qq.com/gift/bigbang/
 
 ## Downloads
 - [zect.js](https://raw.githubusercontent.com/switer/zect/master/dist/zect.js)
