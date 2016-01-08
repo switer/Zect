@@ -16,5 +16,7 @@ describe('#Directive', function () {
 		assert.equal(app.$el.getAttribute('attName'), 'v')
 		app.$data.attValue = null
 		assert.equal(app.$el.getAttribute('attName'), 'null')
+		// app.$data.attValue = undefined
+		// assert(!app.$el.hasAttribute('attName'))
 	})
 })

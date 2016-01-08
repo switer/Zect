@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.13
+* Zect v1.2.14
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -99,7 +99,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var insOpt = _mergeMethodMixins([options])
 	    return ViewModel.call(this, insOpt)
 	}
-	Zect.extend = function(options) {
+	Zect.create = Zect.extend = function(options) {
 	    function Class(opt) {
 	        var insOpt = _mergeMethodMixins([options, opt])
 	        /**
@@ -992,7 +992,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	proto.replace = function(n) {
 	    var tar = this[0]
-	    _parentNode(tar).replaceChild(n, tar)
+	    var pn = _parentNode(tar)
+	    pn && pn.replaceChild(n, tar)
 	    return this
 	}
 
@@ -2343,7 +2344,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        })
 	    },
 	    isUndef: function (o) {
-	        return this.type(o) === 'undefined'
+	        return o === void(0)
 	    },
 	    isNon: function (o) {
 	        var t = this.type(o)
