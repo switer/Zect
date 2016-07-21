@@ -8,24 +8,31 @@
 </head>
 <body>
 <div id="app">
+	<z-repeat items="{list}" ref="repeat">
+		<div z-component="c-input" z-data="{value: $value}"></div>
+	</z-repeat>
 </div>
-<script type="text/html" class="tpl">
-</script>
 <script type="text/javascript" src="../dist/zect.js"></script>
 <script type="text/javascript">
+	Zect.component('c-input', {
+		data: function () {
+			return {
+				value: ''
+			}
+		},
+		template: '<input type="text" value="{value}"/>'
+	})
     var app = new Zect({
-        template: '<z-template class="att" z-attr="{attName: attValue}"></z-template>',
+        el: '#app',
         data: function () {
-            return {
-                attValue: ''
-            }
+        	return {
+        		list: [1,2,3]
+        	}
+        },
+        ready: function() {
+        	console.log(this.$refs.repeat.$get(0))
         }
     })  
-    app.$data.attValue = 'v'
-    app.$data.attValue = null
-    app.$data.attValue = undefined
-    console.log(app.$el.hasAttribute('attName'))
-
 </script>
 </body>
 </html>

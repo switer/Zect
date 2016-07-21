@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.16
+* Zect v1.2.17
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -2135,6 +2135,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 	        'repeat': {
 	            bind: function(items, expr) {
+	                var name = this.$el.getAttribute('ref')
+	                var that = this
+	                if (name) {
+	                    this.$vm.$refs[name] = this
+	                }
+	                this.$items = function() {
+	                    return this.$vms
+	                },
+	                this.$itemBindings = function(index) {
+	                    if (!that.$vms || !that.$vms.length) return []
+	                    var target = that.$vms[index]
+	                    if (!target) return []
+	                    return target.$scope.bindings
+	                }
 	                this.child = this.$el.firstElementChild
 	                this.expr = expr
 	                if (!this.child) {
@@ -2148,6 +2162,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    destroyVM(vm)
 	                })
 	                this.child = this.$vms = this._lastItems = null
+	                this.$items = this.$itemBindings = noop
 	            },
 	            delta: function (nv, pv, kp) {
 	                if (!kp) return false

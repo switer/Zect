@@ -184,4 +184,19 @@ describe('#Directives/if&repeat', function () {
 		app.$data.items = []
 		assert.equal(app.$el.querySelectorAll('ul li').length, 0) // moved
 	})
+	it('repeat:ref', function () {
+		var app = new Zect({
+			data: function () {
+				return {
+					items: [1,2,3,4]
+				}
+			},
+			template: tools.template(function () {/*
+				<z-repeat items="{items}" ref="repeat">
+					<div>{$value}</div>
+				</z-repeat>
+			*/})
+		})
+		assert.equal(app.$refs.repeat.$itemBindings(0)[0].$expr, '{$value}') // moved
+	})
 })
