@@ -321,12 +321,14 @@ Zect.component('c-header', {
 Just like your instance a component and pass data option. When those binding variables of expression change, 
 `Zect` will be re-excute the expression and call component instance's "$set" method automatically for updating child component.
 
+> Notice: r-data has multiple keys must using ';' as separator, otherwise can't create binding for each keys.
+
 ```html
 <div id="app">
     <my-component
         z-data="{
             title: 'child ' + title;
-            content: content
+            content: content;
         }"
     >
     </my-component>
@@ -340,7 +342,8 @@ Just like your instance a component and pass method option. Methods only set onc
 <div id="app">
     <my-component
         z-methods="{
-            onClick: onClickItem
+            onClick: onClickItem;
+            onTouchstar: onTouchItem;
         }"
     ></my-component>
 </div>

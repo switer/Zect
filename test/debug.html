@@ -9,7 +9,7 @@
 <body>
 <div id="app">
 	<z-repeat items="{list}" ref="repeat">
-		<div z-component="c-input" z-data="{value: $value}"></div>
+		<div z-component="c-input" z-data="{value: $value, value2: 123}"></div>
 	</z-repeat>
 </div>
 <script type="text/javascript" src="../dist/zect.js"></script>
@@ -20,6 +20,9 @@
 				value: ''
 			}
 		},
+        ready: function () {
+            console.log(this.$data)
+        },
 		template: '<input type="text" value="{value}"/>'
 	})
     var app = new Zect({
@@ -30,7 +33,7 @@
         	}
         },
         ready: function() {
-        	console.log(this.$refs.repeat.$get(0))
+        	console.log(this.$refs.repeat.$itemBindings(0)[0])
         }
     })  
 </script>
