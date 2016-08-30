@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.17
+* Zect v1.2.18
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -1204,6 +1204,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	var util = __webpack_require__(4)
+	var __$compile__ = __webpack_require__(12)
+	var __$compiledExprs___ = {}
 	/**
 	 *  Calc expression value
 	 */
@@ -1213,26 +1215,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	     *  Each "scope" object maybe include "$parent, data, method" properties
 	     */
 	    var $parent = $scope && $scope.$parent ? util.extend({}, $scope.$parent.methods, $scope.$parent.data) : {}
-	    
+	    var __$expression__ = arguments[2]
+	    var __$fn__ = __$compiledExprs___[__$expression__]
+
 	    $scope = $scope || {}
 	    $scope = util.extend({}, $vm.$methods, $vm.$data, $scope.methods, $scope.data)
-
 	    try {
-	        return util.immutable(eval('with($scope){(%s)}'.replace('%s', arguments[2])))
+	        if (!__$fn__) {
+	            __$fn__ = __$compiledExprs___[__$expression__] = __$compile__(__$expression__)
+	        }
+	        return util.immutable(__$fn__($scope))
 	    } catch (e) {
-	        arguments[2] = /^\{/.test(arguments[2]) 
-	                        ? '. ' + arguments[2]
-	                        : '. {' + arguments[2] + '}' // expr
+	        __$expression__ = /^\{/.test(__$expression__) 
+	                        ? '. ' + __$expression__
+	                        : '. {' + __$expression__ + '}' // expr
 	        // arguments[3] // label
 	        // arguments[4] // target
 	        switch (e.name) {
 	            case 'ReferenceError':
-	                console.warn(e.message + arguments[2])
+	                console.warn(e.message + __$expression__)
 	                break
 	            default:
 	                console.error(
 	                     (arguments[3] ? '\'' + arguments[3] + '\': ' : ''),
-	                    e.message + arguments[2],
+	                    e.message + __$expression__,
 	                    arguments[4] || ''
 	                )
 	        }
@@ -2056,7 +2062,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var $ = __webpack_require__(2)
 	var conf = __webpack_require__(5)
 	var util = __webpack_require__(4)
-	var Scope = __webpack_require__(12)
+	var Scope = __webpack_require__(13)
 	var Expression = __webpack_require__(8)
 
 	module.exports = function(Zect) {
@@ -2498,11 +2504,26 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	module.exports = __webpack_require__(13)
+	module.exports = __webpack_require__(14)
 
 
 /***/ },
 /* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = function (__$expr__) {
+		if (/^[_$][\w$]*$/.test(__$expr__)) {
+			// access property if begin with _ or $
+			return function ($scope) {
+				return $scope[__$expr__]
+			}
+		} else {
+			return new Function('$scope', 'with($scope){return (' + __$expr__ + ')}')
+		}
+	}
+
+/***/ },
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2543,7 +2564,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Scope
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2551,11 +2572,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 *  External module's name startof "$"
 	 */
-	var $Message = __webpack_require__(14)
-	var $keypath = __webpack_require__(15)
-	var $arrayHook = __webpack_require__(16)
-	var $info = __webpack_require__(17)
-	var $util = __webpack_require__(18)
+	var $Message = __webpack_require__(15)
+	var $keypath = __webpack_require__(16)
+	var $arrayHook = __webpack_require__(17)
+	var $info = __webpack_require__(18)
+	var $util = __webpack_require__(19)
 	var $normalize = $keypath.normalize
 	var $join = $keypath.join
 	var $type = $util.type
@@ -3303,7 +3324,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -3312,7 +3333,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 **/
 	'use strict';
 
-	var $util = __webpack_require__(18)
+	var $util = __webpack_require__(19)
 	var _patch = $util.patch
 	var _type = $util.type
 	var _scopeDefault = '__default_scope__'
@@ -3410,7 +3431,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3495,12 +3516,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var $util = __webpack_require__(18)
+	var $util = __webpack_require__(19)
 	var hookMethods = ['splice', 'push', 'pop', 'shift', 'unshift', 'reverse', 'sort', '$concat']
 	var _push = Array.prototype.push
 	var _slice = Array.prototype.slice
@@ -3547,7 +3568,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3569,7 +3590,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
