@@ -8,9 +8,10 @@
 </head>
 <body>
 <div id="app">
-	<z-repeat items="{list}" ref="repeat">
-		<div z-component="c-input" z-data="{value: $value, value2: 123}"></div>
+	<z-repeat items="{list}">
+        <input type="text" z-model="{'list[' + $index + ']'}">
 	</z-repeat>
+    <h1>{list.join(',')}</h1>
 </div>
 <script type="text/javascript" src="../dist/zect.js"></script>
 <script type="text/javascript">
@@ -32,9 +33,7 @@
         		list: [1,2,3]
         	}
         },
-        ready: function() {
-        	console.log(this.$refs.repeat.$itemBindings(0)[0])
-        }
+        ready: function() {}
     })  
 </script>
 </body>

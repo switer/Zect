@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.18
+* Zect v1.2.19
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -1964,6 +1964,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    _update && _update.apply(this, arguments)
 	                }
 	                $el.on(this.evtType, this._requestChange)
+	                this.watch(prop)
+	            },
+	            watch: function (prop) {
+	                if (this._watches) {
+	                    this._watches.forEach(function (fn) {
+	                        fn()
+	                    })
+	                    this._watches = []
+	                }
+	                if (!prop) return
 	                var watches = this._watches = []
 	                var wKeypath = util.normalize(prop)
 	                while (wKeypath) {
@@ -1973,6 +1983,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            },
 	            update: function (prop) {
 	                this._prop = prop
+	                this.watch(prop)
 	                this._update()
 	            },
 	            unbind: function () {
