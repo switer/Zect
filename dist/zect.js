@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.19
+* Zect v1.2.20
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -1217,14 +1217,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var $parent = $scope && $scope.$parent ? util.extend({}, $scope.$parent.methods, $scope.$parent.data) : {}
 	    var __$expression__ = arguments[2]
 	    var __$fn__ = __$compiledExprs___[__$expression__]
-
 	    $scope = $scope || {}
 	    $scope = util.extend({}, $vm.$methods, $vm.$data, $scope.methods, $scope.data)
 	    try {
 	        if (!__$fn__) {
 	            __$fn__ = __$compiledExprs___[__$expression__] = __$compile__(__$expression__)
 	        }
-	        return util.immutable(__$fn__($scope))
+	        return util.immutable(__$fn__($scope, $parent))
 	    } catch (e) {
 	        __$expression__ = /^\{/.test(__$expression__) 
 	                        ? '. ' + __$expression__
@@ -1404,7 +1403,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    d.$name = name
 	    d.$el = tar
 	    d.$vm = vm
-	    d.$scope = scope
+	    d.$scope = scope || null
 
 	    var bind = def.bind
 	    var unbind = def.unbind
@@ -2473,6 +2472,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // on the top of current scope
 	    if(this.$scope) {
 	        this.$scope.children.push($scope)
+	        data.$parent = this.$scope.data
 	    }
 	    return {
 	        $index: index,
@@ -2529,7 +2529,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				return $scope[__$expr__]
 			}
 		} else {
-			return new Function('$scope', 'with($scope){return (' + __$expr__ + ')}')
+			return new Function('$scope', '$parent', 'with($scope){return (' + __$expr__ + ')}')
 		}
 	}
 

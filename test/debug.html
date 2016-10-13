@@ -9,31 +9,22 @@
 <body>
 <div id="app">
 	<z-repeat items="{list}">
-        <input type="text" z-model="{'list[' + $index + ']'}">
+        <z-repeat items="{_items}">
+            <z-repeat items="{_values}">
+                <div>{$parent.$parent.$index}.{$parent.$index}.{$value}</div>
+            </z-repeat>
+        </z-repeat>
 	</z-repeat>
-    <h1>{list.join(',')}</h1>
 </div>
 <script type="text/javascript" src="../dist/zect.js"></script>
 <script type="text/javascript">
-	Zect.component('c-input', {
-		data: function () {
-			return {
-				value: ''
-			}
-		},
-        ready: function () {
-            console.log(this.$data)
-        },
-		template: '<input type="text" value="{value}"/>'
-	})
     var app = new Zect({
         el: '#app',
         data: function () {
         	return {
-        		list: [1,2,3]
+        		list: [{_items: [{_values: [1]}]}]
         	}
-        },
-        ready: function() {}
+        }
     })  
 </script>
 </body>
