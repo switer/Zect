@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.20
+* Zect v1.2.21
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -1392,7 +1392,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // extract key and expr from "key: expression" format
 	        var key
 	        expr = expr.replace(/^[^:]+:/, function (m) {
-	            key = m.replace(/:$/, '').trim()
+	            key = m.replace(/:$/, '').replace(/^\s*['"]|['"]\s*$/g, '')
 	            return ''
 	        }).trim()
 	        
@@ -1863,20 +1863,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	var util = __webpack_require__(4)
 
 
-	module.exports = function(Zect) {
+	module.exports = function() {
 	    return {
 	        'attr': {
 	            multi: true,
 	            bind: function(attname) {
-	                this.attname = attname
-	                this._$el = $(this.$el)
+	                this.attrs = attname ? attname.trim().split(/\s+/) : []
+	                if (this.attrs.length) {
+	                    this._$el = $(this.$el)
+	                }
 	            },
 	            update: function(next) {
-	                if (util.isUndef(next)) {
-	                    this._$el.removeAttr(this.attname)
-	                } else {
-	                    this._$el.attr(this.attname, next)
-	                }
+	                var that = this
+	                this.attrs.forEach(function (attname) {
+	                    if (util.isUndef(next)) {
+	                        that._$el.removeAttr(attname)
+	                    } else {
+	                        that._$el.attr(attname, next)
+	                    }
+	                })
 	            },
 	            unbind: function () {
 	                this._$el = this.attname = null
@@ -1885,12 +1890,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        'class': {
 	            multi: true,
 	            bind: function(className) {
-	                this.className = className
-	                this._$el = $(this.$el)
+	                this.classes = className ? className.trim().split(/\s+/) : []
+	                if (this.classes.length) {
+	                    this._$el = $(this.$el)
+	                }
 	            },
-	            update: function(next) {
-	                if (next) this._$el.addClass(this.className)
-	                else this._$el.removeClass(this.className)
+	            update: function(isUseClass) {
+	                var that = this
+	                this.classes.forEach(function (className) {
+	                    if (isUseClass) that._$el.addClass(className)
+	                    else that._$el.removeClass(className)
+	                })
 	            },
 	            unbind: function () {
 	                this._$el = this.className = null
@@ -1902,7 +1912,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 	        'model': {
-	            bind: function (prop) {
+	            bind: function () {
 	                var tagName = this.$el.tagName
 	                var type = tagName.toLowerCase()
 	                var $el = this._$el = $(this.$el)
@@ -1963,7 +1973,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    _update && _update.apply(this, arguments)
 	                }
 	                $el.on(this.evtType, this._requestChange)
-	                this.watch(prop)
 	            },
 	            watch: function (prop) {
 	                if (this._watches) {
