@@ -17,6 +17,6 @@ window.tools = {
 	    expect(inst.$destroy).to.be.a('function')
 	},
 	template: function (fn) {
-		return fn.toString().replace(/^function\s*\(\s*\)\s*\{\s*\/\*|\*\/\s*\}$/, '')
+		return fn.toString().replace(/^function\s*\(\s*\)\s*\{\s*\/\*|\*\/\s*\}$/g, '')
 	}
 }
