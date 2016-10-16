@@ -8,13 +8,7 @@
 </head>
 <body>
 <div id="app">
-	<z-repeat items="{list}">
-        <z-repeat items="{_items}">
-            <z-repeat items="{_values}">
-                <div>{$parent.$parent.$index}.{$parent.$index}.{$value}</div>
-            </z-repeat>
-        </z-repeat>
-	</z-repeat>
+    <span z-attr="{data-value: list[0]._indexes[2] + list[0]._items[0]}">{list[0]._indexes[2] + list[0]._items[0]}</span>
 </div>
 <script type="text/javascript" src="../dist/zect.js"></script>
 <script type="text/javascript">
@@ -22,10 +16,15 @@
         el: '#app',
         data: function () {
         	return {
-        		list: [{_items: [{_values: [1]}]}]
+        		list: [{_items: [1,2], _indexes: {1: 'a',2:'b'}}]
         	}
         }
-    })  
+    })
+    console.log('After instance')
+    app.$set({
+        'list[0]._items': [2],
+        'list[0]._indexs': {2: 'c'}
+    })
 </script>
 </body>
 </html>
