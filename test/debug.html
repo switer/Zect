@@ -8,22 +8,53 @@
 </head>
 <body>
 <div id="app">
-    <span z-attr="{data-value: list[0]._indexes[2] + list[0]._items[0]}">{list[0]._indexes[2] + list[0]._items[0]}</span>
+    <z-repeat items="{list}">
+        <div>
+            <z-repeat items="{column}">
+                <z-if is="{!/^_/.test($value)}">
+                    <div style="display: inline-block;padding: 10px;margin: 10px;border: 1px solid;width: 100px;"
+                    >
+                        {$parent.$index}.{$index}/{list[$parent.$index][$value]}
+                    </div>
+                </z-if>
+            </z-repeat>
+        </div>
+    </z-repeat>
+    <z-if is="{showTitle}">
+        <h1>title</h1>
+    </z-if>
+    <button z-on="{click: onChange}">change</button>
 </div>
 <script type="text/javascript" src="../dist/zect.js"></script>
 <script type="text/javascript">
+    function dataA () {
+        return {
+            list: [{_id: 'HyDfdxT0', name: 'demo', _keyTypes: {}}, {_id: 'BJ3J9oi0', name: 'demo', address: '', _keyTypes: {}}],
+            column: ['_id', 'name','address'],
+        }
+    }
+    function dataB() {
+        return {
+            list: [{_id: 'rkoPif00', address: '', _keyTypes: {}}],
+            column: ['_id', 'address'],
+        }
+    }
     var app = new Zect({
         el: '#app',
         data: function () {
-        	return {
-        		list: [{_items: [1,2], _indexes: {1: 'a',2:'b'}}]
-        	}
+        	return dataA()
+        },
+        created: function () {
+            this.$data.showTitle = false
+            this.$data.title = 'Hello world'
+        },
+        methods: {
+            onChange: function () {
+                this._flag = !this._flag
+                this.$set(this._flag ? dataB() : dataA())
+                this.$data.showTitle = this._flag
+            }
         }
-    })
-    console.log('After instance')
-    app.$set({
-        'list[0]._items': [2],
-        'list[0]._indexs': {2: 'c'}
     })
 </script>
 </body>

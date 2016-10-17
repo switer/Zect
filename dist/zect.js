@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.22
+* Zect v1.2.23
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -2129,28 +2129,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    this._mount()
 	                } else {
 	                    this.compiled = true
-
-	                    var $parent = this.$scope || new Scope()
-	                    // inherit parent scope's properties
-	                    var $scope = new Scope($parent.data, $parent)
-	                    var protoUpdate = $scope.$update
-	                    $scope.$update = function () {
-	                        // the "if" element is sharing with $scope.data, 
-	                        // so it need to be updated
-	                        $scope.data = $parent.data
-	                        protoUpdate.apply($scope, arguments)
-	                    }
-	                    var $update = this.$update
-
-	                    // hook to $update interface
-	                    this.$update = function () {
-	                        $scope.$update()
-	                        $update.apply(this, arguments)
-	                    }
-	                    if(this.$scope) {
-	                        this.$scope.children.push($scope)
-	                    }
-	                    this.$vm.$compile(this._tmpCon, $scope)
+	                    this.$vm.$compile(this._tmpCon, this.$scope)
 	                    this._mount()
 	                }
 	            },
