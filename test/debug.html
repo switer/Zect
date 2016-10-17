@@ -11,32 +11,35 @@
     <z-repeat items="{list}">
         <div>
             <z-repeat items="{column}">
-                <z-if is="{!/^_/.test($value)}">
-                    <div style="display: inline-block;padding: 10px;margin: 10px;border: 1px solid;width: 100px;"
-                    >
-                        {$parent.$index}.{$index}/{list[$parent.$index][$value]}
-                    </div>
-                </z-if>
+                <div style="display: inline-block;padding: 10px;margin: 10px;border: 1px solid;width: 180px;"
+                    z-class="{
+                        selected: $parent._keyTypes[$value]
+                    }"        
+                >
+                    Hello
+                    <!-- {$parent.$index}.{$index}/{$value}/{list[$parent.$index][$value]} -->
+                </div>
             </z-repeat>
         </div>
     </z-repeat>
-    <z-if is="{showTitle}">
+    <!-- <z-if is="{showTitle}">
         <h1>title</h1>
-    </z-if>
-    <button z-on="{click: onChange}">change</button>
+    </z-if> -->
+    <!-- <button z-on="{click: onChange}">change</button> -->
+    <button z-on="{click: onSelect}">select</button>
 </div>
 <script type="text/javascript" src="../dist/zect.js"></script>
 <script type="text/javascript">
     function dataA () {
         return {
-            list: [{_id: 'HyDfdxT0', name: 'demo', _keyTypes: {}}, {_id: 'BJ3J9oi0', name: 'demo', address: '', _keyTypes: {}}],
-            column: ['_id', 'name','address'],
+            list: [{address: '', _keyTypes: {address: false}}],
+            column: ['address'],
         }
     }
     function dataB() {
         return {
-            list: [{_id: 'rkoPif00', address: '', _keyTypes: {}}],
-            column: ['_id', 'address'],
+            list: [{_id: 'HyDfdxT0', name: 'demo', _keyTypes: {address: false}}, {_id: 'BJ3J9oi0', name: 'demo', address: '', _keyTypes: {address: false}}],
+            column: ['_id', 'name','address'],
         }
     }
     var app = new Zect({
@@ -52,7 +55,10 @@
             onChange: function () {
                 this._flag = !this._flag
                 this.$set(this._flag ? dataB() : dataA())
-                this.$data.showTitle = this._flag
+                // this.$data.showTitle = this._flag
+            },
+            onSelect: function () {
+                this.$set('list.0._keyTypes.address', true)
             }
         }
     })
