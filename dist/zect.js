@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.23
+* Zect v1.2.24
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -1212,9 +1212,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _execute($vm, $scope/*, expression, [label], [target]*/) {
 	    /**
 	     *  $scope is passed when call instance method $compile, 
-	     *  Each "scope" object maybe include "$parent, data, method" properties
+	     *  Each "scope" object maybe include "$parent, data, methods" properties
 	     */
-	    var $parent = $scope && $scope.$parent ? util.extend({}, $scope.$parent.methods, $scope.$parent.data) : {}
+	    // var $parent = $scope && $scope.$parent ? util.extend({}, $scope.$parent.methods, $scope.$parent.data) : {}
+	    if ($scope && $scope.$parent) {
+	        $scope.data.$parent = $scope.$parent.data
+	    }
 	    var __$expression__ = arguments[2]
 	    var __$fn__ = __$compiledExprs___[__$expression__]
 	    $scope = $scope || {}
@@ -1223,7 +1226,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (!__$fn__) {
 	            __$fn__ = __$compiledExprs___[__$expression__] = __$compile__(__$expression__)
 	        }
-	        return util.immutable(__$fn__($scope, $parent))
+	        return util.immutable(__$fn__($scope))
 	    } catch (e) {
 	        __$expression__ = /^\{/.test(__$expression__) 
 	                        ? '. ' + __$expression__
@@ -1392,10 +1395,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // extract key and expr from "key: expression" format
 	        var key
 	        expr = expr.replace(/^[^:]+:/, function (m) {
-	            key = m.replace(/:$/, '').replace(/^\s*['"]|['"]\s*$/g, '')
+	            key = m.replace(/:$/, '').replace(/(^\s*['"]?|['"]?\s*$)/g, '')
 	            return ''
 	        }).trim()
-	        
 	        bindParams.push(key)
 	    }
 
@@ -1430,6 +1432,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    function _update(kp) {
 	        if (d.$destroyed) return
 	        var nexv = _exec(expr)
+
 	        if (util.diff(nexv, prev)) {
 	            var p = prev
 	            prev = nexv
@@ -2460,7 +2463,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // on the top of current scope
 	    if(this.$scope) {
 	        this.$scope.children.push($scope)
-	        data.$parent = this.$scope.data
+	        // data.$parent = this.$scope.data
 	    }
 	    return {
 	        $index: index,
@@ -2474,6 +2477,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var $data = vm.$scope.data = shallowClone(data)
 	    $data.$index = index
 	    $data.$value = data
+	    // $data.$parent = vm.$scope.$parent ? vm.$scope.$parent.data : null
 
 	    vm.$value = data
 	    vm.$index = index
@@ -2517,7 +2521,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				return $scope[__$expr__]
 			}
 		} else {
-			return new Function('$scope', '$parent', 'with($scope){return (' + __$expr__ + ')}')
+			return new Function('$scope', 'with($scope){return (' + __$expr__ + ')}')
 		}
 	}
 

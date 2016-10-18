@@ -14,7 +14,7 @@
                 <div style="display: inline-block;padding: 10px;margin: 10px;border: 1px solid;width: 180px;"
                     z-class="{
                         selected: $parent._keyTypes[$value]
-                    }"        
+                    }"
                 >
                     Hello
                     <!-- {$parent.$index}.{$index}/{$value}/{list[$parent.$index][$value]} -->
@@ -26,7 +26,9 @@
         <h1>title</h1>
     </z-if> -->
     <!-- <button z-on="{click: onChange}">change</button> -->
-    <button z-on="{click: onSelect}">select</button>
+    <button z-on="{
+        click: onSelect
+    }">select</button>
 </div>
 <script type="text/javascript" src="../dist/zect.js"></script>
 <script type="text/javascript">
