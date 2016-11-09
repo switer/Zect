@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.24
+* Zect v1.2.25
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -280,10 +280,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    vm.$get = function () {
 	        return $data.$get.apply($data, arguments)
 	    }
-	    vm.$watch = function (/*[ keypath ], */fn) {
+	    vm.$watch = function (/*[ keypath ], fn*/) {
 	        return $data.$watch.apply($data, arguments)
 	    }
-	    vm.$unwatch = function (/*[ keypath ], */fn) {
+	    vm.$unwatch = function (/*[ keypath ], fn*/) {
 	        return $data.$unwatch.apply($data, arguments)
 	    }
 
@@ -479,18 +479,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    function compileElement(node, scope, isRoot) {
 	        var tagName = node.tagName
+	        var inst
 	        switch(true) {
 	            /**
 	             *  <*-if></*-if>
 	             */
 	            case is.IfElement(tagName):
-	                var inst = new ElementDirective(
+	                var children = _slice(node.children)
+	                var exprs = [$(node).attr('is')]
+	                children.forEach(function(c) {
+	                    if (is.ElseElement(c)) {
+	                        exprs.push($(c).attr(conf.namespace + 'else') || '')
+	                    }
+	                })
+	                inst = new ElementDirective(
 	                        vm, 
 	                        scope,
 	                        node, 
 	                        elements['if'], 
 	                        NS + 'if', 
-	                        $(node).attr('is')
+	                        exprs
 	                )
 	                if (!isRoot) {
 	                    inst.$mount(node)
@@ -504,11 +512,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	             *  <*-repeat></*-repeat>
 	             */
 	            case is.RepeatElement(tagName):
-	                var inst = new ElementDirective(
+	                inst = new ElementDirective(
 	                        vm, 
 	                        scope,
 	                        node, 
-	                        elements['repeat'],
+	                        elements.repeat,
 	                        NS + 'repeat', 
 	                        $(node).attr('items')
 	                )
@@ -569,29 +577,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var revealAst = {}
 	        var compVM
 
-	        function _parseExpr (expr) {
+	        function _parseExpr (exp) {
 	            var name
-	            var expr = expr.replace(/^[^:]+:/, function (m) {
+	            exp = exp.replace(/^[^:]+:/, function (m) {
 	                            name = m.replace(/:$/, '').trim()
 	                            return ''
 	                        }).trim()
 	            return {
 	                name: name,
-	                expr: expr,
-	                vars: Expression.extract(expr)
+	                exp: exp,
+	                vars: Expression.extract(exp)
 	            }
 	        }
 	        function _setBindingObj (expr) {
 	            var r = _parseExpr(expr)
 	            ast[r.name] = r
 	            ;(r.vars || []).forEach(function (v) {
-	                ;!revealAst[v] && (revealAst[v] = [])
-	                ;!~revealAst[v].indexOf(r.name) && revealAst[v].push(r.name)
+	                !revealAst[v] && (revealAst[v] = []);
+	                !~revealAst[v].indexOf(r.name) && revealAst[v].push(r.name)
 	            })
 	        }
 
-	        var bindingData = execLiteral(dataExpr, parentVM, scope)
-	        var bindingMethods = execLiteral(methods, parentVM, scope) // --> bindingMethods
+	        bindingData = execLiteral(dataExpr, parentVM, scope)
+	        bindingMethods = execLiteral(methods, parentVM, scope) // --> bindingMethods
 	        
 	        compVM = new Comp({
 	            el: node,
@@ -1029,6 +1037,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    IfElement: function(tn) {
 	        return tn == (conf.namespace + 'if').toUpperCase()
 	    },
+	    ElseElement: function(node) {
+	        return node.hasAttribute && node.hasAttribute(conf.namespace + 'else')
+	    },
 	    RepeatElement: function(tn) {
 	        return tn == (conf.namespace + 'repeat').toUpperCase()
 	    }
@@ -1279,7 +1290,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _watch(vm, vars, update) {
 	    var watchKeys = []
 	    function _handler (kp) {
-	        if (watchKeys.some(function(key, index) {
+	        if (watchKeys.some(function(key) {
 	            if (_relative(kp, key)) {
 	                return true
 	            }
@@ -1476,13 +1487,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var upda = def.update
 	    var delta = def.delta
 	    var deltaUpdate = def.deltaUpdate
-	    var isExpr = !!_isExpr(expr)
+	    var isMultiExpr = def.multiExpr && util.type(expr) == 'array'
+	    var isExclusion = def.multiExpr == 'exclusion'
+	    var multiExprMetas
 	    var prev
 	    var unwatch
 
-	    d.$expr = expr
 
-	    isExpr && (expr = _strip(expr))
+	    d.$expr = expr
+	    if (isMultiExpr) {
+	        multiExprMetas = expr.map(function (exp) {
+	            var isExpr = _isExpr(exp)
+	            return [!!isExpr, isExpr ? _strip(exp) : exp]
+	        })
+	    }
 	    d.$id = 'e' + _eid ++
 	    d.$name = name
 	    d.$vm = vm
@@ -1539,10 +1557,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    function _update(kp, nv, pv, method, ind, len) {
 	        if (d.$destroyed) return
 
-	        var nexv = _exec(expr)
+	        var nexv
+	        if (isMultiExpr) {
+	            var lastV
+	            nexv = expr.map(function (exp, i) {
+	                if (multiExprMetas[i][0]) {
+	                    if (lastV && isExclusion) return false
+	                    return (lastV = _exec(multiExprMetas[i][1]))
+	                } else {
+	                    return exp
+	                }
+	            })
+	        } else {
+	            nexv = _exec(expr)
+	        }
 	        var deltaResult 
 	        if ( delta && (deltaResult = delta.call(d, nexv, prev, kp)) ) {
-	            return deltaUpdate && deltaUpdate.call(d, nexv, p, kp, deltaResult)
+	            return deltaUpdate && deltaUpdate.call(d, nexv, prev, kp, deltaResult)
 	        }
 	        if (util.diff(nexv, prev)) {
 	            var p = prev
@@ -1560,9 +1591,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return _execute(vm, scope, expr, name)
 	    }
 
-	    prev = isExpr ? _exec(expr) : expr
-	    if (def.watch !== false && isExpr) {
-	        unwatch = _watch(vm, _extractVars(expr), _update)
+	    if (isMultiExpr) {
+	        var watchedKeys = []
+	        // result exclusion
+	        var lastV
+	        prev = expr.map(function (exp, i) {
+	            if (multiExprMetas[i][0]) {
+	                exp = multiExprMetas[i][1]
+	                watchedKeys = watchedKeys.concat(_extractVars(exp))
+	                if (lastV && isExclusion) {
+	                    return false
+	                } else {
+	                    return (lastV = _exec(exp))
+	                }
+	            } else {
+	                return exp
+	            }
+	        })
+	        if (watchedKeys.length) {
+	            unwatch = _watch(vm, watchedKeys, _update)
+	        }
+	    } else {
+	        var isExpr = !!_isExpr(expr)
+	        isExpr && (expr = _strip(expr))
+	        prev = isExpr ? _exec(expr) : expr
+	        if (def.watch !== false && isExpr) {
+	            unwatch = _watch(vm, _extractVars(expr), _update)
+	        }
 	    }
 	    bind && bind.call(d, prev, expr)
 	    upda && upda.call(d, prev)
@@ -1966,9 +2021,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                 *  State 2 DOM input
 	                 */
 	                this._update = function () {
-	                    var nextValue = vm.$get(that._prop)
-	                    if (that.$el[vType] !== nextValue) {
-	                        that.$el[vType] = nextValue
+	                    var nv = vm.$get(that._prop)
+	                    nv = util.isUndef(nv) ? '' : nv
+	                    if (that.$el[vType] !== nv) {
+	                        that.$el[vType] = nv
 	                    }
 	                }
 	                this.$update = function () {
@@ -2084,60 +2140,96 @@ return /******/ (function(modules) { // webpackBootstrap
 	var $ = __webpack_require__(2)
 	var conf = __webpack_require__(5)
 	var util = __webpack_require__(4)
+	var is = __webpack_require__(3)
 	var Scope = __webpack_require__(13)
 	var Expression = __webpack_require__(8)
 
-	module.exports = function(Zect) {
+	module.exports = function() {
 	    return {
 	        'if': {
-	            bind: function(/*cnd, expr*/) {
-	                this._tmpCon = document.createDocumentFragment()
+	            multiExpr: 'exclusion',
+	            bind: function(cnd, exprs) {
+	                this._tmpCons = exprs.map(function () {
+	                    return document.createDocumentFragment()
+	                })
+
 	                /**
 	                 *  Initial unmount childNodes
 	                 */
+	                var cursor = 0
 	                ;[].slice
 	                    .call(this.$el.childNodes)
 	                    .forEach(function(e) {
-	                        this._tmpCon.appendChild(e)
+	                        if (is.ElseElement(e)) {
+	                            cursor ++
+	                        } else {
+	                            this._tmpCons[cursor].appendChild(e)
+	                        }
 	                    }.bind(this))
 
 	                /**
 	                 *  Instance method
 	                 */
-	                var mounted
-	                this._mount = function () {
-	                    if (mounted) return
-	                    mounted = true
+	                var mounteds = {}
+	                this._mount = function (index) {
+	                    if (mounteds[index]) return
+	                    mounteds[index] = true
 	                    var $floor = this.$floor()
-	                    $floor.parentNode.insertBefore(this._tmpCon, $floor)
-
+	                    $floor.parentNode.insertBefore(this._tmpCons[index], $floor)
 	                }
-	                this._unmount = function () {
-	                    if (!mounted) return
-	                    mounted = false
+	                this._unmount = function (index) {
+	                    if (!mounteds) return
+	                    mounteds[index] = false
 	                    var $ceil = this.$ceil()
 	                    var $floor = this.$floor()
 
 	                    var that = this
 	                    util.domRange($ceil.parentNode, $ceil, $floor)
 	                        .forEach(function(n) {
-	                            that._tmpCon.appendChild(n)
+	                            that._tmpCons[index].appendChild(n)
 	                        })
 	                }
+	                this.compileds = {}
+	                this._lIndex = -1
 	            },
 	            update: function(next) {
-	                if (!next) {
-	                    this._unmount()
-	                } else if (this.compiled) {
-	                    this._mount()
+	                var lIndex = this._lIndex
+	                var rearIndex = next.length - 1
+	                var tIndex = -1
+	                var cnd = false
+	                next.some(function (v, i) {
+	                    if (v) tIndex = i
+	                    return !!v
+	                })
+
+	                cnd = next[tIndex]
+	                // is last else without condition
+	                if (!~tIndex && next.length > 1 && !this.$expr[rearIndex]) {
+	                    tIndex = rearIndex
+	                    cnd = true
+	                }
+
+	                this._lIndex = tIndex
+	                if (lIndex != tIndex && ~lIndex) {
+	                    this._unmount(lIndex)
+	                }
+
+	                // not else and all conditions is false
+	                if (!~tIndex) return
+
+	                if (!cnd) {
+	                    this._unmount(tIndex)
+	                } else if (this.compileds[tIndex]) {
+	                    this._mount(tIndex)
 	                } else {
-	                    this.compiled = true
-	                    this.$vm.$compile(this._tmpCon, this.$scope)
-	                    this._mount()
+	                    this.compileds[tIndex] = true
+	                    this.$vm.$compile(this._tmpCons[tIndex], this.$scope)
+	                    this._mount(tIndex)
 	                }
 	            },
 	            unbind: function () {
 	                this.$update = this._mount = this._unmount = noop
+	                this.compileds = this._tmpCons = null
 	            }
 	        },
 	        'repeat': {
@@ -2240,7 +2332,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            $(insertVms.map(function (vm) {
 	                                return vm.$compiler.$bundle()
 	                            })).insertAfter(
-	                                ind == 0 
+	                                ind === 0 
 	                                ? $ceil
 	                                : this.$vms[ind - 1].$compiler.$bundle()
 	                            )
@@ -2258,7 +2350,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                             */
 	                            this.$vms.splice
 	                                     .apply(this.$vms, args)
-	                                     .forEach(function (vm, i) {
+	                                     .forEach(function (vm) {
 	                                        destroyVM(vm)
 	                                     })
 
@@ -2291,7 +2383,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        this.$vms.unshift(vm)
 	                        vm.$compiler.$insertAfter($ceil)
 	                        this.$vms.forEach(function (v, i) {
-	                            if (i != 0) {
+	                            if (i !== 0) {
 	                                updateVMIndex(v, i)
 	                            }
 	                        })
@@ -2338,7 +2430,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            if (!hasDiff) {
 	                                i = k
 	                                // and reuse the pos
-	                                if (index === i) return dontUpdated = true
+	                                if (index === i) return (dontUpdated = true)
 	                                else if (!~i) i = k
 	                            }
 	                        })
@@ -2380,7 +2472,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return collects
 	                }, [])
 
-	                diffItems.some(function (item, index) {
+	                diffItems.some(function (item) {
 	                    if (!reusables.length) return true
 
 	                    if (item.status == 'created') {
