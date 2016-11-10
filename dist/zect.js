@@ -1,5 +1,5 @@
 /**
-* Zect v1.2.25
+* Zect v1.2.26
 * (c) 2015 guankaishe
 * Released under the MIT License.
 */
@@ -585,7 +585,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        }).trim()
 	            return {
 	                name: name,
-	                exp: exp,
+	                expr: exp,
 	                vars: Expression.extract(exp)
 	            }
 	        }
